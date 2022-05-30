@@ -1,0 +1,16 @@
+Package: raticate.tests
+Title: Raticate Tests
+Description: Test for correct raticate bindings
+Authors@R: person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com")
+Version: 0.1.0
+Date: 2022-05-29
+Imports:
+    Rcpp,
+    Matrix,
+    DelayedArray
+Suggests:
+    testthat
+LinkingTo:
+    Rcpp
+SystemRequirements: C++17
+RoxygenNote: 7.2.0

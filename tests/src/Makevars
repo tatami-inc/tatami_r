@@ -1,0 +1,1 @@
+PKG_CPPFLAGS=-I../../include -I../../build/_deps/tatami-src/include/
