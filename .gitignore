@@ -2,3 +2,5 @@
 *.so
 *.o
 build/
+docs/html
+docs/latex
