@@ -8,7 +8,7 @@
 namespace raticate { 
 
 template<typename Data = double, typename Index = int, class V>
-Parsed<Data, Index> convert_CSparseMatrix(Rcpp::RObject seed, const V& val) {
+Parsed<Data, Index> parse_CSparseMatrix(Rcpp::RObject seed, const V& val) {
     auto dims = parse_dims(seed.slot("Dim"));
 
     Rcpp::IntegerVector p(seed.slot("p"));
@@ -35,15 +35,15 @@ Parsed<Data, Index> convert_CSparseMatrix(Rcpp::RObject seed, const V& val) {
 }
 
 template<typename Data = double, typename Index = int>
-Parsed<Data, Index> convert_dgCMatrix(Rcpp::RObject seed) {
+Parsed<Data, Index> parse_dgCMatrix(Rcpp::RObject seed) {
     Rcpp::NumericVector y(seed.slot("x"));
-    return convert_CSparseMatrix(seed, y);
+    return parse_CSparseMatrix(seed, y);
 }
 
 template<typename Data = double, typename Index = int>
-Parsed<Data, Index> convert_lgCMatrix(Rcpp::RObject seed) {
+Parsed<Data, Index> parse_lgCMatrix(Rcpp::RObject seed) {
     Rcpp::LogicalVector y(seed.slot("x"));
-    return convert_CSparseMatrix(seed, y);
+    return parse_CSparseMatrix(seed, y);
 }
 
 }

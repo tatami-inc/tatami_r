@@ -8,7 +8,7 @@
 namespace raticate { 
 
 template<typename Data = double, typename Index = int, class V>
-Parsed<Data, Index> convert_SparseArraySeed(Rcpp::RObject seed, const V& val) {
+Parsed<Data, Index> parse_SparseArraySeed(Rcpp::RObject seed, const V& val) {
     auto dims = parse_dims(seed.slot("dim"));
     int NR = dims.first;
     int NC = dims.second;
@@ -104,19 +104,19 @@ Parsed<Data, Index> convert_SparseArraySeed(Rcpp::RObject seed, const V& val) {
 }
 
 template<typename Data = double, typename Index = int>
-Parsed<Data, Index> convert_SparseArraySeed(Rcpp::RObject seed) {
-    Rcpp::RObject vals(seed.slot("nzval"));
+Parsed<Data, Index> parse_SparseArraySeed(Rcpp::RObject seed) {
+    Rcpp::RObject vals(seed.slot("nzdata"));
 
     Parsed<Data, Index> output;
     if (vals.sexp_type() == REALSXP) {
         Rcpp::NumericVector y(vals);
-        output = convert_SparseArraySeed<Data, Index>(seed, y);
+        output = parse_SparseArraySeed<Data, Index>(seed, y);
     } else if (vals.sexp_type() == INTSXP) {
         Rcpp::IntegerVector y(vals);
-        output = convert_SparseArraySeed<Data, Index>(seed, y);
+        output = parse_SparseArraySeed<Data, Index>(seed, y);
     } else if (vals.sexp_type() == LGLSXP) {
         Rcpp::LogicalVector y(vals);
-        output = convert_SparseArraySeed<Data, Index>(seed, y);
+        output = parse_SparseArraySeed<Data, Index>(seed, y);
     }
 
     return output;

@@ -3,22 +3,27 @@
 
 #' @useDynLib raticate.tests
 #' @importFrom Rcpp sourceCpp
+#' @export
 parse <- function(seed) {
     .Call('_raticate_tests_parse', PACKAGE = 'raticate.tests', seed)
 }
 
+#' @export
 nrow <- function(parsed) {
     .Call('_raticate_tests_nrow', PACKAGE = 'raticate.tests', parsed)
 }
 
+#' @export
 ncol <- function(parsed) {
     .Call('_raticate_tests_ncol', PACKAGE = 'raticate.tests', parsed)
 }
 
+#' @export
 row <- function(parsed, i) {
     .Call('_raticate_tests_row', PACKAGE = 'raticate.tests', parsed, i)
 }
 
+#' @export
 column <- function(parsed, i) {
     .Call('_raticate_tests_column', PACKAGE = 'raticate.tests', parsed, i)
 }
