@@ -67,8 +67,44 @@ $(function() {
   <div class="headertitle"><div class="title">Convert R objects to <code>tatami</code> objects </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p ><a class="anchor" id="md__github_workspace_README"></a> This implements an <b>Rcpp</b>-based header-only library for parsing R objects as <code>tatami::Matrix</code> instances, for use in <a href="https://github.com/LTLA/tatami"><b>tatami</b></a>-compatible C++ code such as <a href="https://github.com/LTLA/libscran"><b>libscran</b></a>. </p>
-</div></div><!-- PageDoc -->
+<div class="textblock"><p ><a class="anchor" id="md__github_workspace_README"></a> </p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+Overview</h1>
+<p ><b>raticate</b> is an <b>Rcpp</b>-based header-only library for parsing R objects as <code>tatami::Matrix</code> instances. This enables use of R matrix data in <a href="https://github.com/LTLA/tatami"><b>tatami</b></a>-compatible C++ code such as <a href="https://github.com/LTLA/libscran"><b>libscran</b></a>. Usage is as simple as:</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="raticate_8hpp.html">raticate/raticate.hpp</a>&quot;</span></div>
+<div class="line"> </div>
+<div class="line">SEXP some_typical_rcpp_function(Rcpp::RObject x) {</div>
+<div class="line">    <span class="keyword">auto</span> parsed = raticate::parse(x);</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordflow">if</span> (parsed.matrix == std::nullptr) {</div>
+<div class="line">        <span class="comment">// Do something if format of &#39;x&#39; is not supported;</span></div>
+<div class="line">        <span class="comment">// probably throw an error.</span></div>
+<div class="line">    } <span class="keywordflow">else</span> {</div>
+<div class="line">        <span class="comment">// Do stuff with the tatami::Matrix.</span></div>
+<div class="line">        parsed.matrix-&gt;nrow();</div>
+<div class="line">        <span class="keyword">auto</span> first_row = parsed.matrix-&gt;row(0);</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="ttc" id="araticate_8hpp_html"><div class="ttname"><a href="raticate_8hpp.html">raticate.hpp</a></div><div class="ttdoc">Parse Rcpp::RObjects into tatami matrices.</div></div>
+</div><!-- fragment --><p >And that's it, really. If you want more details, you can check out the <a href="https://ltla.github.io/raticate">reference documentation</a>.</p>
+<h1><a class="anchor" id="autotoc_md2"></a>
+Slightly more advanced usage</h1>
+<p >Currently <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> knows about the following matrix formats:</p>
+<ul>
+<li>ordinary logical, numeric or integer matrices.</li>
+<li><code>dgCMatrix</code> or <code>lgCMatrix</code> objects from the <b>Matrix</b> package.</li>
+<li><code>SparseArraySeed</code> objects from the <b>DelayedArray</b> package.</li>
+</ul>
+<p >If <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> cannot interpret the format of <code>x</code>, the <code>.matrix</code> member will be set to a <code>nullptr</code>. It is the caller's responsibility to handle this case.</p>
+<p >The <code>parsed</code> output object will also contain an R list named <code>.contents</code>. This holds references to the memory used by the <code>.matrix</code> member, preventing their premature garbage collection. Callers should ensure that the <code>.matrix</code> member (or any copies) does not outlive the <code>.contents</code> R list.</p>
+<h1><a class="anchor" id="autotoc_md3"></a>
+Deployment</h1>
+<p ><b>raticate</b> is intended to be compiled with other relevant C++ code inside an R package. This is most easily done by modifying the package <code>DESCRIPTION</code> with:</p>
+<div class="fragment"><div class="line">LinkingTo: beachmat</div>
+</div><!-- fragment --><p >which will automatically use the vendored copies of <b>raticate</b> (and <b>tatami</b>) inside the <a href="http://bioconductor.org/packages/beachmat"><b>beachmat</b></a> package. Note that C++17 is required.</p>
+<p >If <b>beachmat</b> cannot be used, then the R package developer will need to copy the <b>raticate</b> and <b>tatami</b> <code>include/</code> directories into the package's <code>inst/include</code>, and then add a <code>Makevars</code> file like:</p>
+<div class="fragment"><div class="line">PKG_CPPFLAGS = -I../inst/include</div>
+</div><!-- fragment --> </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
