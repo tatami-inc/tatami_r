@@ -93,7 +93,7 @@ inline std::string translate_type(int sexp_type) {
     return should_be;
 }
 
-std::pair<int, int> parse_dims(Rcpp::RObject dims) {
+inline std::pair<int, int> parse_dims(Rcpp::RObject dims) {
     if (dims.sexp_type()!=INTSXP) {
         throw std::runtime_error("matrix dimensions should be an integer vector");
     }
