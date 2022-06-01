@@ -80,6 +80,8 @@ $(function() {
 <code>#include &quot;SimpleMatrix.hpp&quot;</code><br />
 <code>#include &quot;SparseArraySeed.hpp&quot;</code><br />
 <code>#include &quot;CSparseMatrix.hpp&quot;</code><br />
+<code>#include &quot;DelayedMatrix.hpp&quot;</code><br />
+<code>#include &quot;DelayedSubset.hpp&quot;</code><br />
 <code>#include &quot;<a class="el" href="utils_8hpp_source.html">utils.hpp</a>&quot;</code><br />
 </div>
 <p><a href="raticate_8hpp_source.html">Go to the source code of this file.</a></p>
@@ -115,6 +117,11 @@ template&lt;typename Data  = double, typename Index  = int&gt; </div>
 <li>ordinary logical, numeric or integer matrices.</li>
 <li><code>dgCMatrix</code> or <code>lgCMatrix</code> objects from the <b>Matrix</b> package.</li>
 <li><code>SparseArraySeed</code> objects from the <b>DelayedArray</b> package.</li>
+<li><code>DelayedMatrix</code> objects wrapping any of the above, or containing the following delayed operations:<ul>
+<li>Subsetting</li>
+<li>Dimnames modification</li>
+</ul>
+</li>
 </ul>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
