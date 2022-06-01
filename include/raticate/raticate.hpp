@@ -5,6 +5,8 @@
 #include "SimpleMatrix.hpp"
 #include "SparseArraySeed.hpp"
 #include "CSparseMatrix.hpp"
+#include "DelayedMatrix.hpp"
+#include "DelayedSubset.hpp"
 #include "utils.hpp"
 
 /**
@@ -22,6 +24,9 @@ namespace raticate {
  * - ordinary logical, numeric or integer matrices.
  * - `dgCMatrix` or `lgCMatrix` objects from the **Matrix** package.
  * - `SparseArraySeed` objects from the **DelayedArray** package.
+ * - `DelayedMatrix` objects wrapping any of the above, or containing the following delayed operations:
+ *    - Subsetting
+ *    - Dimnames modification
  * 
  * @tparam Data Numeric data type for the **tatami** interface.
  * @tparam Index Integer index type for the **tatami** interface.
@@ -37,13 +42,22 @@ Parsed<Data, Index> parse(Rcpp::RObject x) {
 
     if (x.isS4()) {
         std::string ctype = get_class_name(x);
+
         if (ctype == "SparseArraySeed") {
             output = parse_SparseArraySeed<Data, Index>(x);
         } else if (ctype == "dgCMatrix") {
             output = parse_dgCMatrix<Data, Index>(x);
         } else if (ctype == "lgCMatrix") {
             output = parse_lgCMatrix<Data, Index>(x);
+
+        } else if (ctype == "DelayedMatrix") {
+            output = parse_DelayedMatrix<Data, Index>(x);
+        } else if (ctype == "DelayedSetDimnames") {
+            output = parse_DelayedMatrix<Data, Index>(x); // just forward onto the seed.
+        } else if (ctype == "DelayedSubset") {
+            output = parse_DelayedSubset<Data, Index>(x);
         }
+
     } else if (x.hasAttribute("dim")) {
         output = parse_simple_matrix<Data, Index>(x);
     }
