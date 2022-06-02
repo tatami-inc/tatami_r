@@ -94,6 +94,12 @@ Slightly more advanced usage</h1>
 <li>ordinary logical, numeric or integer matrices.</li>
 <li><code>dgCMatrix</code> or <code>lgCMatrix</code> objects from the <b>Matrix</b> package.</li>
 <li><code>SparseArraySeed</code> objects from the <b>DelayedArray</b> package.</li>
+<li><code>DelayedMatrix</code> objects wrapping any of the above, or containing the following delayed operations:<ul>
+<li>Subsetting</li>
+<li>Modification of dimnames</li>
+<li>Transposition</li>
+</ul>
+</li>
 </ul>
 <p >If <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> cannot interpret the format of <code>x</code>, the <code>.matrix</code> member will be set to a <code>nullptr</code>. It is the caller's responsibility to handle this case.</p>
 <p >The <code>parsed</code> output object will also contain an R list named <code>.contents</code>. This holds references to the memory used by the <code>.matrix</code> member, preventing their premature garbage collection. Callers should ensure that the <code>.matrix</code> member (or any copies) does not outlive the <code>.contents</code> R list.</p>
