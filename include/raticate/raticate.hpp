@@ -7,6 +7,7 @@
 #include "CSparseMatrix.hpp"
 #include "DelayedMatrix.hpp"
 #include "DelayedSubset.hpp"
+#include "DelayedAperm.hpp"
 #include "utils.hpp"
 
 /**
@@ -26,7 +27,8 @@ namespace raticate {
  * - `SparseArraySeed` objects from the **DelayedArray** package.
  * - `DelayedMatrix` objects wrapping any of the above, or containing the following delayed operations:
  *    - Subsetting
- *    - Dimnames modification
+ *    - Modification of dimnames
+ *    - Transposition
  * 
  * @tparam Data Numeric data type for the **tatami** interface.
  * @tparam Index Integer index type for the **tatami** interface.
@@ -56,6 +58,8 @@ Parsed<Data, Index> parse(Rcpp::RObject x) {
             output = parse_DelayedMatrix<Data, Index>(x); // just forward onto the seed.
         } else if (ctype == "DelayedSubset") {
             output = parse_DelayedSubset<Data, Index>(x);
+        } else if (ctype == "DelayedAperm") {
+            output = parse_DelayedAperm<Data, Index>(x);
         }
 
     } else if (x.hasAttribute("dim")) {

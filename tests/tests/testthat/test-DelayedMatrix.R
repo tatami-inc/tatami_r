@@ -54,3 +54,15 @@ test_that("Works for dimnames-altered objects", {
     expect_identical(raticate.tests::row(z, 5), unname(y[5,]))
     expect_identical(raticate.tests::column(z, 9), unname(y[,9]))
 })
+
+test_that("Works for transposed objects", {
+    y <- DelayedArray(rsparsematrix(100, 20, 0.05))
+    y <- t(y)
+
+    z <- raticate.tests::parse(y)
+    expect_identical(raticate.tests::nrow(z), 20L)
+    expect_identical(raticate.tests::ncol(z), 100L)
+
+    expect_identical(raticate.tests::row(z, 1), unname(y[1,]))
+    expect_identical(raticate.tests::column(z, 19), unname(y[,19]))
+})
