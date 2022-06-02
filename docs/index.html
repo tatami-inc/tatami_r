@@ -93,11 +93,12 @@ Slightly more advanced usage</h1>
 <ul>
 <li>ordinary logical, numeric or integer matrices.</li>
 <li><code>dgCMatrix</code> or <code>lgCMatrix</code> objects from the <b>Matrix</b> package.</li>
-<li><code>SparseArraySeed</code> objects from the <b>DelayedArray</b> package.</li>
+<li><code>SparseArraySeed</code> objects from the <a href="https://bioconductor.org/packages/DelayedArray"><b>DelayedArray</b></a> package.</li>
 <li><code>DelayedMatrix</code> objects wrapping any of the above, or containing the following delayed operations:<ul>
-<li>Subsetting</li>
-<li>Modification of dimnames</li>
-<li>Transposition</li>
+<li>Subsetting (as a <code>DelayedSubset</code> instance)</li>
+<li>Modification of dimnames (as a <code>DelayedSetDimnames</code> instance)</li>
+<li>Transposition (as a <code>DelayedAperm</code> instance)</li>
+<li>Combining (as a <code>DelayedAbind</code> instance)</li>
 </ul>
 </li>
 </ul>
