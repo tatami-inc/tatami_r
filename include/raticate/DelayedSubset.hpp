@@ -9,7 +9,7 @@ namespace raticate {
 
 template<typename Data = double, typename Index = int>
 Parsed<Data, Index> parse_DelayedSubset(Rcpp::RObject seed) {
-    auto sparsed = parse(seed.slot("seed"));
+    auto sparsed = parse<Data, Index>(seed.slot("seed"));
     auto mat = sparsed.matrix;
 
     if (mat != nullptr) {

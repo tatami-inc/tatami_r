@@ -7,7 +7,7 @@ namespace raticate {
 
 template<typename Data = double, typename Index = int>
 Parsed<Data, Index> parse_DelayedMatrix(Rcpp::RObject seed) {
-    return parse(seed.slot("seed"));
+    return parse<Data, Index>(seed.slot("seed"));
 }
 
 }

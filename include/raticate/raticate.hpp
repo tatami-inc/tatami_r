@@ -30,15 +30,15 @@ namespace raticate {
  *    - Modification of dimnames
  *    - Transposition
  * 
- * @tparam Data Numeric data type for the **tatami** interface.
- * @tparam Index Integer index type for the **tatami** interface.
+ * @tparam Data Numeric data type for the **tatami** interface, typically `double`.
+ * @tparam Index Integer index type for the **tatami** interface, typically `int`.
  * 
  * @param x An R object representing a supported matrix type.
  *
  * @return A `Parsed` object containing a pointer to a parsed `tatami::Matrix`.
  * If parsing was not successful, this pointer will be a `nullptr`.
  */
-template<typename Data = double, typename Index = int>
+template<typename Data, typename Index>
 Parsed<Data, Index> parse(Rcpp::RObject x) {
     Parsed<Data, Index> output;
 
