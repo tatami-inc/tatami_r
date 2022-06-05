@@ -8,6 +8,7 @@
 #include "DelayedMatrix.hpp"
 #include "DelayedSubset.hpp"
 #include "DelayedAperm.hpp"
+#include "UnknownMatrix.hpp"
 #include "utils.hpp"
 
 /**
@@ -64,6 +65,11 @@ Parsed<Data, Index> parse(Rcpp::RObject x) {
 
     } else if (x.hasAttribute("dim")) {
         output = parse_simple_matrix<Data, Index>(x);
+    }
+
+    if (output.matrix == nullptr) {
+        // No need to set contents here, as the matrix itself holds the Rcpp::RObject.
+        output.matrix.reset(new UnknownMatrix<Data, Index>(x));
     }
 
     return output;
