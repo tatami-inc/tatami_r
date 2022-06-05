@@ -32,11 +32,12 @@ Currently `parse()` knows about the following matrix formats:
 
 - ordinary logical, numeric or integer matrices.
 - `dgCMatrix` or `lgCMatrix` objects from the **Matrix** package.
-- `SparseArraySeed` objects from the **DelayedArray** package.
+- `SparseArraySeed` objects from the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package.
 - `DelayedMatrix` objects wrapping any of the above, or containing the following delayed operations:
-  - Subsetting
-  - Modification of dimnames
-  - Transposition
+  - Subsetting (as a `DelayedSubset` instance)
+  - Modification of dimnames (as a `DelayedSetDimnames` instance)
+  - Transposition (as a `DelayedAperm` instance)
+  - Combining (as a `DelayedAbind` instance)
 
 If `parse()` cannot interpret the format of `x`, the `.matrix` member will be set to a `nullptr`.
 It is the caller's responsibility to handle this case.

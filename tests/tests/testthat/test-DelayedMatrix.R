@@ -66,3 +66,31 @@ test_that("Works for transposed objects", {
     expect_identical(raticate.tests::row(z, 1), unname(y[1,]))
     expect_identical(raticate.tests::column(z, 19), unname(y[,19]))
 })
+
+test_that("Works for combined objects", {
+    # By row.
+    x1 <- DelayedArray(rsparsematrix(50, 20, 0.05))
+    x2 <- DelayedArray(matrix(runif(200), 10, 20))
+    y <- BiocGenerics::rbind(x1, x2)
+
+    z <- raticate.tests::parse(y)
+    expect_identical(raticate.tests::nrow(z), 60L)
+    expect_identical(raticate.tests::ncol(z), 20L)
+
+    expect_identical(raticate.tests::row(z, 3), unname(y[3,]))
+    expect_identical(raticate.tests::row(z, 55), unname(y[55,]))
+    expect_identical(raticate.tests::column(z, 16), unname(y[,16]))
+
+    # By row.
+    x1 <- DelayedArray(matrix(runif(150), 10, 15))
+    x2 <- DelayedArray(rsparsematrix(10, 20, 0.05))
+    y <- BiocGenerics::cbind(x1, x2)
+
+    z <- raticate.tests::parse(y)
+    expect_identical(raticate.tests::nrow(z), 10L)
+    expect_identical(raticate.tests::ncol(z), 35L)
+
+    expect_identical(raticate.tests::column(z, 5), unname(y[,5]))
+    expect_identical(raticate.tests::column(z, 30), unname(y[,30]))
+    expect_identical(raticate.tests::row(z, 8), unname(y[8,]))
+})
