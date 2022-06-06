@@ -1,4 +1,48 @@
 #include "Rcpp.h"
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+#ifdef TEST_CUSTOM_PARALLEL
+// Adding this stuff to test the custom parallelization.
+// Note that this must all be defined before raticate (and tatami) is included.
+#include <thread>
+
+template<class Function>
+void custom_parallel(size_t n, Function f) {
+    size_t jobs_per_worker = std::ceil(static_cast<double>(n) / 3);
+    size_t start = 0;
+    std::vector<std::thread> jobs;
+    
+    for (size_t w = 0; w < 3; ++w) {
+        size_t end = std::min(n, start + jobs_per_worker);
+        if (start >= end) {
+            break;
+        }
+        jobs.emplace_back(f, start, end);
+        start += jobs_per_worker;
+    }
+
+    for (auto& job : jobs) {
+        job.join();
+    }
+}
+
+#define TATAMI_CUSTOM_PARALLEL custom_parallel
+
+std::mutex rcpp_lock;
+
+template<class Function>
+void custom_lock(Function fun) {
+    std::cout << "LOCKING!" << std::endl;
+    std::lock_guard<std::mutex> lock(rcpp_lock);
+    std::cout << "WHEE" << std::endl;
+    fun();
+}
+
+#define RATICATE_RCPP_PARALLEL_LOCK custom_lock
+#endif
+
 #include "raticate/raticate.hpp"
 
 typedef Rcpp::XPtr<raticate::Parsed<double, int> > RatXPtr;
@@ -309,4 +353,41 @@ Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last) {
     return output;
 }
 
+/*********************************
+ *** Parallelizable extractors ***
+ *********************************/
 
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector rowsums(Rcpp::RObject parsed) {
+    RatXPtr ptr(parsed);
+    auto out = tatami::row_sums((ptr->matrix).get());
+    return Rcpp::NumericVector(out.begin(), out.end());
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
+    RatXPtr ptr(parsed);
+    size_t NR = (ptr->matrix)->nrow();
+    std::vector<double> output(NR);
+
+#ifndef TATAMI_CUSTOM_PARALLEL
+    #pragma omp parallel for
+    for (size_t r = 0; r < NR; ++r) {
+#else
+    TATAMI_CUSTOM_PARALLEL(NR, [&](size_t first, size_t last) -> void {
+    for (size_t r = first; r < last; ++r) {
+#endif
+
+        auto current = (ptr->matrix)->row(r);
+        output[r] = std::accumulate(current.begin(), current.end(), 0.0);
+
+#ifndef TATAMI_CUSTOM_PARALLEL
+    }
+#else
+    }});
+#endif
+
+    return Rcpp::NumericVector(output.begin(), output.end());
+}

@@ -1,1 +1,1 @@
-PKG_CPPFLAGS=-I../../include -I../../build/_deps/tatami-src/include/
+PKG_CPPFLAGS=-I../../include -I../../build/_deps/tatami-src/include/ -DTEST_CUSTOM_PARALLEL

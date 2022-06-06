@@ -118,7 +118,24 @@ public:
     };
 
     std::shared_ptr<tatami::Workspace> new_workspace(bool row) const { 
-        return std::shared_ptr<tatami::Workspace>(new UnknownWorkspace(row));
+        UnknownWorkspace* ptr;
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+            ptr = new UnknownWorkspace(row);
+                     
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        }
+#else
+        });
+#endif
+
+        return std::shared_ptr<tatami::Workspace>(ptr);
     }
 
 private:
@@ -194,55 +211,33 @@ private:
 
 public:
     const Data* row(size_t r, Data* buffer, size_t first, size_t last, tatami::Workspace* work=nullptr) const {
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-        {
-#else
-        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
-            if (work == NULL) {
-                quick_dense_extractor<true>(r, buffer, first, last);
-            } else {
-                buffered_dense_extractor<true>(r, buffer, first, last, work);
-            }
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        if (work == NULL) {
+            quick_dense_extractor<true>(r, buffer, first, last);
+        } else {
+            buffered_dense_extractor<true>(r, buffer, first, last, work);
         }
-#else
-        });
-#endif
-
         return buffer;
     }
 
     const Data* column(size_t c, Data* buffer, size_t first, size_t last, tatami::Workspace* work=nullptr) const {
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-        {
-#else
-        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
-            if (work == NULL) {
-                quick_dense_extractor<false>(c, buffer, first, last);
-            } else {
-                buffered_dense_extractor<false>(c, buffer, first, last, work);
-            }
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        if (work == NULL) {
+            quick_dense_extractor<false>(c, buffer, first, last);
+        } else {
+            buffered_dense_extractor<false>(c, buffer, first, last, work);
         }
-#else
-        });
-#endif
-
         return buffer;
     } 
 
 private:
     template<bool byrow>
     void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
         {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
             auto indices = create_quick_indices<byrow>(i, first, last);
             Rcpp::RObject val0 = dense_extractor(original_seed, indices);
             if (val0.sexp_type() == LGLSXP) {
@@ -255,7 +250,12 @@ private:
                 Rcpp::NumericVector val(val0);
                 std::copy(val.begin(), val.end(), buffer);
             }
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
         }
+#else
+        });
+#endif
     }
 
     template<bool byrow>
@@ -266,12 +266,26 @@ private:
         }
 
         if (needs_reset(i, first, last, work)) {
-            auto indices = create_rounded_indices<byrow>(i, first, last, work);
-            Rcpp::RObject val0 = dense_extractor(original_seed, indices);
-            auto parsed = parse_simple_matrix<Data, Index>(val0);
-            work->buffer = parsed.matrix;
-            work->contents = parsed.contents;
-            work->bufwork = (work->buffer)->new_workspace(byrow);
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+            #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+            {
+#else
+            RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+                auto indices = create_rounded_indices<byrow>(i, first, last, work);
+                Rcpp::RObject val0 = dense_extractor(original_seed, indices);
+                auto parsed = parse_simple_matrix<Data, Index>(val0);
+                work->buffer = parsed.matrix;
+                work->contents = parsed.contents;
+                work->bufwork = (work->buffer)->new_workspace(byrow);
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+            }
+#else
+            });
+#endif
+
         }
 
         i -= work->primary_block_start;
@@ -286,92 +300,72 @@ private:
 
 public:
     virtual tatami::SparseRange<Data, Index> sparse_row(size_t r, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work=nullptr, bool sorted=true) const {
-        tatami::SparseRange<Data, Index> output;
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK
-        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-        {
-#else
-        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
-            if (sparse_) {
-                if (work == NULL) {
-                    output = quick_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, sorted);
-                } else {
-                    output = buffered_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, work, sorted);
-                }
+        if (sparse_) {
+            if (work == NULL) {
+                return quick_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, sorted);
             } else {
-                output = tatami::Matrix<Data, Index>::sparse_row(r, vbuffer, ibuffer, first, last, work, sorted);
+                return buffered_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, work, sorted);
             }
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        } else {
+            return tatami::Matrix<Data, Index>::sparse_row(r, vbuffer, ibuffer, first, last, work, sorted);
         }
-#else
-        });
-#endif
-
-        return output;
     }
 
     virtual tatami::SparseRange<Data, Index> sparse_column(size_t c, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work=nullptr, bool sorted=true) const {
-        tatami::SparseRange<Data, Index> output;
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK
-        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-        {
-#else
-        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
         if (sparse_) {
             if (work == NULL) {
-                output = quick_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, sorted);
+                return quick_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, sorted);
             } else {
-                output = buffered_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, work, sorted);
+                return buffered_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, work, sorted);
             }
         } else {
-            output = tatami::Matrix<Data, Index>::sparse_column(c, vbuffer, ibuffer, first, last, work, sorted);
+            return tatami::Matrix<Data, Index>::sparse_column(c, vbuffer, ibuffer, first, last, work, sorted);
         }
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-        }
-#else
-        });
-#endif
-
-        return output;
     }
 
 private:
     template<bool byrow>
     tatami::SparseRange<Data, Index> quick_sparse_extractor(size_t i, Data* vbuffer, Index* ibuffer, size_t first, size_t last, bool sorted) const {
-        auto indices = create_quick_indices<byrow>(i, first, last);
-        Rcpp::RObject val0 = sparse_extractor(original_seed, indices);
-
         size_t n = 0;
-        {
-            Rcpp::IntegerMatrix indices = val0.slot("nzindex");
-            n = indices.rows();
-            auto idx = indices.column(byrow ? 1 : 0);
-            auto icopy = ibuffer;
-            for (auto ix : idx) {
-                *icopy = ix + first - 1; // 0-based indices.
-                ++icopy;
-            }
-        }
 
-        Rcpp::RObject data = val0.slot("nzdata");
-        if (data.sexp_type() == LGLSXP) {
-            Rcpp::LogicalVector val(data);
-            std::copy(val.begin(), val.end(), vbuffer);
-        } else if (data.sexp_type() == INTSXP) {
-            Rcpp::IntegerVector val(data);
-            std::copy(val.begin(), val.end(), vbuffer);
-        } else {
-            Rcpp::NumericVector val(data);
-            std::copy(val.begin(), val.end(), vbuffer);
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+            auto indices = create_quick_indices<byrow>(i, first, last);
+            Rcpp::RObject val0 = sparse_extractor(original_seed, indices);
+
+            {
+                Rcpp::IntegerMatrix indices = val0.slot("nzindex");
+                n = indices.rows();
+                auto idx = indices.column(byrow ? 1 : 0);
+                auto icopy = ibuffer;
+                for (auto ix : idx) {
+                    *icopy = ix + first - 1; // 0-based indices.
+                    ++icopy;
+                }
+            }
+
+            Rcpp::RObject data = val0.slot("nzdata");
+            if (data.sexp_type() == LGLSXP) {
+                Rcpp::LogicalVector val(data);
+                std::copy(val.begin(), val.end(), vbuffer);
+            } else if (data.sexp_type() == INTSXP) {
+                Rcpp::IntegerVector val(data);
+                std::copy(val.begin(), val.end(), vbuffer);
+            } else {
+                Rcpp::NumericVector val(data);
+                std::copy(val.begin(), val.end(), vbuffer);
+            }
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
         }
+#else
+        });
+#endif
 
         if (sorted && !std::is_sorted(ibuffer, ibuffer + n)) {
             // TODO: use an in-place sort?
@@ -398,12 +392,25 @@ private:
         }
 
         if (needs_reset(i, first, last, work)) {
-            auto indices = create_rounded_indices<byrow>(i, first, last, work);
-            auto val0 = sparse_extractor(original_seed, indices);
-            auto parsed = parse_SparseArraySeed<Data, Index>(val0);
-            work->buffer = parsed.matrix;
-            work->contents = parsed.contents;
-            work->bufwork = (work->buffer)->new_workspace(byrow);
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+            #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+            {
+#else
+            RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+                auto indices = create_rounded_indices<byrow>(i, first, last, work);
+                auto val0 = sparse_extractor(original_seed, indices);
+                auto parsed = parse_SparseArraySeed<Data, Index>(val0);
+                work->buffer = parsed.matrix;
+                work->contents = parsed.contents;
+                work->bufwork = (work->buffer)->new_workspace(byrow);
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+            }
+#else
+            });
+#endif
         }
 
         i -= work->primary_block_start;
