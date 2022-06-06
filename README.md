@@ -39,8 +39,8 @@ Currently `parse()` knows about the following matrix formats:
   - Transposition (as a `DelayedAperm` instance)
   - Combining (as a `DelayedAbind` instance)
 
-If `parse()` cannot interpret the format of `x`, the `.matrix` member will be set to a `nullptr`.
-It is the caller's responsibility to handle this case.
+If `parse()` cannot interpret the format of `x`, we call `DelayedArray::extract_array()` to extract an appropriate slice of the matrix.
+This is quite a bit slower as it involves a call into the R runtime.
 
 The `parsed` output object will also contain an R list named `.contents`.
 This holds references to the memory used by the `.matrix` member, preventing their premature garbage collection.

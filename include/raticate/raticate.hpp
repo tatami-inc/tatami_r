@@ -9,6 +9,7 @@
 #include "DelayedSubset.hpp"
 #include "DelayedAperm.hpp"
 #include "DelayedAbind.hpp"
+#include "UnknownMatrix.hpp"
 #include "utils.hpp"
 
 /**
@@ -21,16 +22,19 @@ namespace raticate {
 
 /**
  * Parse `Rcpp::RObject`s into **tatami** matrices.
- * Supported matrix types are:
+ * Natively supported matrix types are:
  *
  * - ordinary logical, numeric or integer matrices.
  * - `dgCMatrix` or `lgCMatrix` objects from the **Matrix** package.
- * - `SparseArraySeed` objects from the **DelayedArray** package.
+ * - `SparseArraySeed` objects from the [**DelayedArray**](https://github.com/Bioconductor/DelayedArray) package.
  * - `DelayedMatrix` objects wrapping any of the above, or containing the following delayed operations:
  *    - Subsetting (as a `DelayedSubset` instance)
  *    - Modification of dimnames (as a `DelayedSetDimnames` instance)
  *    - Transposition (as a `DelayedAperm` instance)
  *    - Combining (as a `DelayedAbind` instance)
+ * 
+ * For all other objects, we call `DelayedArray::extract_array()` to extract an appropriate slice of the matrix.
+ * This is quite a bit slower as it involves a call into the R runtime.
  * 
  * @tparam Data Numeric data type for the **tatami** interface, typically `double`.
  * @tparam Index Integer index type for the **tatami** interface, typically `int`.
@@ -68,6 +72,24 @@ Parsed<Data, Index> parse(Rcpp::RObject x) {
 
     } else if (x.hasAttribute("dim")) {
         output = parse_simple_matrix<Data, Index>(x);
+    }
+
+    if (output.matrix == nullptr) {
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+            // No need to set contents here, as the matrix itself holds the Rcpp::RObject.
+            output.matrix.reset(new UnknownMatrix<Data, Index>(x));
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        }
+#else
+        });
+#endif
     }
 
     return output;
