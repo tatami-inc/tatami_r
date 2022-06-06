@@ -88,6 +88,54 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sparse_row
+Rcpp::List sparse_row(Rcpp::RObject parsed, int i);
+RcppExport SEXP _raticate_tests_sparse_row(SEXP parsedSEXP, SEXP iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_row(parsed, i));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_row_subset
+Rcpp::List sparse_row_subset(Rcpp::RObject parsed, int i, int first, int last);
+RcppExport SEXP _raticate_tests_sparse_row_subset(SEXP parsedSEXP, SEXP iSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
+    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_row_subset(parsed, i, first, last));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_column
+Rcpp::List sparse_column(Rcpp::RObject parsed, int i);
+RcppExport SEXP _raticate_tests_sparse_column(SEXP parsedSEXP, SEXP iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_column(parsed, i));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_column_subset
+Rcpp::List sparse_column_subset(Rcpp::RObject parsed, int i, int first, int last);
+RcppExport SEXP _raticate_tests_sparse_column_subset(SEXP parsedSEXP, SEXP iSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
+    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_column_subset(parsed, i, first, last));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rows
 Rcpp::List rows(Rcpp::RObject parsed);
 RcppExport SEXP _raticate_tests_rows(SEXP parsedSEXP) {
@@ -132,6 +180,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sparse_rows
+Rcpp::List sparse_rows(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_sparse_rows(SEXP parsedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_rows(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_rows_subset
+Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last);
+RcppExport SEXP _raticate_tests_sparse_rows_subset(SEXP parsedSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
+    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_rows_subset(parsed, first, last));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_columns
+Rcpp::List sparse_columns(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_sparse_columns(SEXP parsedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_columns(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_columns_subset
+Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last);
+RcppExport SEXP _raticate_tests_sparse_columns_subset(SEXP parsedSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
+    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_columns_subset(parsed, first, last));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 1},
@@ -141,10 +233,18 @@ static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_row_subset", (DL_FUNC) &_raticate_tests_row_subset, 4},
     {"_raticate_tests_column", (DL_FUNC) &_raticate_tests_column, 2},
     {"_raticate_tests_column_subset", (DL_FUNC) &_raticate_tests_column_subset, 4},
+    {"_raticate_tests_sparse_row", (DL_FUNC) &_raticate_tests_sparse_row, 2},
+    {"_raticate_tests_sparse_row_subset", (DL_FUNC) &_raticate_tests_sparse_row_subset, 4},
+    {"_raticate_tests_sparse_column", (DL_FUNC) &_raticate_tests_sparse_column, 2},
+    {"_raticate_tests_sparse_column_subset", (DL_FUNC) &_raticate_tests_sparse_column_subset, 4},
     {"_raticate_tests_rows", (DL_FUNC) &_raticate_tests_rows, 1},
     {"_raticate_tests_rows_subset", (DL_FUNC) &_raticate_tests_rows_subset, 3},
     {"_raticate_tests_columns", (DL_FUNC) &_raticate_tests_columns, 1},
     {"_raticate_tests_columns_subset", (DL_FUNC) &_raticate_tests_columns_subset, 3},
+    {"_raticate_tests_sparse_rows", (DL_FUNC) &_raticate_tests_sparse_rows, 1},
+    {"_raticate_tests_sparse_rows_subset", (DL_FUNC) &_raticate_tests_sparse_rows_subset, 3},
+    {"_raticate_tests_sparse_columns", (DL_FUNC) &_raticate_tests_sparse_columns, 1},
+    {"_raticate_tests_sparse_columns_subset", (DL_FUNC) &_raticate_tests_sparse_columns_subset, 3},
     {NULL, NULL, 0}
 };
 

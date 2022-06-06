@@ -39,6 +39,26 @@ column_subset <- function(parsed, i, first, last) {
 }
 
 #' @export
+sparse_row <- function(parsed, i) {
+    .Call('_raticate_tests_sparse_row', PACKAGE = 'raticate.tests', parsed, i)
+}
+
+#' @export
+sparse_row_subset <- function(parsed, i, first, last) {
+    .Call('_raticate_tests_sparse_row_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+}
+
+#' @export
+sparse_column <- function(parsed, i) {
+    .Call('_raticate_tests_sparse_column', PACKAGE = 'raticate.tests', parsed, i)
+}
+
+#' @export
+sparse_column_subset <- function(parsed, i, first, last) {
+    .Call('_raticate_tests_sparse_column_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+}
+
+#' @export
 rows <- function(parsed) {
     .Call('_raticate_tests_rows', PACKAGE = 'raticate.tests', parsed)
 }
@@ -56,5 +76,25 @@ columns <- function(parsed) {
 #' @export
 columns_subset <- function(parsed, first, last) {
     .Call('_raticate_tests_columns_subset', PACKAGE = 'raticate.tests', parsed, first, last)
+}
+
+#' @export
+sparse_rows <- function(parsed) {
+    .Call('_raticate_tests_sparse_rows', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
+sparse_rows_subset <- function(parsed, first, last) {
+    .Call('_raticate_tests_sparse_rows_subset', PACKAGE = 'raticate.tests', parsed, first, last)
+}
+
+#' @export
+sparse_columns <- function(parsed) {
+    .Call('_raticate_tests_sparse_columns', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
+sparse_columns_subset <- function(parsed, first, last) {
+    .Call('_raticate_tests_sparse_columns_subset', PACKAGE = 'raticate.tests', parsed, first, last)
 }
 

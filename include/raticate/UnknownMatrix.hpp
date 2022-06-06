@@ -3,6 +3,8 @@
 
 #include "Rcpp.h"
 #include "tatami/tatami.hpp"
+#include "SimpleMatrix.hpp"
+#include "SparseArraySeed.hpp"
 #include <vector>
 #include <memory>
 #include <string>
@@ -35,28 +37,10 @@ public:
         }
 
         {
-            auto bcg_env = Rcpp::Environment::namespace_env("BiocGenerics");
-            Rcpp::Function fun = bcg_env["type"];
-            Rcpp::CharacterVector type = fun(seed);
-            if (type.size() != 1) {
-                throw std::runtime_error("'type' should return a character vector of length 1");
-            }
-
-            std::string type_str = Rcpp::as<std::string>(type[0]);
-            if (type_str == std::string("logical")) {
-                type_ = 0;      
-            } else if (type_str == std::string("integer")) {
-                type_ = 1;
-            } else {
-                type_ = 2;
-            }
-        }
-
-        {
             Rcpp::Function fun = delayed_env["is_sparse"];
             Rcpp::LogicalVector sparse = fun(seed);
             if (sparse.size() != 1) {
-                throw std::runtime_error("'type' should return a logical vector of length 1");
+                throw std::runtime_error("'is_sparse' should return a logical vector of length 1");
             }
             sparse_ = (sparse[0] != 0);
         }
@@ -118,10 +102,14 @@ public:
     struct UnknownWorkspace : public tatami::Workspace {
         UnknownWorkspace(bool r = true) : byrow(r) {}
         bool byrow;
+
         size_t primary_block_start, primary_block_end;
         size_t secondary_chunk_start, secondary_chunk_end;
+
         std::shared_ptr<tatami::Matrix<Data, Index> > buffer = nullptr;
         std::shared_ptr<tatami::Workspace> bufwork = nullptr;
+
+        Rcpp::RObject contents;
     };
 
     std::shared_ptr<tatami::Workspace> new_workspace(bool row) const { 
@@ -137,6 +125,14 @@ private:
         } else {
             return R_NilValue;
         }
+    }
+
+    template<bool byrow>
+    Rcpp::List create_quick_indices(size_t i, size_t first, size_t last) const {
+        Rcpp::List indices(2);
+        indices[(byrow ? 0 : 1)] = Rcpp::IntegerVector::create(i + 1);
+        indices[(byrow ? 1 : 0)] = create_index_vector(first, last, (byrow ? ncol_ : nrow_));
+        return indices;
     }
 
     std::pair<size_t, size_t> round_indices(size_t first, size_t last, size_t interval, size_t max) const {
@@ -179,6 +175,18 @@ private:
         return indices;
     }
 
+    bool needs_reset(size_t i, size_t first, size_t last, const UnknownWorkspace* work) const {
+        bool reset = true;
+        if (work->buffer != nullptr) {
+            if (i >= work->primary_block_start && i < work->primary_block_end) {
+                if (first >= work->secondary_chunk_start && last <= work->secondary_chunk_end) {
+                    reset = false;
+                }
+            }
+        }
+        return reset;
+    }
+
 public:
     const Data* row(size_t r, Data* buffer, size_t first, size_t last, tatami::Workspace* work=nullptr) const {
         if (work == NULL) {
@@ -203,15 +211,12 @@ public:
 private:
     template<bool byrow>
     void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
-        Rcpp::List indices(2);
-        indices[(byrow ? 0 : 1)] = Rcpp::IntegerVector::create(i + 1);
-        indices[(byrow ? 1 : 0)] = create_index_vector(first, last, (byrow ? ncol_ : nrow_));
-
-        auto val0 = dense_extractor(original_seed, indices);
-        if (type_ == 0) {
+        auto indices = create_quick_indices<byrow>(i, first, last);
+        Rcpp::RObject val0 = dense_extractor(original_seed, indices);
+        if (val0.sexp_type() == LGLSXP) {
             Rcpp::LogicalVector val(val0);
             std::copy(val.begin(), val.end(), buffer);
-        } else if (type_ == 1) {
+        } else if (val0.sexp_type() == INTSXP) {
             Rcpp::IntegerVector val(val0);
             std::copy(val.begin(), val.end(), buffer);
         } else {
@@ -227,31 +232,12 @@ private:
             throw std::runtime_error("workspace should have been generated with 'row=" + std::to_string(byrow) + "'");
         }
 
-        bool reset = true;
-        if (work->buffer != nullptr) {
-            if (i >= work->primary_block_start && i < work->primary_block_end) {
-                if (first >= work->secondary_chunk_start && last <= work->secondary_chunk_end) {
-                    reset = false;
-                }
-            }
-        }
-
-        if (reset) {
+        if (needs_reset(i, first, last, work)) {
             auto indices = create_rounded_indices<byrow>(i, first, last, work);
-            auto val0 = dense_extractor(original_seed, indices);
-            if (type_ == 0) {
-                Rcpp::LogicalMatrix val(val0);
-                std::vector<int> holding(val.begin(), val.end());
-                (work->buffer).reset(new tatami::DenseColumnMatrix<Data, Index, decltype(holding)>(val.rows(), val.cols(), std::move(holding)));
-            } else if (type_ == 1) {
-                Rcpp::IntegerMatrix val(val0);
-                std::vector<int> holding(val.begin(), val.end());
-                (work->buffer).reset(new tatami::DenseColumnMatrix<Data, Index, decltype(holding)>(val.rows(), val.cols(), std::move(holding)));
-            } else {
-                Rcpp::NumericMatrix val(val0);
-                std::vector<double> holding(val.begin(), val.end());
-                (work->buffer).reset(new tatami::DenseColumnMatrix<Data, Index, decltype(holding)>(val.rows(), val.cols(), std::move(holding)));
-            }
+            Rcpp::RObject val0 = dense_extractor(original_seed, indices);
+            auto parsed = parse_simple_matrix<Data, Index>(val0);
+            work->buffer = parsed.matrix;
+            work->contents = parsed.contents;
             work->bufwork = (work->buffer)->new_workspace(byrow);
         }
 
@@ -259,16 +245,122 @@ private:
         first -= work->secondary_chunk_start;
         last -= work->secondary_chunk_start;
         if constexpr(byrow) {
-            auto thing = (work->buffer)->row_copy(i, buffer, first, last, (work->bufwork).get());
+            (work->buffer)->row_copy(i, buffer, first, last, (work->bufwork).get());
         } else {
             (work->buffer)->column_copy(i, buffer, first, last, (work->bufwork).get());
         }
     }
 
+public:
+    virtual tatami::SparseRange<Data, Index> sparse_row(size_t r, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work=nullptr, bool sorted=true) const {
+        if (sparse_) {
+            if (work == NULL) {
+                return quick_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, sorted);
+            } else {
+                return buffered_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, work, sorted);
+            }
+        } else {
+            return tatami::Matrix<Data, Index>::sparse_row(r, vbuffer, ibuffer, first, last, work, sorted);
+        }
+    }
+
+    virtual tatami::SparseRange<Data, Index> sparse_column(size_t c, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work=nullptr, bool sorted=true) const {
+        if (sparse_) {
+            if (work == NULL) {
+                return quick_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, sorted);
+            } else {
+                return buffered_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, work, sorted);
+            }
+        } else {
+            return tatami::Matrix<Data, Index>::sparse_column(c, vbuffer, ibuffer, first, last, work, sorted);
+        }
+    }
+
+private:
+    template<bool byrow>
+    tatami::SparseRange<Data, Index> quick_sparse_extractor(size_t i, Data* vbuffer, Index* ibuffer, size_t first, size_t last, bool sorted) const {
+        auto indices = create_quick_indices<byrow>(i, first, last);
+        Rcpp::RObject val0 = sparse_extractor(original_seed, indices);
+
+        size_t n = 0;
+        {
+            Rcpp::IntegerMatrix indices = val0.slot("nzindex");
+            n = indices.rows();
+            auto idx = indices.column(byrow ? 1 : 0);
+            auto icopy = ibuffer;
+            for (auto ix : idx) {
+                *icopy = ix + first - 1; // 0-based indices.
+                ++icopy;
+            }
+        }
+
+        Rcpp::RObject data = val0.slot("nzdata");
+        if (data.sexp_type() == LGLSXP) {
+            Rcpp::LogicalVector val(data);
+            std::copy(val.begin(), val.end(), vbuffer);
+        } else if (data.sexp_type() == INTSXP) {
+            Rcpp::IntegerVector val(data);
+            std::copy(val.begin(), val.end(), vbuffer);
+        } else {
+            Rcpp::NumericVector val(data);
+            std::copy(val.begin(), val.end(), vbuffer);
+        }
+
+        if (sorted && !std::is_sorted(ibuffer, ibuffer + n)) {
+            // TODO: use an in-place sort?
+            std::vector<std::pair<Data, Index> > holding;
+            holding.reserve(n);
+            for (size_t ix = 0; ix < n; ++ix) {
+                holding.emplace_back(vbuffer[ix], ibuffer[ix]);
+            }
+            std::sort(holding.begin(), holding.end());
+            for (size_t ix = 0; ix < n; ++ix) {
+                vbuffer[ix] = holding[ix].first;
+                ibuffer[ix] = holding[ix].second;
+            }
+        }
+
+        return tatami::SparseRange<Data, Index>(n, vbuffer, ibuffer);
+    }
+
+    template<bool byrow>
+    tatami::SparseRange<Data, Index> buffered_sparse_extractor(size_t i, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work0, bool sorted) const {
+        UnknownWorkspace* work = static_cast<UnknownWorkspace*>(work0);
+        if (work->byrow != byrow) {
+            throw std::runtime_error("workspace should have been generated with 'row=" + std::to_string(byrow) + "'");
+        }
+
+        if (needs_reset(i, first, last, work)) {
+            auto indices = create_rounded_indices<byrow>(i, first, last, work);
+            auto val0 = sparse_extractor(original_seed, indices);
+            auto parsed = parse_SparseArraySeed<Data, Index>(val0);
+            work->buffer = parsed.matrix;
+            work->contents = parsed.contents;
+            work->bufwork = (work->buffer)->new_workspace(byrow);
+        }
+
+        i -= work->primary_block_start;
+        first -= work->secondary_chunk_start;
+        last -= work->secondary_chunk_start;
+
+        tatami::SparseRange<Data, Index> output;
+        if constexpr(byrow) {
+            output = (work->buffer)->sparse_row_copy(i, vbuffer, ibuffer, first, last, tatami::SPARSE_COPY_BOTH, (work->bufwork).get(), sorted);
+        } else {
+            output = (work->buffer)->sparse_column_copy(i, vbuffer, ibuffer, first, last, tatami::SPARSE_COPY_BOTH, (work->bufwork).get(), sorted);
+        }
+
+        // Need to adjust the indices.
+        for (size_t i = 0; i < output.number; ++i) {
+            ibuffer[i] += work->secondary_chunk_start;
+        }
+
+        return output;
+    }
+
 private:
     size_t nrow_, ncol_;
     bool sparse_;
-    int type_;
 
     bool needs_chunks;
     size_t chunk_nrow, chunk_ncol;
