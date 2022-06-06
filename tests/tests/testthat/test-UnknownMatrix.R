@@ -14,7 +14,7 @@ extract_sparse <- function(v, offset = 1L) {
 
 test_that("Works for dense UnknownMatrix objects", {
     y <- DelayedArray(matrix(runif(100), 20, 5))
-    y <- log1p(y) + rnorm(nrow(y))
+    y <- log1p(y) + rnorm(base::nrow(y))
 
     z <- raticate.tests::parse(y)
     expect_identical(raticate.tests::nrow(z), 20L)
@@ -30,20 +30,20 @@ test_that("Works for dense UnknownMatrix objects", {
     expect_identical(raticate.tests::sparse_row_subset(z, 3, 1, 3), dummy_sparse(y[3,1:3], offset = 1))
     expect_identical(raticate.tests::sparse_column_subset(z, 5, 2, 19), dummy_sparse(y[2:19,5], offset = 2))
 
-    expect_identical(raticate.tests::rows(z), lapply(seq_len(nrow(y)), function(i) y[i,]))
-    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(nrow(y)), function(i) y[i,3:5]))
-    expect_identical(raticate.tests::columns(z), lapply(seq_len(ncol(y)), function(i) y[,i]))
-    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(ncol(y)), function(i) y[5:16,i]))
+    expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
+    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
+    expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
+    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
 
-    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(nrow(y)), function(i) dummy_sparse(y[i,])))
-    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 5), lapply(seq_len(nrow(y)), function(i) dummy_sparse(y[i,3:5], offset = 3)))
-    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(ncol(y)), function(i) dummy_sparse(y[,i])))
-    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 16), lapply(seq_len(ncol(y)), function(i) dummy_sparse(y[5:16,i], offset = 5)))
+    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) dummy_sparse(y[i,])))
+    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) dummy_sparse(y[i,3:5], offset = 3)))
+    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) dummy_sparse(y[,i])))
+    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) dummy_sparse(y[5:16,i], offset = 5)))
 })
 
 test_that("Works for sparse UnknownMatrix objects", {
     y <- DelayedArray(abs(rsparsematrix(10, 20, 0.2)))
-    y <- log1p(y) * runif(nrow(y))
+    y <- log1p(y) * runif(base::nrow(y))
 
     z <- raticate.tests::parse(y)
     expect_identical(raticate.tests::nrow(z), 10L)
@@ -59,39 +59,39 @@ test_that("Works for sparse UnknownMatrix objects", {
     expect_identical(raticate.tests::sparse_row_subset(z, 5, 2, 8), extract_sparse(y[5,2:8], offset = 2))
     expect_identical(raticate.tests::sparse_column_subset(z, 6, 3, 10), extract_sparse(y[3:10,6], offset = 3))
 
-    expect_identical(raticate.tests::rows(z), lapply(seq_len(nrow(y)), function(i) y[i,]))
-    expect_identical(raticate.tests::rows_subset(z, 2, 17), lapply(seq_len(nrow(y)), function(i) y[i,2:17]))
-    expect_identical(raticate.tests::columns(z), lapply(seq_len(ncol(y)), function(i) y[,i]))
-    expect_identical(raticate.tests::columns_subset(z, 3, 8), lapply(seq_len(ncol(y)), function(i) y[3:8,i]))
+    expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
+    expect_identical(raticate.tests::rows_subset(z, 2, 17), lapply(seq_len(base::nrow(y)), function(i) y[i,2:17]))
+    expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
+    expect_identical(raticate.tests::columns_subset(z, 3, 8), lapply(seq_len(base::ncol(y)), function(i) y[3:8,i]))
 
-    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(nrow(y)), function(i) extract_sparse(y[i,])))
-    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
-    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(ncol(y)), function(i) extract_sparse(y[,i])))
-    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
+    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
+    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
+    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
+    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 })
 
 test_that("Behaves correctly with small block sizes", {
     y <- DelayedArray(abs(rsparsematrix(103, 51, 0.2))) # slightly offset from multiple, check for correct capping by dimension.
-    y <- log1p(y) / rnorm(nrow(y))
+    y <- log1p(y) / rnorm(base::nrow(y))
 
     blocksize <- 500
     DelayedArray::setAutoBlockSize(blocksize * 8)
-    expect_equal(ncol(colAutoGrid(y)), ceiling(ncol(y) / floor(blocksize/nrow(y))))
-    expect_equal(nrow(rowAutoGrid(y)), ceiling(nrow(y) / floor(blocksize/ncol(y))))
+    expect_equal(base::ncol(colAutoGrid(y)), ceiling(base::ncol(y) / floor(blocksize/base::nrow(y))))
+    expect_equal(base::nrow(rowAutoGrid(y)), ceiling(base::nrow(y) / floor(blocksize/base::ncol(y))))
 
     z <- raticate.tests::parse(y)
     expect_identical(raticate.tests::nrow(z), 103L)
     expect_identical(raticate.tests::ncol(z), 51L)
 
-    expect_identical(raticate.tests::rows(z), lapply(seq_len(nrow(y)), function(i) y[i,]))
-    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(nrow(y)), function(i) y[i,3:5]))
-    expect_identical(raticate.tests::columns(z), lapply(seq_len(ncol(y)), function(i) y[,i]))
-    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(ncol(y)), function(i) y[5:16,i]))
+    expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
+    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
+    expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
+    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
 
-    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(nrow(y)), function(i) extract_sparse(y[i,])))
-    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
-    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(ncol(y)), function(i) extract_sparse(y[,i])))
-    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
+    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
+    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
+    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
+    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
     setAutoBlockSize()
 })
@@ -106,22 +106,22 @@ test_that("Behaves correctly with small chunk sizes", {
     # Induce some interesting interaction with the block size.
     blocksize <- 500
     DelayedArray::setAutoBlockSize(blocksize * 8)
-    expect_true(ncol(colAutoGrid(y)) > 1)
-    expect_true(nrow(rowAutoGrid(y)) > 1)
+    expect_true(base::ncol(colAutoGrid(y)) > 1)
+    expect_true(base::nrow(rowAutoGrid(y)) > 1)
 
     z <- raticate.tests::parse(y)
     expect_identical(raticate.tests::nrow(z), 39L)
     expect_identical(raticate.tests::ncol(z), 55L)
 
-    expect_identical(raticate.tests::rows(z), lapply(seq_len(nrow(y)), function(i) y[i,]))
-    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(nrow(y)), function(i) y[i,3:5]))
-    expect_identical(raticate.tests::columns(z), lapply(seq_len(ncol(y)), function(i) y[,i]))
-    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(ncol(y)), function(i) y[5:16,i]))
+    expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
+    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
+    expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
+    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
 
-    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(nrow(y)), function(i) extract_sparse(y[i,])))
-    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
-    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(ncol(y)), function(i) extract_sparse(y[,i])))
-    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
+    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
+    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
+    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
+    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
     setAutoBlockSize()
 })
