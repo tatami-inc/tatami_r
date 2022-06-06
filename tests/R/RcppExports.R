@@ -24,7 +24,37 @@ row <- function(parsed, i) {
 }
 
 #' @export
+row_subset <- function(parsed, i, first, last) {
+    .Call('_raticate_tests_row_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+}
+
+#' @export
 column <- function(parsed, i) {
     .Call('_raticate_tests_column', PACKAGE = 'raticate.tests', parsed, i)
+}
+
+#' @export
+column_subset <- function(parsed, i, first, last) {
+    .Call('_raticate_tests_column_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+}
+
+#' @export
+rows <- function(parsed) {
+    .Call('_raticate_tests_rows', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
+rows_subset <- function(parsed, first, last) {
+    .Call('_raticate_tests_rows_subset', PACKAGE = 'raticate.tests', parsed, first, last)
+}
+
+#' @export
+columns <- function(parsed) {
+    .Call('_raticate_tests_columns', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
+columns_subset <- function(parsed, first, last) {
+    .Call('_raticate_tests_columns_subset', PACKAGE = 'raticate.tests', parsed, first, last)
 }
 

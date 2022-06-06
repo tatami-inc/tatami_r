@@ -121,10 +121,62 @@ public:
         size_t primary_block_start, primary_block_end;
         size_t secondary_chunk_start, secondary_chunk_end;
         std::shared_ptr<tatami::Matrix<Data, Index> > buffer = nullptr;
+        std::shared_ptr<tatami::Workspace> bufwork = nullptr;
     };
 
     std::shared_ptr<tatami::Workspace> new_workspace(bool row) const { 
         return std::shared_ptr<tatami::Workspace>(new UnknownWorkspace(row));
+    }
+
+private:
+    Rcpp::RObject create_index_vector(size_t first, size_t last, size_t max) const {
+        if (first != 0 || last != max) {
+            Rcpp::IntegerVector alt(last - first);
+            std::iota(alt.begin(), alt.end(), first + 1); // 1-based.
+            return alt;
+        } else {
+            return R_NilValue;
+        }
+    }
+
+    std::pair<size_t, size_t> round_indices(size_t first, size_t last, size_t interval, size_t max) const {
+        size_t new_first = (first / interval) * interval;
+        size_t new_last = std::min(
+            max, 
+            (last ? 
+                ((last - 1) / interval + 1) * interval // i.e., ceil(last/interval) * interval.
+                : 0 
+            )
+        );
+        return std::make_pair(new_first, new_last);
+    }
+
+    template<bool byrow>
+    Rcpp::List create_rounded_indices(size_t i, size_t first, size_t last, UnknownWorkspace* work) const {
+        Rcpp::List indices(2);
+        if constexpr(byrow) {
+            auto row_rounded = round_indices(i, i + 1, block_nrow, nrow_);
+            indices[0] = create_index_vector(row_rounded.first, row_rounded.second, nrow_);
+            work->primary_block_start = row_rounded.first;
+            work->primary_block_end = row_rounded.second;
+
+            auto col_rounded = (needs_chunks ? round_indices(first, last, chunk_ncol, ncol_) : std::make_pair(first, last));
+            indices[1] = create_index_vector(col_rounded.first, col_rounded.second, ncol_);
+            work->secondary_chunk_start = col_rounded.first;
+            work->secondary_chunk_end = col_rounded.second;
+
+        } else {
+            auto row_rounded = (needs_chunks ? round_indices(first, last, chunk_nrow, nrow_) : std::make_pair(first, last));
+            indices[0] = create_index_vector(row_rounded.first, row_rounded.second, nrow_);
+            work->secondary_chunk_start = row_rounded.first;
+            work->secondary_chunk_end = row_rounded.second;
+
+            auto col_rounded = round_indices(i, i + 1, block_ncol, ncol_);
+            indices[1] = create_index_vector(col_rounded.first, col_rounded.second, ncol_);
+            work->primary_block_start = col_rounded.first;
+            work->primary_block_end = col_rounded.second;
+        }
+        return indices;
     }
 
 public:
@@ -149,29 +201,6 @@ public:
     } 
 
 private:
-    Rcpp::RObject create_index_vector(size_t first, size_t last, size_t max) const {
-        if (first != 0 || last != max) {
-            Rcpp::IntegerVector alt(last - first);
-            std::iota(alt.begin(), alt.end(), first + 1); // 1-based.
-            return alt;
-        } else {
-            return R_NilValue;
-        }
-    }
-
-    std::pair<size_t, size_t> round_indices(size_t first, size_t last, size_t interval, size_t max) const {
-        size_t new_first = (first / interval) * interval;
-        size_t new_last = std::min(
-            max, 
-            (last ? 
-                0 : 
-                ((last - 1) / interval + 1) * interval // i.e., ceil(last/interval) * interval.
-            )
-        );
-        return std::make_pair(new_first, new_last);
-    }
-
-private:
     template<bool byrow>
     void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
         Rcpp::List indices(2);
@@ -187,7 +216,6 @@ private:
             std::copy(val.begin(), val.end(), buffer);
         } else {
             Rcpp::NumericVector val(val0);
-            std::cout << val.size() << std::endl;
             std::copy(val.begin(), val.end(), buffer);
         }
     }
@@ -209,30 +237,7 @@ private:
         }
 
         if (reset) {
-            Rcpp::List indices(2);
-            if constexpr(byrow) {
-                auto row_rounded = round_indices(i, i + 1, block_nrow, nrow_);
-                indices[0] = create_index_vector(row_rounded.first, row_rounded.second, nrow_);
-                work->primary_block_start = row_rounded.first;
-                work->primary_block_end = row_rounded.second;
-
-                auto col_rounded = (needs_chunks ? round_indices(first, last, chunk_ncol, ncol_) : std::make_pair(first, last));
-                indices[1] = create_index_vector(col_rounded.first, col_rounded.second, ncol_);
-                work->secondary_chunk_start = col_rounded.first;
-                work->secondary_chunk_end = col_rounded.second;
-
-            } else {
-                auto row_rounded = (needs_chunks ? round_indices(first, last, chunk_nrow, nrow_) : std::make_pair(first, last));
-                indices[0] = create_index_vector(row_rounded.first, row_rounded.second, nrow_);
-                work->secondary_chunk_start = row_rounded.first;
-                work->secondary_chunk_end = row_rounded.second;
-
-                auto col_rounded = round_indices(i, i + 1, block_ncol, ncol_);
-                indices[1] = create_index_vector(col_rounded.first, col_rounded.second, ncol_);
-                work->primary_block_start = col_rounded.first;
-                work->primary_block_end = col_rounded.second;
-            }
-
+            auto indices = create_rounded_indices<byrow>(i, first, last, work);
             auto val0 = dense_extractor(original_seed, indices);
             if (type_ == 0) {
                 Rcpp::LogicalMatrix val(val0);
@@ -247,12 +252,16 @@ private:
                 std::vector<double> holding(val.begin(), val.end());
                 (work->buffer).reset(new tatami::DenseColumnMatrix<Data, Index, decltype(holding)>(val.rows(), val.cols(), std::move(holding)));
             }
+            work->bufwork = (work->buffer)->new_workspace(byrow);
         }
 
+        i -= work->primary_block_start;
+        first -= work->secondary_chunk_start;
+        last -= work->secondary_chunk_start;
         if constexpr(byrow) {
-            (work->buffer)->row_copy(i - work->primary_block_start, buffer, first - work->secondary_chunk_start, last - work->secondary_chunk_end);
+            auto thing = (work->buffer)->row_copy(i, buffer, first, last, (work->bufwork).get());
         } else {
-            (work->buffer)->column_copy(i - work->primary_block_start, buffer, first - work->secondary_chunk_start, last - work->secondary_chunk_end);
+            (work->buffer)->column_copy(i, buffer, first, last, (work->bufwork).get());
         }
     }
 
