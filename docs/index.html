@@ -102,7 +102,7 @@ Slightly more advanced usage</h1>
 </ul>
 </li>
 </ul>
-<p >If <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> cannot interpret the format of <code>x</code>, the <code>.matrix</code> member will be set to a <code>nullptr</code>. It is the caller's responsibility to handle this case.</p>
+<p >If <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> cannot interpret the format of <code>x</code>, we call <code>DelayedArray::extract_array()</code> to extract an appropriate slice of the matrix. This is quite a bit slower as it involves a call into the R runtime.</p>
 <p >The <code>parsed</code> output object will also contain an R list named <code>.contents</code>. This holds references to the memory used by the <code>.matrix</code> member, preventing their premature garbage collection. Callers should ensure that the <code>.matrix</code> member (or any copies) does not outlive the <code>.contents</code> R list.</p>
 <h1><a class="anchor" id="autotoc_md3"></a>
 Deployment</h1>
