@@ -21,6 +21,11 @@ public:
         dense_extractor(delayed_env["extract_array"]),
         sparse_extractor(delayed_env["extract_sparse_array"])
     {
+        // We assume the constructor is already wrapped in a serial section by
+        // the caller, so we won't bother adding the various omp critical
+        // statements here. I'm also not sure that the operations in the
+        // initialization list are thread-safe.
+
         {
             auto base = Rcpp::Environment::base_env();
             Rcpp::Function fun = base["dim"];
@@ -189,39 +194,67 @@ private:
 
 public:
     const Data* row(size_t r, Data* buffer, size_t first, size_t last, tatami::Workspace* work=nullptr) const {
-        if (work == NULL) {
-            quick_dense_extractor<true>(r, buffer, first, last);
-            return buffer;
-        } else {
-            buffered_dense_extractor<true>(r, buffer, first, last, work);
-            return buffer;
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+            if (work == NULL) {
+                quick_dense_extractor<true>(r, buffer, first, last);
+            } else {
+                buffered_dense_extractor<true>(r, buffer, first, last, work);
+            }
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
         }
+#else
+        });
+#endif
+
+        return buffer;
     }
 
     const Data* column(size_t c, Data* buffer, size_t first, size_t last, tatami::Workspace* work=nullptr) const {
-        if (work == NULL) {
-            quick_dense_extractor<false>(c, buffer, first, last);
-            return buffer;
-        } else {
-            buffered_dense_extractor<false>(c, buffer, first, last, work);
-            return buffer;
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+            if (work == NULL) {
+                quick_dense_extractor<false>(c, buffer, first, last);
+            } else {
+                buffered_dense_extractor<false>(c, buffer, first, last, work);
+            }
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
         }
+#else
+        });
+#endif
+
+        return buffer;
     } 
 
 private:
     template<bool byrow>
     void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
-        auto indices = create_quick_indices<byrow>(i, first, last);
-        Rcpp::RObject val0 = dense_extractor(original_seed, indices);
-        if (val0.sexp_type() == LGLSXP) {
-            Rcpp::LogicalVector val(val0);
-            std::copy(val.begin(), val.end(), buffer);
-        } else if (val0.sexp_type() == INTSXP) {
-            Rcpp::IntegerVector val(val0);
-            std::copy(val.begin(), val.end(), buffer);
-        } else {
-            Rcpp::NumericVector val(val0);
-            std::copy(val.begin(), val.end(), buffer);
+        {
+            auto indices = create_quick_indices<byrow>(i, first, last);
+            Rcpp::RObject val0 = dense_extractor(original_seed, indices);
+            if (val0.sexp_type() == LGLSXP) {
+                Rcpp::LogicalVector val(val0);
+                std::copy(val.begin(), val.end(), buffer);
+            } else if (val0.sexp_type() == INTSXP) {
+                Rcpp::IntegerVector val(val0);
+                std::copy(val.begin(), val.end(), buffer);
+            } else {
+                Rcpp::NumericVector val(val0);
+                std::copy(val.begin(), val.end(), buffer);
+            }
         }
     }
 
@@ -253,27 +286,61 @@ private:
 
 public:
     virtual tatami::SparseRange<Data, Index> sparse_row(size_t r, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work=nullptr, bool sorted=true) const {
-        if (sparse_) {
-            if (work == NULL) {
-                return quick_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, sorted);
+        tatami::SparseRange<Data, Index> output;
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
+            if (sparse_) {
+                if (work == NULL) {
+                    output = quick_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, sorted);
+                } else {
+                    output = buffered_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, work, sorted);
+                }
             } else {
-                return buffered_sparse_extractor<true>(r, vbuffer, ibuffer, first, last, work, sorted);
+                output = tatami::Matrix<Data, Index>::sparse_row(r, vbuffer, ibuffer, first, last, work, sorted);
             }
-        } else {
-            return tatami::Matrix<Data, Index>::sparse_row(r, vbuffer, ibuffer, first, last, work, sorted);
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
         }
+#else
+        });
+#endif
+
+        return output;
     }
 
     virtual tatami::SparseRange<Data, Index> sparse_column(size_t c, Data* vbuffer, Index* ibuffer, size_t first, size_t last, tatami::Workspace* work=nullptr, bool sorted=true) const {
+        tatami::SparseRange<Data, Index> output;
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
+        {
+#else
+        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
+#endif
+
         if (sparse_) {
             if (work == NULL) {
-                return quick_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, sorted);
+                output = quick_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, sorted);
             } else {
-                return buffered_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, work, sorted);
+                output = buffered_sparse_extractor<false>(c, vbuffer, ibuffer, first, last, work, sorted);
             }
         } else {
-            return tatami::Matrix<Data, Index>::sparse_column(c, vbuffer, ibuffer, first, last, work, sorted);
+            output = tatami::Matrix<Data, Index>::sparse_column(c, vbuffer, ibuffer, first, last, work, sorted);
         }
+
+#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+        }
+#else
+        });
+#endif
+
+        return output;
     }
 
 private:
