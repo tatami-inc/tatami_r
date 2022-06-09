@@ -118,7 +118,7 @@ public:
     };
 
     std::shared_ptr<tatami::Workspace> new_workspace(bool row) const { 
-        UnknownWorkspace* ptr;
+        std::shared_ptr<tatami::Workspace> output;
 
 #ifndef RATICATE_RCPP_PARALLEL_LOCK        
         #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
@@ -127,7 +127,9 @@ public:
         RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
 #endif
 
-            ptr = new UnknownWorkspace(row);
+            std::cout << "Creating..." << std::endl;            
+            output.reset(new UnknownWorkspace(row));
+            std::cout << "READY!" << std::endl;            
                      
 #ifndef RATICATE_RCPP_PARALLEL_LOCK        
         }
@@ -135,11 +137,11 @@ public:
         });
 #endif
 
-        return std::shared_ptr<tatami::Workspace>(ptr);
+        return output;
     }
 
 private:
-    Rcpp::RObject create_index_vector(size_t first, size_t last, size_t max) const {
+    static Rcpp::RObject create_index_vector(size_t first, size_t last, size_t max) const {
         if (first != 0 || last != max) {
             Rcpp::IntegerVector alt(last - first);
             std::iota(alt.begin(), alt.end(), first + 1); // 1-based.
@@ -212,7 +214,6 @@ private:
 public:
     const Data* row(size_t r, Data* buffer, size_t first, size_t last, tatami::Workspace* work=nullptr) const {
         if (work == NULL) {
-            quick_dense_extractor<true>(r, buffer, first, last);
         } else {
             buffered_dense_extractor<true>(r, buffer, first, last, work);
         }
@@ -228,34 +229,61 @@ public:
         return buffer;
     } 
 
+public:
+    /**
+     * @cond
+     */
+
+
+
+
+    /**
+     * @endcond
+     */
+
+
+
+    struct MainWorker {
+
+    };
+    
+
 private:
     template<bool byrow>
-    void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-        {
-#else
-        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
-            auto indices = create_quick_indices<byrow>(i, first, last);
-            Rcpp::RObject val0 = dense_extractor(original_seed, indices);
-            if (val0.sexp_type() == LGLSXP) {
-                Rcpp::LogicalVector val(val0);
-                std::copy(val.begin(), val.end(), buffer);
-            } else if (val0.sexp_type() == INTSXP) {
-                Rcpp::IntegerVector val(val0);
-                std::copy(val.begin(), val.end(), buffer);
-            } else {
-                Rcpp::NumericVector val(val0);
-                std::copy(val.begin(), val.end(), buffer);
-            }
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
+    static void quick_dense_extractor_raw(size_t i, Data* buffer, size_t first, size_t last, const Rcpp::RObject* original_ptr, const Rcpp::Function* dense_extractor) {
+        auto indices = create_quick_indices<byrow>(i, first, last);
+        Rcpp::RObject val0 = (*dense_extractor)(*original_seed, indices);
+        if (val0.sexp_type() == LGLSXP) {
+            Rcpp::LogicalVector val(val0);
+            std::copy(val.begin(), val.end(), buffer);
+        } else if (val0.sexp_type() == INTSXP) {
+            Rcpp::IntegerVector val(val0);
+            std::copy(val.begin(), val.end(), buffer);
+        } else {
+            Rcpp::NumericVector val(val0);
+            std::copy(val.begin(), val.end(), buffer);
         }
+    }
+
+    template<bool byrow>
+    void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+        quick_dense_extractor_raw<byrow>(i, buffer, first, last, &original_seed, &dense_extractor);
 #else
+        RATICATE_RCPP_PARALLEL([&]() -> void {
+            executor().set<byrow>(i, buffer, first, last, &original_seed, &dense_extractor);
         });
 #endif
+    }
+
+    template<bool byrow>
+    static void buffered_dense_extractor_raw(size_t i, Data* buffer, size_t first, size_t last, UnknownWorkspace* work, const Rcpp::RObject* original_ptr, const Rcpp::Function* dense_extractor) {
+        auto indices = create_rounded_indices<byrow>(i, first, last, work);
+        Rcpp::RObject val0 = (*dense_extractor)(original_seed, indices);
+        auto parsed = parse_simple_matrix<Data, Index>(val0);
+        work->buffer = parsed.matrix;
+        work->contents = parsed.contents;
+        work->bufwork = (work->buffer)->new_workspace(byrow);
     }
 
     template<bool byrow>
@@ -266,26 +294,13 @@ private:
         }
 
         if (needs_reset(i, first, last, work)) {
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-            #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-            {
+#ifndef RATICATE_RCPP_PARALLEL_LOCK
+            buffered_dense_extractor_raw<byrow>(i, buffer, first, last, work, &original_seed, &dense_extractor);
 #else
-            RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
-                auto indices = create_rounded_indices<byrow>(i, first, last, work);
-                Rcpp::RObject val0 = dense_extractor(original_seed, indices);
-                auto parsed = parse_simple_matrix<Data, Index>(val0);
-                work->buffer = parsed.matrix;
-                work->contents = parsed.contents;
-                work->bufwork = (work->buffer)->new_workspace(byrow);
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-            }
-#else
+            RATICATE_RCPP_PARALLEL([&]() -> void {
+                executor().set<byrow>(i, buffer, first, last, work, &original_seed, &dense_extractor);
             });
 #endif
-
         }
 
         i -= work->primary_block_start;
@@ -440,6 +455,75 @@ private:
     size_t chunk_nrow, chunk_ncol;
 
     size_t block_nrow, block_ncol;
+
+public:
+    friend struct Executor {
+        bool sparse;
+        bool buffered;
+        bool byrow;
+
+        size_t index, first, last;
+        Data* dbuffer;
+        Index* ibuffer;
+        UnknownMatrix::Workspace* work;
+
+        const Rcpp::RObject* original_ptr;
+        const Rcpp::Function* extractor;
+
+        bool ready = false;
+        bool finished = false;
+
+        template<bool B>
+        void set(size_t i, size_t f, size_t l, const Rcpp::RObject* original_seed) {
+            byrow = B;
+            index = i;
+            first = f;
+            last = l;
+            original_ptr = original_seed;
+            ready = true;
+            finished = false;
+        }
+
+        template<bool B>
+        void set(size_t i, Data* buffer, size_t f, size_t l, const Rcpp::RObject* original_seed, const Rcpp:Function* dense_extractor) {
+            set(i, f, l, original_seed);
+            sparse = false;
+            buffered = false;
+            dbuffer = buffer;
+            extractor = dense_extractor;
+        }
+
+        template<bool B>
+        void set(size_t i, Data* buffer, size_t f, size_t l, UnknownMatrix::Workspace* w, const Rcpp::RObject* original_seed, const Rcpp:Function* dense_extractor) {
+            set(i, buffer, f, l, original_seed, dense_extractor);
+            buffered = true;
+            work = w;
+        }
+
+        void harvest() {
+            if (!sparse) {
+                if (buffered) {
+                    if (byrow) {
+                        buffered_dense_extractor_raw<true>(i, first, last, work, original_ptr, dense_extractor);
+                    } else {
+                        buffered_dense_extractor_raw<false>(i, first, last, work, original_ptr, dense_extractor);
+                    }
+                } else {
+                    if (byrow) {
+                        quick_dense_extractor_raw<true>(i, first, last, original_ptr, dense_extractor);
+                    } else {
+                        quick_dense_extractor_raw<false>(i, first, last, original_ptr, dense_extractor);
+                    }
+                }
+            }
+            finished = true;
+        }
+    };
+
+    static Executor& executor() {
+        static Executor ex;
+        return ex;
+    }
 
 private:
     Rcpp::RObject original_seed;

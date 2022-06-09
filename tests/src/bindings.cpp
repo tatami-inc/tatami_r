@@ -7,14 +7,21 @@
 // Adding this stuff to test the custom parallelization.
 // Note that this must all be defined before raticate (and tatami) is included.
 #include <thread>
+#include <mutex>
+#include <chrono>
 
-template<class Function>
+std::mutex rcpp_lock;
+std::condition_variable cv;
+
+template<typename Data, typename Index, class Function>
 void custom_parallel(size_t n, Function f) {
-    size_t jobs_per_worker = std::ceil(static_cast<double>(n) / 3);
+    size_t jobs_per_worker = std::ceil(static_cast<double>(n) / 1);
     size_t start = 0;
     std::vector<std::thread> jobs;
+
+    auto ex = UnknownMatrix<Data, Index>::executor();
     
-    for (size_t w = 0; w < 3; ++w) {
+    for (size_t w = 0; w < 1; ++w) {
         size_t end = std::min(n, start + jobs_per_worker);
         if (start >= end) {
             break;
@@ -23,21 +30,49 @@ void custom_parallel(size_t n, Function f) {
         start += jobs_per_worker;
     }
 
+    // Handling all requests from the workers.
+    while (1) {
+        std::unique_lock lk(m);
+        cv.wait(lk, []{ return ex.ready; });
+
+        ex.harvest();
+     
+        // Unlock before notifying, see https://en.cppreference.com/w/cpp/thread/condition_variable
+        lk.unlock();
+        cv.notify_all();
+    }
+
     for (auto& job : jobs) {
         job.join();
     }
 }
 
-#define TATAMI_CUSTOM_PARALLEL custom_parallel
-
-std::mutex rcpp_lock;
+#define TATAMI_CUSTOM_PARALLEL custom_parallel<T, IDX>
 
 template<class Function>
 void custom_lock(Function fun) {
-    std::cout << "LOCKING!" << std::endl;
-    std::lock_guard<std::mutex> lock(rcpp_lock);
-    std::cout << "WHEE" << std::endl;
-    fun();
+    auto ex = UnknownMatrix<Data, Index>::executor();
+
+    // Waiting until the main thread executor is free,
+    // and then assigning it a task.
+    {
+        std::unique_lock lk(rcpp_lock);
+        cv.wait(lk, []{ return !ex.ready; });
+        fun();
+    }
+
+    // Notifying everyone that there is a task. At this point,
+    // free = false and finished = false, so the waiting workers
+    // should not proceed.
+    cv.notify_all();
+
+    // Checking that we get the finished result, and then we set
+    // ready = false to give another worker thread the chance to acquire the lock.
+    {
+        std::unique_lock lk(rcpp_lock);
+        cv.wait(lk, []{ return ex.finished; });
+        ex.ready = false;
+    }
 }
 
 #define RATICATE_RCPP_PARALLEL_LOCK custom_lock
