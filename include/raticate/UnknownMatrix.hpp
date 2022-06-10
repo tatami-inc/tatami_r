@@ -27,10 +27,9 @@ struct UnknownMatrixCore {
         dense_extractor(delayed_env["extract_array"]),
         sparse_extractor(delayed_env["extract_sparse_array"])
     {
-        // We assume the constructor is already wrapped in a serial section by
-        // the caller, so we won't bother adding the various omp critical
-        // statements here. I'm also not sure that the operations in the
-        // initialization list are thread-safe.
+        // We assume the constructor only occurs on the main thread, so we
+        // won't bother locking things up. I'm also not sure that the
+        // operations in the initialization list are thread-safe.
 
         {
             auto base = Rcpp::Environment::base_env();
@@ -280,6 +279,7 @@ struct UnknownEvaluator {
     const UnknownMatrixCore<Data, Index>* parent;
 
     bool parallel = false;
+    bool create_work = false;
     bool ready = false;
     bool finished = false;
 
@@ -293,6 +293,7 @@ public:
         parent = core;
         ready = true;
         finished = false;
+        create_work = false;
     }
 
     template<bool B>
@@ -333,33 +334,46 @@ public:
     }
 
 public:
+    void set(typename UnknownMatrixCore<Data, Index>::UnknownWorkspace* w, bool B) {
+        work = w;
+        byrow = B;
+        create_work = true;
+        ready = true;
+        finished = false;
+    }
+
+public:
     void harvest() {
-        if (!sparse) {
-            if (buffered) {
-                if (byrow) {
-                    parent->template buffered_dense_extractor_raw<true>(index, first, last, work);
-                } else {
-                    parent->template buffered_dense_extractor_raw<false>(index, first, last, work);
-                }
-            } else {
-                if (byrow) {
-                    parent->template quick_dense_extractor_raw<true>(index, dbuffer, first, last);
-                } else {
-                    parent->template quick_dense_extractor_raw<false>(index, dbuffer, first, last);
-                }
-            }
+        if (create_work) {
+            work = new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(byrow);
         } else {
-            if (buffered) {
-                if (byrow) {
-                    parent->template buffered_sparse_extractor_raw<true>(index, first, last, work);
+            if (!sparse) {
+                if (buffered) {
+                    if (byrow) {
+                        parent->template buffered_dense_extractor_raw<true>(index, first, last, work);
+                    } else {
+                        parent->template buffered_dense_extractor_raw<false>(index, first, last, work);
+                    }
                 } else {
-                    parent->template buffered_sparse_extractor_raw<false>(index, first, last, work);
+                    if (byrow) {
+                        parent->template quick_dense_extractor_raw<true>(index, dbuffer, first, last);
+                    } else {
+                        parent->template quick_dense_extractor_raw<false>(index, dbuffer, first, last);
+                    }
                 }
             } else {
-                if (byrow) {
-                    parent->template quick_sparse_extractor_raw<true>(index, nonzero, dbuffer, ibuffer, first, last);
+                if (buffered) {
+                    if (byrow) {
+                        parent->template buffered_sparse_extractor_raw<true>(index, first, last, work);
+                    } else {
+                        parent->template buffered_sparse_extractor_raw<false>(index, first, last, work);
+                    }
                 } else {
-                    parent->template quick_sparse_extractor_raw<false>(index, nonzero, dbuffer, ibuffer, first, last);
+                    if (byrow) {
+                        parent->template quick_sparse_extractor_raw<true>(index, nonzero, dbuffer, ibuffer, first, last);
+                    } else {
+                        parent->template quick_sparse_extractor_raw<false>(index, nonzero, dbuffer, ibuffer, first, last);
+                    }
                 }
             }
         }
@@ -443,14 +457,8 @@ struct ParallelCoordinator {
         ex.parallel = prev_parallel;
     }
 
-    template<class Function>
-    void simple_lock(Function fun) {
-        std::lock_guard<std::mutex> lk(rcpp_lock);
-        fun();
-    }
-
     template<typename Data, typename Index, class ParallelFunction, class SerialFunction>
-    void eval_lock(ParallelFunction pfun, SerialFunction sfun) {
+    void lock(ParallelFunction pfun, SerialFunction sfun) {
         auto& ex = unknown_evaluator<Data, Index>();
         if (!ex.parallel) {
             sfun();
@@ -515,14 +523,20 @@ public:
 
 #ifdef RATICATE_PARALLELIZE_UNKNOWN 
         // We default-initialize an Rcpp::RObject, so we lock it just in case.
+        typename UnknownMatrixCore<Data, Index>::UnknownWorkspace* tmp;
         auto& par = parallel_coordinator();
-        par.simple_lock([&]() -> void {
-#endif
-
-            output.reset(new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(row));
-
-#ifdef RATICATE_PARALLELIZE_UNKNOWN 
-        });
+        auto& ex = unknown_evaluator<Data, Index>();
+        par.template lock<Data, Index>(
+            [&]() -> void {
+                ex.set(tmp, row);
+            },
+            [&]() -> void {
+                tmp = new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(row);
+            }
+        );
+        output.reset(tmp);
+#else
+        output.reset(new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(row));
 #endif
 
         return output;
@@ -536,7 +550,7 @@ private:
 #else
         auto& ex = unknown_evaluator<Data, Index>();
         auto& par = parallel_coordinator();
-        par.template eval_lock<Data, Index>(
+        par.template lock<Data, Index>(
             [&]() -> void {
                 ex.template set<byrow>(i, buffer, first, last, &core);
             },
@@ -560,7 +574,7 @@ private:
 #else
             auto& ex = unknown_evaluator<Data, Index>();
             auto& par = parallel_coordinator();
-            par.template eval_lock<Data, Index>(
+            par.template lock<Data, Index>(
                 [&]() -> void {
                     ex.template set<byrow>(i, buffer, first, last, work, &core);
                 },
@@ -610,7 +624,7 @@ private:
 #else
         auto& ex = unknown_evaluator<Data, Index>();
         auto& par = parallel_coordinator();
-        par.template eval_lock<Data, Index>(
+        par.template lock<Data, Index>(
             [&]() -> void {
                 ex.template set<byrow>(i, &n, vbuffer, ibuffer, first, last, &core);
             },
@@ -650,7 +664,7 @@ private:
 #else
             auto& ex = unknown_evaluator<Data, Index>();
             auto& par = parallel_coordinator();
-            par.template eval_lock<Data, Index>(
+            par.template lock<Data, Index>(
                 [&]() -> void {
                     ex.template set<byrow>(i, vbuffer, ibuffer, first, last, work, &core);
                 },
