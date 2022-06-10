@@ -8,7 +8,7 @@ typedef Rcpp::XPtr<raticate::Parsed<double, int> > RatXPtr;
 //' @export
 //[[Rcpp::export(rng=false)]]
 SEXP parse(Rcpp::RObject seed) {
-    auto out = raticate::parse<double, int>(seed);
+    auto out = raticate::parse<double, int>(seed, true);
     if (out.matrix == nullptr) {
         throw std::runtime_error("failed to parse R object into a tatami::NumericMatrix");
     }

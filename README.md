@@ -10,7 +10,7 @@ Usage is as simple as:
 #include "raticate/raticate.hpp"
 
 SEXP some_typical_rcpp_function(Rcpp::RObject x) {
-    auto parsed = raticate::parse(x);
+    auto parsed = raticate::parse(x, /* allow_unknown = */ false);
 
     if (parsed.matrix == std::nullptr) {
         // Do something if format of 'x' is not supported;
@@ -39,7 +39,8 @@ Currently `parse()` knows about the following matrix formats:
   - Transposition (as a `DelayedAperm` instance)
   - Combining (as a `DelayedAbind` instance)
 
-If `parse()` cannot interpret the format of `x`, we call `DelayedArray::extract_array()` to extract an appropriate slice of the matrix.
+If `parse()` cannot interpret the format of `x`, it returns a `nullptr` by default.
+However, by setting `allow_unknown = true`, we can create a "unknown matrix fallback" that calls `DelayedArray::extract_array()` to extract an appropriate slice of the matrix.
 This is quite a bit slower as it involves a call into the R runtime.
 
 The `parsed` output object will also contain an R list named `.contents`.
