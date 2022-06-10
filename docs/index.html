@@ -74,7 +74,7 @@ Overview</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="raticate_8hpp.html">raticate/raticate.hpp</a>&quot;</span></div>
 <div class="line"> </div>
 <div class="line">SEXP some_typical_rcpp_function(Rcpp::RObject x) {</div>
-<div class="line">    <span class="keyword">auto</span> parsed = raticate::parse(x);</div>
+<div class="line">    <span class="keyword">auto</span> parsed = raticate::parse(x, <span class="comment">/* allow_unknown = */</span> <span class="keyword">false</span>);</div>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">if</span> (parsed.matrix == std::nullptr) {</div>
 <div class="line">        <span class="comment">// Do something if format of &#39;x&#39; is not supported;</span></div>
@@ -89,7 +89,7 @@ Overview</h1>
 </div><!-- fragment --><p >And that's it, really. If you want more details, you can check out the <a href="https://ltla.github.io/raticate">reference documentation</a>.</p>
 <h1><a class="anchor" id="autotoc_md2"></a>
 Slightly more advanced usage</h1>
-<p >Currently <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> knows about the following matrix formats:</p>
+<p >Currently <code><a class="el" href="raticate_8hpp.html#a92d1249c9e39e31ef411a8d068b0ea52">parse()</a></code> knows about the following matrix formats:</p>
 <ul>
 <li>ordinary logical, numeric or integer matrices.</li>
 <li><code>dgCMatrix</code> or <code>lgCMatrix</code> objects from the <b>Matrix</b> package.</li>
@@ -102,7 +102,7 @@ Slightly more advanced usage</h1>
 </ul>
 </li>
 </ul>
-<p >If <code><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">parse()</a></code> cannot interpret the format of <code>x</code>, we call <code>DelayedArray::extract_array()</code> to extract an appropriate slice of the matrix. This is quite a bit slower as it involves a call into the R runtime.</p>
+<p >If <code><a class="el" href="raticate_8hpp.html#a92d1249c9e39e31ef411a8d068b0ea52">parse()</a></code> cannot interpret the format of <code>x</code>, it returns a <code>nullptr</code> by default. However, by setting <code>allow_unknown = true</code>, we can create a "unknown matrix fallback" that calls <code>DelayedArray::extract_array()</code> to extract an appropriate slice of the matrix. This is quite a bit slower as it involves a call into the R runtime.</p>
 <p >The <code>parsed</code> output object will also contain an R list named <code>.contents</code>. This holds references to the memory used by the <code>.matrix</code> member, preventing their premature garbage collection. Callers should ensure that the <code>.matrix</code> member (or any copies) does not outlive the <code>.contents</code> R list.</p>
 <h1><a class="anchor" id="autotoc_md3"></a>
 Deployment</h1>

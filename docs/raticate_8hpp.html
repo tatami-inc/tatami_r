@@ -91,15 +91,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:add7090419f756e5aca354722909aec96"><td class="memTemplParams" colspan="2">template&lt;typename Data , typename Index &gt; </td></tr>
-<tr class="memitem:add7090419f756e5aca354722909aec96"><td class="memTemplItemLeft" align="right" valign="top">Parsed&lt; Data, Index &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="raticate_8hpp.html#add7090419f756e5aca354722909aec96">raticate::parse</a> (Rcpp::RObject x)</td></tr>
-<tr class="separator:add7090419f756e5aca354722909aec96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92d1249c9e39e31ef411a8d068b0ea52"><td class="memTemplParams" colspan="2">template&lt;typename Data , typename Index &gt; </td></tr>
+<tr class="memitem:a92d1249c9e39e31ef411a8d068b0ea52"><td class="memTemplItemLeft" align="right" valign="top">Parsed&lt; Data, Index &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="raticate_8hpp.html#a92d1249c9e39e31ef411a8d068b0ea52">raticate::parse</a> (Rcpp::RObject x, bool allow_unknown)</td></tr>
+<tr class="separator:a92d1249c9e39e31ef411a8d068b0ea52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Parse <code>Rcpp::RObject</code>s into <b>tatami</b> matrices. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="add7090419f756e5aca354722909aec96" name="add7090419f756e5aca354722909aec96"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add7090419f756e5aca354722909aec96">&#9670;&nbsp;</a></span>parse()</h2>
+<a id="a92d1249c9e39e31ef411a8d068b0ea52" name="a92d1249c9e39e31ef411a8d068b0ea52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92d1249c9e39e31ef411a8d068b0ea52">&#9670;&nbsp;</a></span>parse()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -110,8 +110,18 @@ template&lt;typename Data , typename Index &gt; </div>
           <td class="memname">Parsed&lt; Data, Index &gt; raticate::parse </td>
           <td>(</td>
           <td class="paramtype">Rcpp::RObject&#160;</td>
-          <td class="paramname"><em>x</em></td><td>)</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>allow_unknown</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -128,7 +138,8 @@ template&lt;typename Data , typename Index &gt; </div>
 </ul>
 </li>
 </ul>
-<p >For all other objects, we call <code>DelayedArray::extract_array()</code> to extract an appropriate slice of the matrix. This is quite a bit slower as it involves a call into the R runtime.</p>
+<p >For all other objects, if <code>allow_unknown = true</code>, we create an instance of an "unknown matrix fallback" subclass of a <code>tatami::Matrix</code>. This calls <code>DelayedArray::extract_array()</code> in R to extract an appropriate slice of the matrix. Of course, this is quite a bit slower than the native representations - see also <code>parallelize()</code> for safe parallelization of <b>tatami</b> calls that might operate on an unknown matrix.</p>
+<p >If <code>allow_unknown = false</code>, any object not listed above will result in a <code>nullptr</code>. This should be handled by the caller.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">Data</td><td>Numeric data type for the <b>tatami</b> interface, typically <code>double</code>. </td></tr>
@@ -138,11 +149,13 @@ template&lt;typename Data , typename Index &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">x</td><td>An R object representing a supported matrix type.</td></tr>
+    <tr><td class="paramname">x</td><td>An R object representing a supported matrix type. </td></tr>
+    <tr><td class="paramname"></td><td></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A <code>Parsed</code> object containing a pointer to a parsed <code>tatami::Matrix</code>. If parsing was not successful, this pointer will be a <code>nullptr</code>. </dd></dl>
+<p>return A <code>Parsed</code> object containing a pointer to a parsed <code>tatami::Matrix</code> (or <code>null</code>, if parsing was not successful and <code>allow_unknown = false</code>). </p>
+<p >As a general rule, any internal calls to <a class="el" href="raticate_8hpp.html#a92d1249c9e39e31ef411a8d068b0ea52">parse()</a> in DelayedArray parsers should keep the default of allow_unknown = false. This avoids partial parsing that ends up having to fall back to R anyway. By keeping as much as we can in R, we might be able to get more effective extraction via block processing, which sees multiple indices at once for better extraction (tatami only sees one row/column at a time).</p>
 
 </div>
 </div>
