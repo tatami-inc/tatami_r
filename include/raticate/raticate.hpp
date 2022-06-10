@@ -34,19 +34,23 @@ namespace raticate {
  *    - Transposition (as a `DelayedAperm` instance)
  *    - Combining (as a `DelayedAbind` instance)
  * 
- * For all other objects, we call `DelayedArray::extract_array()` to extract an appropriate slice of the matrix.
- * This is quite a bit slower as it involves a call into the R runtime.
+ * For all other objects, if `allow_unknown = true`, we create an instance of an "unknown matrix fallback" subclass of a `tatami::Matrix`.
+ * This calls `DelayedArray::extract_array()` in R to extract an appropriate slice of the matrix.
+ * Of course, this is quite a bit slower than the native representations - see also `parallelize()` for safe parallelization of **tatami** calls that might operate on an unknown matrix.
+ *
+ * If `allow_unknown = false`, any object not listed above will result in a `nullptr`.
+ * This should be handled by the caller. 
  * 
  * @tparam Data Numeric data type for the **tatami** interface, typically `double`.
  * @tparam Index Integer index type for the **tatami** interface, typically `int`.
  * 
  * @param x An R object representing a supported matrix type.
+ * @param 
  *
- * @return A `Parsed` object containing a pointer to a parsed `tatami::Matrix`.
- * If parsing was not successful, this pointer will be a `nullptr`.
+ * @return A `Parsed` object containing a pointer to a parsed `tatami::Matrix` (or `null`, if parsing was not successful and `allow_unknown = false`).
  */
 template<typename Data, typename Index>
-Parsed<Data, Index> parse(Rcpp::RObject x) {
+Parsed<Data, Index> parse(Rcpp::RObject x, bool allow_unknown /* = false, in the declaration at utils.hpp */) {
     Parsed<Data, Index> output;
 
     if (x.isS4()) {
@@ -75,7 +79,16 @@ Parsed<Data, Index> parse(Rcpp::RObject x) {
         output = parse_simple_matrix<Data, Index>(x);
     }
 
-    if (output.matrix == nullptr) {
+    /**
+     * As a general rule, any internal calls to parse() in DelayedArray parsers
+     * should keep the default of allow_unknown = false. This avoids partial
+     * parsing that ends up having to fall back to R anyway. By keeping as much
+     * as we can in R, we might be able to get more effective extraction via
+     * block processing, which sees multiple indices at once for better
+     * extraction (tatami only sees one row/column at a time).
+     */
+
+    if (output.matrix == nullptr && allow_unknown) {
         // No need to set contents here, as the matrix itself holds the Rcpp::RObject.
         output.matrix.reset(new UnknownMatrix<Data, Index>(x));
     }
