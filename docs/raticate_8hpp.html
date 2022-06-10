@@ -86,6 +86,7 @@ $(function() {
 <code>#include &quot;DelayedAbind.hpp&quot;</code><br />
 <code>#include &quot;UnknownMatrix.hpp&quot;</code><br />
 <code>#include &quot;<a class="el" href="utils_8hpp_source.html">utils.hpp</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="parallelize_8hpp_source.html">parallelize.hpp</a>&quot;</code><br />
 </div>
 <p><a href="raticate_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -138,7 +139,7 @@ template&lt;typename Data , typename Index &gt; </div>
 </ul>
 </li>
 </ul>
-<p >For all other objects, if <code>allow_unknown = true</code>, we create an instance of an "unknown matrix fallback" subclass of a <code>tatami::Matrix</code>. This calls <code>DelayedArray::extract_array()</code> in R to extract an appropriate slice of the matrix. Of course, this is quite a bit slower than the native representations - see also <code>parallelize()</code> for safe parallelization of <b>tatami</b> calls that might operate on an unknown matrix.</p>
+<p >For all other objects, if <code>allow_unknown = true</code>, we create an instance of an "unknown matrix fallback" subclass of a <code>tatami::Matrix</code>. This calls <code>DelayedArray::extract_array()</code> in R to extract an appropriate slice of the matrix. Of course, this is quite a bit slower than the native representations. Also see <a class="el" href="md_parallel.html">here</a> for safe parallelization of <b>tatami</b> calls that might operate on an unknown matrix.</p>
 <p >If <code>allow_unknown = false</code>, any object not listed above will result in a <code>nullptr</code>. This should be handled by the caller.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
@@ -150,11 +151,11 @@ template&lt;typename Data , typename Index &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>An R object representing a supported matrix type. </td></tr>
-    <tr><td class="paramname"></td><td></td></tr>
+    <tr><td class="paramname">allow_unknown</td><td>Whether to allow the creation of a fallback <code>tatami::Matrix</code> for unknown matrix-like objects.</td></tr>
   </table>
   </dd>
 </dl>
-<p>return A <code>Parsed</code> object containing a pointer to a parsed <code>tatami::Matrix</code> (or <code>null</code>, if parsing was not successful and <code>allow_unknown = false</code>). </p>
+<dl class="section return"><dt>Returns</dt><dd>A <code>Parsed</code> object containing a pointer to a parsed <code>tatami::Matrix</code> (or <code>null</code>, if parsing was not successful and <code>allow_unknown = false</code>). </dd></dl>
 <p >As a general rule, any internal calls to <a class="el" href="raticate_8hpp.html#a92d1249c9e39e31ef411a8d068b0ea52">parse()</a> in DelayedArray parsers should keep the default of allow_unknown = false. This avoids partial parsing that ends up having to fall back to R anyway. By keeping as much as we can in R, we might be able to get more effective extraction via block processing, which sees multiple indices at once for better extraction (tatami only sees one row/column at a time).</p>
 
 </div>
