@@ -40,7 +40,7 @@ raticate::parallelize<double, int>(
 );
 ```
 
-The `raticulate::parallelize()` function is most obviously applied in `tatami::apply()`.
+The `raticate::parallelize()` function is most obviously applied in `tatami::apply()`.
 This requires a bit of preprocessing trickery to ensure that the definitions are available at the right time.
 It also, unfortunately, requires prior knowledge of the type of the `tatami::Matrix` - in this case, we are assuming that we are dealing with a `tatami::Matrix<double, int>`.
 Also see `tests/src/bindings.cpp` for a working example.

@@ -1,8 +1,21 @@
 #ifndef RATICATE_PARALLELIZE_HPP
 #define RATICATE_PARALLELIZE_HPP
+
+/**
+ * @cond
+ */
 #ifdef RATICATE_PARALLELIZE_UNKNOWN
+/**
+ * @endcond
+ */
 
 #include "UnknownMatrix.hpp"
+
+/**
+ * @file parallelize.hpp
+ *
+ * @brief Safely parallelize for unknown matrix fallbacks.
+ */
 
 namespace raticate {
 
@@ -11,7 +24,7 @@ namespace raticate {
  * @tparam Index Integer index type for the **tatami** interface, typically `int`.
  *
  * @param njobs Number of jobs to be executed.
- * @param f Function to run in each thread.
+ * @param fun Function to run in each thread.
  * This is typically a lambda that should accept two arguments specifying the first and one-past-the-last job to be executed in a given thread.
  * @param nthreads Number of threads to parallelize over.
  *
@@ -26,5 +39,12 @@ void parallelize(size_t njobs, Function fun, size_t nthreads) {
 
 }
 
+/**
+ * @cond
+ */
 #endif
+/**
+ * @endcond
+ */
+
 #endif
