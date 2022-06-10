@@ -224,6 +224,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rowsums
+Rcpp::NumericVector rowsums(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_rowsums(SEXP parsedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    rcpp_result_gen = Rcpp::wrap(rowsums(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rowsums_manual
+Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_rowsums_manual(SEXP parsedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    rcpp_result_gen = Rcpp::wrap(rowsums_manual(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 1},
@@ -245,6 +265,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_sparse_rows_subset", (DL_FUNC) &_raticate_tests_sparse_rows_subset, 3},
     {"_raticate_tests_sparse_columns", (DL_FUNC) &_raticate_tests_sparse_columns, 1},
     {"_raticate_tests_sparse_columns_subset", (DL_FUNC) &_raticate_tests_sparse_columns_subset, 3},
+    {"_raticate_tests_rowsums", (DL_FUNC) &_raticate_tests_rowsums, 1},
+    {"_raticate_tests_rowsums_manual", (DL_FUNC) &_raticate_tests_rowsums_manual, 1},
     {NULL, NULL, 0}
 };
 

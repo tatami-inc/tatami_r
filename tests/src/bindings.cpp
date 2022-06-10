@@ -1,5 +1,24 @@
 #include "Rcpp.h"
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+#ifdef TEST_CUSTOM_PARALLEL
+#define RATICATE_PARALLELIZE_UNKNOWN
+
+template<class Function> 
+void run(size_t n, Function f);
+#define TATAMI_CUSTOM_PARALLEL run
+#endif
+
 #include "raticate/raticate.hpp"
+
+#ifdef TEST_CUSTOM_PARALLEL
+template<class Function> 
+void run(size_t n, Function f) {
+    raticate::parallelize<double, int>(n, f, 3);
+}
+#endif
 
 typedef Rcpp::XPtr<raticate::Parsed<double, int> > RatXPtr;
 
@@ -309,4 +328,40 @@ Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last) {
     return output;
 }
 
+/*********************************
+ *** Parallelizable extractors ***
+ *********************************/
 
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector rowsums(Rcpp::RObject parsed) {
+    RatXPtr ptr(parsed);
+    auto out = tatami::row_sums((ptr->matrix).get());
+    return Rcpp::NumericVector(out.begin(), out.end());
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
+    RatXPtr ptr(parsed);
+    size_t NR = (ptr->matrix)->nrow();
+    std::vector<double> output(NR);
+
+#ifndef TATAMI_CUSTOM_PARALLEL
+    for (size_t r = 0; r < NR; ++r) {
+#else
+    TATAMI_CUSTOM_PARALLEL(NR, [&](size_t first, size_t last) -> void {
+    for (size_t r = first; r < last; ++r) {
+#endif
+
+        auto current = (ptr->matrix)->row(r);
+        output[r] = std::accumulate(current.begin(), current.end(), 0.0);
+
+#ifndef TATAMI_CUSTOM_PARALLEL
+    }
+#else
+    }});
+#endif
+
+    return Rcpp::NumericVector(output.begin(), output.end());
+}

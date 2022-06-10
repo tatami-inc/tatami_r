@@ -98,3 +98,13 @@ sparse_columns_subset <- function(parsed, first, last) {
     .Call('_raticate_tests_sparse_columns_subset', PACKAGE = 'raticate.tests', parsed, first, last)
 }
 
+#' @export
+rowsums <- function(parsed) {
+    .Call('_raticate_tests_rowsums', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
+rowsums_manual <- function(parsed) {
+    .Call('_raticate_tests_rowsums_manual', PACKAGE = 'raticate.tests', parsed)
+}
+
