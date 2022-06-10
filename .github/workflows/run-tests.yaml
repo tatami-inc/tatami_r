@@ -7,6 +7,11 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     container: bioconductor/bioconductor_docker:devel
+    strategy:
+      fail-fast: false
+      matrix:
+        parallel: [true, false]
+
     steps:
     - uses: actions/checkout@v2
 
@@ -30,6 +35,13 @@ jobs:
       shell: Rscript {0}
       run: |
         BiocManager::install(c("DelayedArray", "Rcpp", "testthat"))
+
+    - name: Turn on parallelization flags
+      if: ${{ matrix.parallel }}
+      run: |
+        cat tests/src/Makevars | sed "s/^\(PKG_CPPFLAGS=.*\)$/\\1 -DTEST_CUSTOM_PARALLEL/" > .tmp
+        cat .tmp
+        mv .tmp tests/src/Makevars
 
     - name: Install the test package
       run: R CMD INSTALL tests

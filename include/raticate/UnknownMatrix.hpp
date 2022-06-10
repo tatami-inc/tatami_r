@@ -406,9 +406,11 @@ struct ParallelCoordinator {
         // Acquire the evaluator lock to indicate that we're currently in a single
         // parallel context. This avoids wacky messages from other calls to parallelize().
         std::lock_guard<std::mutex> lk(coord_lock);
+
+        // Only parallelize if it's strictly necessary.
         auto& ex = unknown_evaluator<Data, Index>();
         auto prev_parallel = ex.parallel;
-        ex.parallel = (n == 1 || nthreads == 1);
+        ex.parallel = (n > 1 && nthreads > 1);
 
         if (ex.parallel) {
             size_t jobs_per_worker = std::ceil(static_cast<double>(n) / nthreads);
