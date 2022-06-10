@@ -392,51 +392,55 @@ struct ParallelCoordinator {
         // Acquire the evaluator lock to indicate that we're currently in a single
         // parallel context. This avoids wacky messages from other calls to parallelize().
         std::lock_guard<std::mutex> lk(coord_lock);
-
-        size_t jobs_per_worker = std::ceil(static_cast<double>(n) / nthreads);
-        size_t start = 0;
-        std::vector<std::thread> jobs;
-        std::atomic_size_t ncomplete = 0;
-
         auto& ex = unknown_evaluator<Data, Index>();
-        ex.parallel = true;
+        auto prev_parallel = ex.parallel;
+        ex.parallel = (n == 1 || nthreads == 1);
 
-        for (size_t w = 0; w < nthreads; ++w) {
-            size_t end = std::min(n, start + jobs_per_worker);
-            if (start >= end) {
-                ncomplete++;
-                break;
+        if (ex.parallel) {
+            size_t jobs_per_worker = std::ceil(static_cast<double>(n) / nthreads);
+            size_t start = 0;
+            std::vector<std::thread> jobs;
+            std::atomic_size_t ncomplete = 0;
+
+            for (size_t w = 0; w < nthreads; ++w) {
+                size_t end = std::min(n, start + jobs_per_worker);
+                if (start >= end) {
+                    ncomplete++;
+                    break;
+                }
+
+                jobs.emplace_back([&](size_t s, size_t e) -> void {
+                    f(s, e);
+                    ncomplete++;
+                    cv.notify_all();
+                }, start, end);
+
+                start += jobs_per_worker;
             }
 
-            jobs.emplace_back([&](size_t s, size_t e) -> void {
-                f(s, e);
-                ncomplete++;
+            // Handling all requests from the workers.
+            while (1) {
+                std::unique_lock lk(rcpp_lock);
+                cv.wait(lk, [&]{ return (ex.ready && !ex.finished) || ncomplete.load() == nthreads; });
+                if (ncomplete.load() == nthreads) {
+                    break;
+                }
+
+                ex.harvest();
+             
+                // Unlock before notifying, see https://en.cppreference.com/w/cpp/thread/condition_variable
+                lk.unlock();
                 cv.notify_all();
-            }, start, end);
-
-            start += jobs_per_worker;
-        }
-
-        // Handling all requests from the workers.
-        while (1) {
-            std::unique_lock lk(rcpp_lock);
-            cv.wait(lk, [&]{ return (ex.ready && !ex.finished) || ncomplete.load() == nthreads; });
-            if (ncomplete.load() == nthreads) {
-                break;
             }
 
-            ex.harvest();
-         
-            // Unlock before notifying, see https://en.cppreference.com/w/cpp/thread/condition_variable
-            lk.unlock();
-            cv.notify_all();
+            for (auto& job : jobs) {
+                job.join();
+            }
+        } else {
+            f(0, n);
         }
 
-        for (auto& job : jobs) {
-            job.join();
-        }
-
-        ex.parallel = false;
+        ex.parallel = prev_parallel;
     }
 
     template<class Function>
@@ -445,16 +449,20 @@ struct ParallelCoordinator {
         fun();
     }
 
-    template<typename Data, typename Index, class Function>
-    void eval_lock(Function fun) {
+    template<typename Data, typename Index, class ParallelFunction, class SerialFunction>
+    void eval_lock(ParallelFunction pfun, SerialFunction sfun) {
         auto& ex = unknown_evaluator<Data, Index>();
+        if (!ex.parallel) {
+            sfun();
+            return;
+        }
 
         // Waiting until the main thread executor is free,
         // and then assigning it a task.
         {
             std::unique_lock lk(rcpp_lock);
             cv.wait(lk, [&]{ return !ex.ready; });
-            fun();
+            pfun();
         }
 
         // Notifying everyone that there is a task. At this point,
@@ -524,13 +532,18 @@ private:
     template<bool byrow>
     void quick_dense_extractor(size_t i, Data* buffer, size_t first, size_t last) const {
 #ifndef RATICATE_PARALLELIZE_UNKNOWN 
-        core.quick_dense_extractor_raw<byrow>(i, buffer, first, last, &core);
+        core.template quick_dense_extractor_raw<byrow>(i, buffer, first, last);
 #else
         auto& ex = unknown_evaluator<Data, Index>();
         auto& par = parallel_coordinator();
-        par.template eval_lock<Data, Index>([&]() -> void {
-            ex.template set<byrow>(i, buffer, first, last, &core);
-        });
+        par.template eval_lock<Data, Index>(
+            [&]() -> void {
+                ex.template set<byrow>(i, buffer, first, last, &core);
+            },
+            [&]() -> void {
+                core.template quick_dense_extractor_raw<byrow>(i, buffer, first, last);
+            }
+        );
 #endif
     }
 
@@ -543,13 +556,18 @@ private:
 
         if (core.needs_reset(i, first, last, work)) {
 #ifndef RATICATE_PARALLELIZE_UNKNOWN 
-            core.buffered_dense_extractor_raw<byrow>(i, buffer, first, last, work, &core);
+            core.template buffered_dense_extractor_raw<byrow>(i, first, last, work);
 #else
             auto& ex = unknown_evaluator<Data, Index>();
             auto& par = parallel_coordinator();
-            par.template eval_lock<Data, Index>([&]() -> void {
-                ex.template set<byrow>(i, buffer, first, last, work, &core);
-            });
+            par.template eval_lock<Data, Index>(
+                [&]() -> void {
+                    ex.template set<byrow>(i, buffer, first, last, work, &core);
+                },
+                [&]() -> void {
+                    core.template buffered_dense_extractor_raw<byrow>(i, first, last, work);
+                }
+            );
 #endif
         }
 
@@ -588,13 +606,18 @@ private:
         size_t n = 0;
 
 #ifndef RATICATE_PARALLELIZE_UNKNOWN
-        core.quick_sparse_extractor_raw(i, &n, vbuffer, ibuffer, first, last);
+        core.template quick_sparse_extractor_raw<byrow>(i, &n, vbuffer, ibuffer, first, last);
 #else
         auto& ex = unknown_evaluator<Data, Index>();
         auto& par = parallel_coordinator();
-        par.template eval_lock<Data, Index>([&]() -> void {
-            ex.template set<byrow>(i, &n, vbuffer, ibuffer, first, last, &core);
-        });
+        par.template eval_lock<Data, Index>(
+            [&]() -> void {
+                ex.template set<byrow>(i, &n, vbuffer, ibuffer, first, last, &core);
+            },
+            [&]() -> void {
+                core.template quick_sparse_extractor_raw<byrow>(i, &n, vbuffer, ibuffer, first, last);
+            }
+        );
 #endif
 
         if (sorted && !std::is_sorted(ibuffer, ibuffer + n)) {
@@ -623,13 +646,18 @@ private:
 
         if (core.needs_reset(i, first, last, work)) {
 #ifndef RATICATE_PARALLELIZE_UNKNOWN
-            core.buffered_sparse_extractor_raw(i, vbuffer, ibuffer, first, last, work);
+            core.template buffered_sparse_extractor_raw<byrow>(i, first, last, work);
 #else
             auto& ex = unknown_evaluator<Data, Index>();
             auto& par = parallel_coordinator();
-            par.template eval_lock<Data, Index>([&]() -> void {
-                ex.template set<byrow>(i, vbuffer, ibuffer, first, last, work, &core);
-            });
+            par.template eval_lock<Data, Index>(
+                [&]() -> void {
+                    ex.template set<byrow>(i, vbuffer, ibuffer, first, last, work, &core);
+                },
+                [&]() -> void {
+                    core.template buffered_sparse_extractor_raw<byrow>(i, first, last, work);
+                }
+            );
 #endif
         }
 
