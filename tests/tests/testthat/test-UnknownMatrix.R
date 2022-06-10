@@ -42,8 +42,8 @@ test_that("Works for dense UnknownMatrix objects", {
 
     # check that parallelization works correctly.
     rs <- Matrix::rowSums(y)
-    expect_identical(raticate.tests::rowsums(z), rs)
-    expect_identical(raticate.tests::rowsums_manual(z), rs)
+    expect_equal(raticate.tests::rowsums(z), rs)
+    expect_equal(raticate.tests::rowsums_manual(z), rs)
 })
 
 test_that("Works for sparse UnknownMatrix objects", {
@@ -75,8 +75,8 @@ test_that("Works for sparse UnknownMatrix objects", {
     expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
     rs <- Matrix::rowSums(y)
-    expect_identical(raticate.tests::rowsums(z), rs)
-    expect_identical(raticate.tests::rowsums_manual(z), rs)
+    expect_equal(raticate.tests::rowsums(z), rs)
+    expect_equal(raticate.tests::rowsums_manual(z), rs)
 })
 
 test_that("Behaves correctly with small block sizes", {
@@ -103,8 +103,8 @@ test_that("Behaves correctly with small block sizes", {
     expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
     rs <- Matrix::rowSums(y)
-    expect_identical(raticate.tests::rowsums(z), rs)
-    expect_identical(raticate.tests::rowsums_manual(z), rs)
+    expect_equal(raticate.tests::rowsums(z), rs)
+    expect_equal(raticate.tests::rowsums_manual(z), rs)
 
     setAutoBlockSize()
 })
@@ -137,8 +137,8 @@ test_that("Behaves correctly with small chunk sizes", {
     expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
     rs <- Matrix::rowSums(y)
-    expect_identical(raticate.tests::rowsums(z), rs)
-    expect_identical(raticate.tests::rowsums_manual(z), rs)
+    expect_equal(raticate.tests::rowsums(z), rs)
+    expect_equal(raticate.tests::rowsums_manual(z), rs)
 
     setAutoBlockSize()
 })
