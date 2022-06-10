@@ -11,6 +11,7 @@
 #include "DelayedAbind.hpp"
 #include "UnknownMatrix.hpp"
 #include "utils.hpp"
+#include "parallelize.hpp"
 
 /**
  * @file raticate.hpp
@@ -75,21 +76,8 @@ Parsed<Data, Index> parse(Rcpp::RObject x) {
     }
 
     if (output.matrix == nullptr) {
-#ifndef RATICATE_RCPP_PARALLEL_LOCK
-        #pragma omp critical(RATICATE_RCPP_CRITICAL_NAME)
-        {
-#else
-        RATICATE_RCPP_PARALLEL_LOCK([&]() -> void {
-#endif
-
-            // No need to set contents here, as the matrix itself holds the Rcpp::RObject.
-            output.matrix.reset(new UnknownMatrix<Data, Index>(x));
-
-#ifndef RATICATE_RCPP_PARALLEL_LOCK        
-        }
-#else
-        });
-#endif
+        // No need to set contents here, as the matrix itself holds the Rcpp::RObject.
+        output.matrix.reset(new UnknownMatrix<Data, Index>(x));
     }
 
     return output;

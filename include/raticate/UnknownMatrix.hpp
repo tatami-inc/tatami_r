@@ -14,6 +14,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 #endif
 
 namespace raticate {
@@ -504,13 +505,15 @@ public:
     std::shared_ptr<tatami::Workspace> new_workspace(bool row) const { 
         std::shared_ptr<tatami::Workspace> output;
 
+#ifdef RATICATE_PARALLELIZE_UNKNOWN 
         // We default-initialize an Rcpp::RObject, so we lock it just in case.
-#ifndef RATICATE_PARALLELIZE_UNKNOWN 
-        output.reset(new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(row));
-#else
         auto& par = parallel_coordinator();
         par.simple_lock([&]() -> void {
+#endif
+
             output.reset(new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(row));
+
+#ifdef RATICATE_PARALLELIZE_UNKNOWN 
         });
 #endif
 

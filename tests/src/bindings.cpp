@@ -16,7 +16,7 @@ void run(size_t n, Function f);
 #ifdef TEST_CUSTOM_PARALLEL
 template<class Function> 
 void run(size_t n, Function f) {
-    raticate::parallel_coordinator().run<double, int>(n, f, 3);
+    raticate::parallelize<double, int>(n, f, 3);
 }
 #endif
 
