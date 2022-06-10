@@ -1,9 +1,12 @@
 # Handling parallelization
 
-For the most part, **raticate** is thread-safe and can be used inside various parallelization constructs (e.g., OpenMP, `<thread>`).
+In general, **raticate** is thread-safe and can be used inside various parallelization constructs (e.g., OpenMP, `<thread>`).
+This is true for all supported matrices listed in `parse()`, where the memory layout is well-defined.
+At that point, **raticate** simply operates on raw pointers to the underlying data, without touching the R API at all.
 
-The exception is when **raticate** needs to call the R runtime via **Rcpp** to evaluate `DelayedArray::extract_array()`.
-R is strictly single-threaded, so we might naively think to lock all calls to R inside serial sections.
+The exception is when `parse()` is used with `allow_unknown = true`.
+In this case, **raticate** needs to extract data from an unknown matrix fallback by calling `DelayedArray::extract_array()` via the R API.
+The R API is strictly single-threaded, so we might naively think to lock all calls to R inside serial sections.
 Unfortunately, this is not sufficient as we still get stack limit errors when R is called from a worker.
 Some experimentation indicates that any call to R must only occur on the main thread.
 I suspect that some other R-managed process (an event loop, perhaps?) is always running on the main thread;
@@ -62,6 +65,6 @@ void run(size_t n, Function f) {
 }
 ```
 
-Note that `raticate::parse()` must be called from the main thread.
-This is because construction of the unknown fallback `tatami::Matrix` involves some calls into the R runtime;
+Note that `raticate::parse()` must always be called from the main thread.
+This is because construction of the unknown fallback involves some calls into the R runtime;
 these are currently not protected from execution in worker contexts.

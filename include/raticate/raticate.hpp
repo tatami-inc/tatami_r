@@ -36,7 +36,8 @@ namespace raticate {
  * 
  * For all other objects, if `allow_unknown = true`, we create an instance of an "unknown matrix fallback" subclass of a `tatami::Matrix`.
  * This calls `DelayedArray::extract_array()` in R to extract an appropriate slice of the matrix.
- * Of course, this is quite a bit slower than the native representations - see also `parallelize()` for safe parallelization of **tatami** calls that might operate on an unknown matrix.
+ * Of course, this is quite a bit slower than the native representations.
+ * Also see [here](../../docs/parallel.md) for safe parallelization of **tatami** calls that might operate on an unknown matrix.
  *
  * If `allow_unknown = false`, any object not listed above will result in a `nullptr`.
  * This should be handled by the caller. 
@@ -45,7 +46,7 @@ namespace raticate {
  * @tparam Index Integer index type for the **tatami** interface, typically `int`.
  * 
  * @param x An R object representing a supported matrix type.
- * @param 
+ * @param allow_unknown Whether to allow the creation of a fallback `tatami::Matrix` for unknown matrix-like objects. 
  *
  * @return A `Parsed` object containing a pointer to a parsed `tatami::Matrix` (or `null`, if parsing was not successful and `allow_unknown = false`).
  */
