@@ -279,9 +279,11 @@ struct UnknownEvaluator {
     const UnknownMatrixCore<Data, Index>* parent;
 
     bool parallel = false;
-    bool create_work = false;
     bool ready = false;
     bool finished = false;
+
+    bool create_work = false;
+    typename UnknownMatrixCore<Data, Index>::UnknownWorkspace** new_work;
 
 public:
     template<bool B>
@@ -334,8 +336,8 @@ public:
     }
 
 public:
-    void set(typename UnknownMatrixCore<Data, Index>::UnknownWorkspace* w, bool B) {
-        work = w;
+    void set(typename UnknownMatrixCore<Data, Index>::UnknownWorkspace** nw, bool B) {
+        new_work = nw;
         byrow = B;
         create_work = true;
         ready = true;
@@ -345,7 +347,7 @@ public:
 public:
     void harvest() {
         if (create_work) {
-            work = new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(byrow);
+            *new_work = new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(byrow);
         } else {
             if (!sparse) {
                 if (buffered) {
@@ -530,7 +532,7 @@ public:
         auto& ex = unknown_evaluator<Data, Index>();
         par.template lock<Data, Index>(
             [&]() -> void {
-                ex.set(tmp, row);
+                ex.set(&tmp, row);
             },
             [&]() -> void {
                 tmp = new typename UnknownMatrixCore<Data, Index>::UnknownWorkspace(row);
