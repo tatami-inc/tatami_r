@@ -517,50 +517,59 @@ struct ParallelCoordinator {
             std::atomic_size_t ncomplete = 0;
             std::vector<std::string> errors(nthreads);
 
-            for (size_t w = 0; w < nthreads; ++w) {
-                size_t end = std::min(n, start + jobs_per_worker);
-                if (start >= end) {
-                    ncomplete++;
-                    continue;
-                }
-
-                // Local scope, avoid shenanigans when 'w' increments.
-                size_t id = w;
-
-                jobs.emplace_back([&](size_t s, size_t e) -> void {
-                    try {
-                        f(s, e);
-                    } catch (std::exception& x) {
-                        // No throw here, we need to make sure we mark the
-                        // thread as being completed so that the main loop can quit.
-                        errors[id] = x.what();
+            try {
+                for (size_t w = 0; w < nthreads; ++w) {
+                    size_t end = std::min(n, start + jobs_per_worker);
+                    if (start >= end) {
+                        ncomplete++;
+                        continue;
                     }
-                    ncomplete++;
+
+                    // Local scope, avoid shenanigans when 'w' increments.
+                    size_t id = w;
+
+                    jobs.emplace_back([&](size_t s, size_t e) -> void {
+                        try {
+                            f(s, e);
+                        } catch (std::exception& x) {
+                            // No throw here, we need to make sure we mark the
+                            // thread as being completed so that the main loop can quit.
+                            errors[id] = x.what();
+                        }
+                        ncomplete++;
+                        cv.notify_all();
+                    }, start, end);
+
+                    start += jobs_per_worker;
+                }
+
+                // Handling all requests from the workers.
+                while (1) {
+                    std::unique_lock lk(rcpp_lock);
+                    cv.wait(lk, [&]{ return (ex.ready && !ex.finished) || ncomplete.load() == nthreads; });
+                    if (ncomplete.load() == nthreads) {
+                        break;
+                    }
+
+                    try {
+                        ex.harvest();
+                    } catch (std::exception& x) {
+                        // No throw, we need to make sure we notify the worker of (failed) completion.
+                        ex.finished = true;
+                        ex.error = x.what();
+                    }
+
+                    // Unlock before notifying, see https://en.cppreference.com/w/cpp/thread/condition_variable
+                    lk.unlock();
                     cv.notify_all();
-                }, start, end);
-
-                start += jobs_per_worker;
-            }
-
-            // Handling all requests from the workers.
-            while (1) {
-                std::unique_lock lk(rcpp_lock);
-                cv.wait(lk, [&]{ return (ex.ready && !ex.finished) || ncomplete.load() == nthreads; });
-                if (ncomplete.load() == nthreads) {
-                    break;
                 }
 
-                try {
-                    ex.harvest();
-                } catch (std::exception& x) {
-                    // No throw, we need to make sure we notify the worker of (failed) completion.
-                    ex.finished = true;
-                    ex.error = x.what();
+            } catch (std::exception& e) {
+                // Guarantee joining of threads.
+                for (auto& job : jobs) {
+                    job.join();
                 }
-
-                // Unlock before notifying, see https://en.cppreference.com/w/cpp/thread/condition_variable
-                lk.unlock();
-                cv.notify_all();
+                throw;
             }
 
             for (auto& job : jobs) {
