@@ -521,7 +521,7 @@ struct ParallelCoordinator {
                 size_t end = std::min(n, start + jobs_per_worker);
                 if (start >= end) {
                     ncomplete++;
-                    break;
+                    continue;
                 }
 
                 // Local scope, avoid shenanigans when 'w' increments.
