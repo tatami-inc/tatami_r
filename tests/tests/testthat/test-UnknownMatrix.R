@@ -153,7 +153,7 @@ test_that("Behaves correctly with R-side errors", {
     expect_identical(raticate.tests::nrow(z), 50L)
     expect_error(raticate.tests::row(z, 1), "HEY")
     expect_error(raticate.tests::rows(z), "HEY")
-    expect_error(raticate.tests::rowsums(z), "HEY")
+    expect_error(raticate.tests::rowsums(z)) # error message changes depending on TEST_CUSTOM_PARALLEL, so don't worry about it.
 
     # Also behaves correctly if we emit incorrect dimensions.
     setMethod("extract_array", "MyFailMatrix", function(x, index) {
@@ -163,5 +163,5 @@ test_that("Behaves correctly with R-side errors", {
 
     expect_error(raticate.tests::row(z, 1), "incorrect dimensions")
     expect_error(raticate.tests::rows(z), "incorrect dimensions")
-    expect_error(raticate.tests::rowsums(z), "incorrect dimensions")
+    expect_error(raticate.tests::rowsums(z)) # error message changes depending on TEST_CUSTOM_PARALLEL, so don't worry about it.
 })
