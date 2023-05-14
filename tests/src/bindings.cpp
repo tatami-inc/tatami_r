@@ -60,7 +60,7 @@ Rcpp::NumericVector row(Rcpp::RObject parsed, int i) {
         throw std::runtime_error("requested row index out of range");
     }
     Rcpp::NumericVector output((ptr->matrix)->ncol());
-    (ptr->matrix)->row_copy(i - 1, static_cast<double*>(output.begin()));
+    (ptr->matrix)->dense_row()->fetch(i - 1, static_cast<double*>(output.begin()));
     return output;
 }
 
@@ -75,7 +75,7 @@ Rcpp::NumericVector row_subset(Rcpp::RObject parsed, int i, int first, int last)
         throw std::runtime_error("requested subset indices out of range");
     }
     Rcpp::NumericVector output(last - first + 1);
-    (ptr->matrix)->row_copy(i - 1, static_cast<double*>(output.begin()), first - 1, last);
+    (ptr->matrix)->dense_row(first - 1, last)->fetch_copy(i - 1, static_cast<double*>(output.begin()));
     return output;
 }
 
