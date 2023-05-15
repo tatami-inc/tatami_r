@@ -89,15 +89,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a0e0750660f6421041a307142095fa594"><td class="memTemplParams" colspan="2">template&lt;typename Data , typename Index , class Function &gt; </td></tr>
-<tr class="memitem:a0e0750660f6421041a307142095fa594"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="parallelize_8hpp.html#a0e0750660f6421041a307142095fa594">raticate::parallelize</a> (size_t njobs, Function fun, size_t nthreads)</td></tr>
-<tr class="separator:a0e0750660f6421041a307142095fa594"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37cdd544baa0b0c572a8f3fa3982656b"><td class="memTemplParams" colspan="2">template&lt;typename Data , typename Index , class Function &gt; </td></tr>
+<tr class="memitem:a37cdd544baa0b0c572a8f3fa3982656b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="parallelize_8hpp.html#a37cdd544baa0b0c572a8f3fa3982656b">raticate::parallelize</a> (Function fun, size_t njobs, size_t nthreads)</td></tr>
+<tr class="separator:a37cdd544baa0b0c572a8f3fa3982656b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Safely parallelize for unknown matrix fallbacks. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a0e0750660f6421041a307142095fa594" name="a0e0750660f6421041a307142095fa594"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e0750660f6421041a307142095fa594">&#9670;&#160;</a></span>parallelize()</h2>
+<a id="a37cdd544baa0b0c572a8f3fa3982656b" name="a37cdd544baa0b0c572a8f3fa3982656b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37cdd544baa0b0c572a8f3fa3982656b">&#9670;&#160;</a></span>parallelize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -107,14 +107,14 @@ template&lt;typename Data , typename Index , class Function &gt; </div>
         <tr>
           <td class="memname">void raticate::parallelize </td>
           <td>(</td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>njobs</em>, </td>
+          <td class="paramtype">Function&#160;</td>
+          <td class="paramname"><em>fun</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Function&#160;</td>
-          <td class="paramname"><em>fun</em>, </td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>njobs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

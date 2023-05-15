@@ -87,15 +87,15 @@ $(function() {
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keyword">namespace </span>raticate {</div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Data, <span class="keyword">typename</span> Index, <span class="keyword">class</span> Function&gt;</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="parallelize_8hpp.html#a0e0750660f6421041a307142095fa594">   36</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="parallelize_8hpp.html#a0e0750660f6421041a307142095fa594">parallelize</a>(<span class="keywordtype">size_t</span> njobs, Function fun, <span class="keywordtype">size_t</span> nthreads) {</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    parallel_coordinator().template run&lt;Data, Index&gt;(njobs, fun, nthreads);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="parallelize_8hpp.html#a37cdd544baa0b0c572a8f3fa3982656b">   36</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="parallelize_8hpp.html#a37cdd544baa0b0c572a8f3fa3982656b">parallelize</a>(Function fun, <span class="keywordtype">size_t</span> njobs, <span class="keywordtype">size_t</span> nthreads) {</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    parallel_coordinator().template run&lt;Data, Index&gt;(std::move(fun), njobs, nthreads);</div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>}</div>
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>}</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aparallelize_8hpp_html_a0e0750660f6421041a307142095fa594"><div class="ttname"><a href="parallelize_8hpp.html#a0e0750660f6421041a307142095fa594">raticate::parallelize</a></div><div class="ttdeci">void parallelize(size_t njobs, Function fun, size_t nthreads)</div><div class="ttdef"><b>Definition:</b> parallelize.hpp:36</div></div>
+<div class="ttc" id="aparallelize_8hpp_html_a37cdd544baa0b0c572a8f3fa3982656b"><div class="ttname"><a href="parallelize_8hpp.html#a37cdd544baa0b0c572a8f3fa3982656b">raticate::parallelize</a></div><div class="ttdeci">void parallelize(Function fun, size_t njobs, size_t nthreads)</div><div class="ttdef"><b>Definition:</b> parallelize.hpp:36</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
