@@ -113,7 +113,7 @@ public:
         }
 
     public:
-        Index primary_block_start, primary_block_end, secondary_len;
+        Index primary_block_start, primary_block_len, secondary_len;
         Rcpp::RObject secondary_indices;
         std::shared_ptr<tatami::Matrix<Data, Index> > buffer;
         std::shared_ptr<tatami::Extractor<tatami::DimensionSelectionType::FULL, sparse_, Data, Index> > bufextractor;
@@ -124,7 +124,7 @@ private:
     static std::pair<Index, Index> round_indices(Index i, Index interval, Index max) {
         Index new_first = (i / interval) * interval;
         Index new_last = std::min(max, new_first + interval);
-        return std::make_pair(new_first, new_last);
+        return std::make_pair(new_first, new_last - new_first);
     }
 
     static Rcpp::IntegerVector create_consecutive_indices(Index start, Index length) {
@@ -139,13 +139,13 @@ private:
         if constexpr(byrow) {
             auto row_rounded = round_indices(i, block_nrow, nrow);
             work->primary_block_start = row_rounded.first;
-            work->primary_block_end = row_rounded.second;
+            work->primary_block_len = row_rounded.second;
             indices[0] = create_consecutive_indices(row_rounded.first, row_rounded.second);
             indices[1] = work->secondary_indices;
         } else {
             auto col_rounded = round_indices(i, block_ncol, ncol);
             work->primary_block_start = col_rounded.first;
-            work->primary_block_end = col_rounded.second;
+            work->primary_block_len = col_rounded.second;
             indices[0] = work->secondary_indices;
             indices[1] = create_consecutive_indices(col_rounded.first, col_rounded.second);
         }
@@ -156,9 +156,8 @@ private:
     void check_buffered_dims(const tatami::Matrix<Data, Index>* parsed, const Workspace<sparse>* work) const {
         size_t parsed_primary = (byrow ? parsed->nrow() : parsed->ncol());
         size_t parsed_secondary = (byrow ? parsed->ncol() : parsed->nrow());
-        size_t expected_primary = work->primary_block_end - work->primary_block_start;
 
-        if (parsed_primary != expected_primary || parsed_secondary != work->secondary_len) {
+        if (parsed_primary != work->primary_block_len || parsed_secondary != work->secondary_len) {
             auto ctype = get_class_name(original_seed);
             throw std::runtime_error("'" + 
                 (sparse_err ? std::string("extract_sparse_array") : std::string("extract_array")) + 
@@ -170,7 +169,7 @@ public:
     template<bool sparse>
     static bool needs_reset(Index i, const Workspace<sparse>* work) {
         if (work->buffer != nullptr) {
-            if (i >= work->primary_block_start && i < work->primary_block_end) {
+            if (i >= work->primary_block_start && i < work->primary_block_start + work->primary_block_len) {
                 return false;
             }
         }
@@ -578,7 +577,7 @@ private:
         UnknownExtractor(const UnknownMatrixCore<Data, Index>* c) : core(c) { 
             if constexpr(selection_ == tatami::DimensionSelectionType::FULL) {
                 this->full_length = byrow ? core->ncol : core->nrow;
-                work.reset(setup_workspace(full_length));
+                work.reset(setup_workspace(this->full_length));
             }
         }
 
@@ -676,13 +675,7 @@ private:
             }
 
             i -= this->work->primary_block_start;
-            std::cout << "Index is " << i << std::endl;
-            std::cout << "Work pointer is " << (size_t)this->work->buffer.get() << std::endl;
-            std::cout << this->work->buffer->nrow() << " x " << this->work->buffer->ncol() << std::endl;
-            std::cout << "Extractor pointer is " << (size_t)this->work->bufextractor.get() << std::endl;
-            std::cout << "Target pointers are " << (size_t)vbuffer << "\t" << (size_t)ibuffer << std::endl;
             tatami::SparseRange<Data, Index> output = this->work->bufextractor->fetch_copy(i, vbuffer, ibuffer);
-            std::cout << "Acquired " << output.number << std::endl;
 
             // Need to adjust the indices.
             if (output.index) {

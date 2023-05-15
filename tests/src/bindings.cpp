@@ -350,9 +350,9 @@ Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
     auto wrk = ptr->matrix->dense_row();
     for (size_t r = 0; r < NR; ++r) {
 #else
-    TATAMI_CUSTOM_PARALLEL([&](int, int first, int last) -> void {
+    TATAMI_CUSTOM_PARALLEL([&](int, int start, int length) -> void {
         auto wrk = ptr->matrix->dense_row();
-        for (size_t r = first; r < last; ++r) {
+        for (size_t r = start, e = start + length; r < e; ++r) {
 #endif
 
         auto current = wrk->fetch(r);

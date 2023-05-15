@@ -26,7 +26,6 @@ test_that("Works for dense UnknownMatrix objects", {
     expect_identical(raticate.tests::column_subset(z, 3, 11, 15), y[11:15,3])
 
     expect_identical(raticate.tests::sparse_row(z, 9), dummy_sparse(y[9,]))
-    asdasd
     expect_identical(raticate.tests::sparse_column(z, 3), dummy_sparse(y[,3]))
     expect_identical(raticate.tests::sparse_row_subset(z, 3, 1, 3), dummy_sparse(y[3,1:3], offset = 1))
     expect_identical(raticate.tests::sparse_column_subset(z, 5, 2, 19), dummy_sparse(y[2:19,5], offset = 2))
