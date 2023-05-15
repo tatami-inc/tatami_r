@@ -25,7 +25,7 @@ struct UnknownMatrixCore {
         original_seed(seed),
         delayed_env(Rcpp::Environment::namespace_env("DelayedArray")),
         dense_extractor(delayed_env["extract_array"]),
-        sparse_extractor(delayed_env["extract_sparse_array"])
+        sparse_extractor(delayed_env["OLD_extract_sparse_array"])
     {
         // We assume the constructor only occurs on the main thread, so we
         // won't bother locking things up. I'm also not sure that the
