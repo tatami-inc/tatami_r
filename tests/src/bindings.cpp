@@ -7,7 +7,7 @@
 #define RATICATE_PARALLELIZE_UNKNOWN
 
 template<class Function> 
-void run(Function, size_t, size_t, size_t);
+void run(Function, size_t, size_t);
 #define TATAMI_CUSTOM_PARALLEL run
 #endif
 
@@ -15,7 +15,7 @@ void run(Function, size_t, size_t, size_t);
 
 #ifdef TEST_CUSTOM_PARALLEL
 template<class Function> 
-void run(Function f, size_t n, size_t t, size_t) {
+void run(Function f, size_t n, size_t t) {
     raticate::parallelize<double, int>(std::move(f), n, t);
 }
 #endif
@@ -346,24 +346,13 @@ Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
     size_t NR = (ptr->matrix)->nrow();
     std::vector<double> output(NR);
 
-#ifndef TATAMI_CUSTOM_PARALLEL
-    auto wrk = ptr->matrix->dense_row();
-    for (size_t r = 0; r < NR; ++r) {
-#else
-    TATAMI_CUSTOM_PARALLEL([&](int, int start, int length) -> void {
+    tatami::parallelize([&](int, int start, int length) -> void {
         auto wrk = ptr->matrix->dense_row();
         for (size_t r = start, e = start + length; r < e; ++r) {
-#endif
-
-        auto current = wrk->fetch(r);
-        output[r] = std::accumulate(current.begin(), current.end(), 0.0);
-
-#ifndef TATAMI_CUSTOM_PARALLEL
-    }
-#else
-    }
-    }, NR, 3, 0); // 3 threads
-#endif
+            auto current = wrk->fetch(r);
+            output[r] = std::accumulate(current.begin(), current.end(), 0.0);
+        }
+    }, NR, 3); // 3 threads
 
     return Rcpp::NumericVector(output.begin(), output.end());
 }
