@@ -152,7 +152,7 @@ private:
         return indices;
     }
 
-    template<bool byrow, bool sparse>
+    template<bool byrow, bool sparse, bool sparse_err = sparse>
     void check_buffered_dims(const tatami::Matrix<Data, Index>* parsed, const Workspace<sparse>* work) const {
         size_t parsed_primary = (byrow ? parsed->nrow() : parsed->ncol());
         size_t parsed_secondary = (byrow ? parsed->ncol() : parsed->nrow());
@@ -161,7 +161,7 @@ private:
         if (parsed_primary != expected_primary || parsed_secondary != work->secondary_len) {
             auto ctype = get_class_name(original_seed);
             throw std::runtime_error("'" + 
-                (sparse ? std::string("extract_sparse_array") : std::string("extract_array")) + 
+                (sparse_err ? std::string("extract_sparse_array") : std::string("extract_array")) + 
                 "(<" + ctype + ">)' returns incorrect dimensions");
         }
     }
@@ -187,20 +187,30 @@ public:
 
         work->buffer = parsed.matrix;
         work->contents = parsed.contents;
-        work->bufwork = tatami::new_extractor<byrow, tatami::DimensionSelectionType::FULL, false>(work->buffer.get(), options);
+        work->bufextractor = tatami::new_extractor<byrow, false>(work->buffer.get(), options);
     }
 
     template<bool byrow>
     void run_sparse_extractor(Index i, const tatami::Options& options, Workspace<true>* work) const {
         auto indices = create_rounded_indices<byrow>(i, work);
-        auto val0 = sparse_extractor(original_seed, indices);
 
-        auto parsed = parse_SparseArraySeed<Data, Index>(val0);
-        check_buffered_dims<byrow, true>(parsed.matrix.get(), work);
+        if (sparse) {
+            auto val0 = sparse_extractor(original_seed, indices);
+            auto parsed = parse_SparseArraySeed<Data, Index>(val0);
+            check_buffered_dims<byrow, true, true>(parsed.matrix.get(), work);
 
-        work->buffer = parsed.matrix;
-        work->contents = parsed.contents;
-        work->bufwork = tatami::new_extractor<byrow, tatami::DimensionSelectionType::FULL, true>(work->buffer.get(), options);
+            work->buffer = parsed.matrix;
+            work->contents = parsed.contents;
+        } else {
+            auto val0 = dense_extractor(original_seed, indices);
+            auto parsed = parse_simple_matrix<Data, Index>(val0);
+            check_buffered_dims<byrow, true, false>(parsed.matrix.get(), work);
+
+            work->buffer = parsed.matrix;
+            work->contents = parsed.contents;
+        }
+
+        work->bufextractor = tatami::new_extractor<byrow, true>(work->buffer.get(), options);
     }
 };
 
@@ -216,8 +226,6 @@ struct UnknownEvaluator {
     bool byrow;
 
     Index index;
-    Data* dbuffer;
-    Index* ibuffer;
     const tatami::Options* options;
     typename UnknownMatrixCore<Data, Index>::template Workspace<false>* dwork;
     typename UnknownMatrixCore<Data, Index>::template Workspace<true>* swork;
@@ -249,19 +257,16 @@ public:
     }
 
     template<bool B>
-    void set(Index i, Data* buffer, const tatami::Options& opt, typename UnknownMatrixCore<Data, Index>::template Workspace<false>* w, const UnknownMatrixCore<Data, Index>* core) {
+    void set(Index i, const tatami::Options& opt, typename UnknownMatrixCore<Data, Index>::template Workspace<false>* w, const UnknownMatrixCore<Data, Index>* core) {
         set<B>(i, opt, core);
         sparse = false;
-        dbuffer = buffer;
         dwork = w;
     }
 
     template<bool B>
-    void set(Index i, Data* data, Index* index, const tatami::Options& opt, typename UnknownMatrixCore<Data, Index>::template Workspace<true>* w, const UnknownMatrixCore<Data, Index>* core) {
+    void set(Index i, const tatami::Options& opt, typename UnknownMatrixCore<Data, Index>::template Workspace<true>* w, const UnknownMatrixCore<Data, Index>* core) {
         set<B>(i, opt, core);
         sparse = true;
-        dbuffer = data;
-        ibuffer = index; 
         swork = w;
     }
 
@@ -305,20 +310,20 @@ public:
         if (create_work) {
             if (!sparse) {
                 if (selection == tatami::DimensionSelectionType::FULL) {
-                    *new_dwork = new typename UnknownMatrixCore<Data, Index>::Workspace<false>(full_length);
+                    *new_dwork = new typename UnknownMatrixCore<Data, Index>::template Workspace<false>(full_length);
                 } else if (selection == tatami::DimensionSelectionType::BLOCK) {
-                    *new_dwork = new typename UnknownMatrixCore<Data, Index>::Workspace<false>(block_start, block_length);
+                    *new_dwork = new typename UnknownMatrixCore<Data, Index>::template Workspace<false>(block_start, block_length);
                 } else {
-                    *new_dwork = new typename UnknownMatrixCore<Data, Index>::Workspace<false>(indices);
+                    *new_dwork = new typename UnknownMatrixCore<Data, Index>::template Workspace<false>(*indices);
                 }
 
             } else {
                 if (selection == tatami::DimensionSelectionType::FULL) {
-                    *new_swork = new typename UnknownMatrixCore<Data, Index>::Workspace<true>(full_length);
+                    *new_swork = new typename UnknownMatrixCore<Data, Index>::template Workspace<true>(full_length);
                 } else if (selection == tatami::DimensionSelectionType::BLOCK) {
-                    *new_swork = new typename UnknownMatrixCore<Data, Index>::Workspace<true>(block_start, block_length);
+                    *new_swork = new typename UnknownMatrixCore<Data, Index>::template Workspace<true>(block_start, block_length);
                 } else {
-                    *new_swork = new typename UnknownMatrixCore<Data, Index>::Workspace<true>(indices);
+                    *new_swork = new typename UnknownMatrixCore<Data, Index>::template Workspace<true>(*indices);
                 }
             }
             
@@ -373,7 +378,7 @@ struct ParallelCoordinator {
     };
 
     template<typename Data, typename Index, class Function>
-    void run(size_t n, Function f, size_t nthreads) {
+    void run(Function f, size_t n, size_t nthreads) {
         // Acquire the evaluator lock to indicate that we're currently in a single
         // parallel context. This avoids wacky messages from other calls to run().
         std::lock_guard<std::mutex> clk(coord_lock);
@@ -401,12 +406,9 @@ struct ParallelCoordinator {
                     continue;
                 }
 
-                // Local scope, avoid shenanigans when 'w' increments.
-                size_t id = w;
-
-                jobs.emplace_back([&](size_t s, size_t e) -> void {
+                jobs.emplace_back([&](size_t id, size_t s, size_t l) -> void {
                     try {
-                        f(s, e);
+                        f(id, s, l);
                     } catch (std::exception& x) {
                         // No throw here, we need to make sure we mark the
                         // thread as being completed so that the main loop can quit.
@@ -414,7 +416,7 @@ struct ParallelCoordinator {
                     }
                     ncomplete++;
                     cv.notify_all();
-                }, start, end);
+                }, w, start, end - start);
 
                 start += jobs_per_worker;
             }
@@ -454,7 +456,7 @@ struct ParallelCoordinator {
                 }
             }
         } else {
-            f(0, n);
+            f(0, 0, n);
         }
     }
 
@@ -522,11 +524,11 @@ class UnknownMatrix : public tatami::Matrix<Data, Index> {
 public:
     UnknownMatrix(Rcpp::RObject seed) : core(seed) {}
 
-    size_t nrow() const {
+    Index nrow() const {
         return core.nrow;
     }
 
-    size_t ncol() const {
+    Index ncol() const {
         return core.ncol;
     }
 
@@ -536,6 +538,11 @@ public:
 
     bool prefer_rows() const {
         // All of the individual extract_array outputs are effectively column-major.
+        return false;
+    }
+
+    bool uses_oracle(bool) const {
+        // TODO: add support for oracular extraction.
         return false;
     }
 
@@ -570,12 +577,12 @@ private:
 
         UnknownExtractor(const UnknownMatrixCore<Data, Index>* c) : core(c) { 
             if constexpr(selection_ == tatami::DimensionSelectionType::FULL) {
-                auto full_length = byrow ? core.ncol : core.nrow;
+                this->full_length = byrow ? core->ncol : core->nrow;
                 work.reset(setup_workspace(full_length));
             }
         }
 
-        UnknownExtractor(const UnknownMatrix<Data, Index>* c, Index start, Index length) : core(c) {
+        UnknownExtractor(const UnknownMatrixCore<Data, Index>* c, Index start, Index length) : core(c) {
             if constexpr(selection_ == tatami::DimensionSelectionType::BLOCK) {
                 this->block_start = start;
                 this->block_length = length;
@@ -583,7 +590,7 @@ private:
             }
         }
 
-        UnknownExtractor(const UnknownMatrix<Data, Index>* c, std::vector<Index> idx) : core(c) {
+        UnknownExtractor(const UnknownMatrixCore<Data, Index>* c, std::vector<Index> idx) : core(c) {
             if constexpr(selection_ == tatami::DimensionSelectionType::INDEX) {
                 indices = std::move(idx);
                 this->index_length = indices.size();
@@ -599,7 +606,12 @@ private:
             }
         }
 
-    private:
+        void set_oracle(std::unique_ptr<tatami::Oracle<Index> >) {
+            // TODO: support this.
+            return;
+        }
+
+    protected:
         const UnknownMatrixCore<Data, Index>* core;
         std::unique_ptr<typename UnknownMatrixCore<Data, Index>::template Workspace<sparse_> > work;
         typename std::conditional<selection_ == tatami::DimensionSelectionType::INDEX, std::vector<Index>, bool>::type indices;
@@ -609,29 +621,29 @@ private:
     template<bool byrow, tatami::DimensionSelectionType selection_>
     struct DenseUnknownExtractor : public UnknownExtractor<byrow, selection_, false> {
         template<typename ... Args_>
-        DenseUnknownExtractor(const UnknownMatrixCore<Data, Index>* c, tatami::Options& opt, Args_... args) : 
+        DenseUnknownExtractor(const UnknownMatrixCore<Data, Index>* c, tatami::Options opt, Args_... args) : 
             UnknownExtractor<byrow, selection_, false>(c, std::forward<Args_>(args)...), options(std::move(opt)) {}
 
-        const Index fetch(Index i, Data* buffer) {
-            if (core.needs_reset(i, this->work.get())) {
+        const Data* fetch(Index i, Data* buffer) {
+            if (this->core->needs_reset(i, this->work.get())) {
 #ifndef RATICATE_PARALLELIZE_UNKNOWN 
-                core.template dense_extractor<byrow>(i, options, this->work.get());
+                this->core->template run_dense_extractor<byrow>(i, options, this->work.get());
 #else
                 auto& ex = unknown_evaluator<Data, Index>();
                 auto& par = parallel_coordinator();
                 par.template lock<Data, Index>(
                     [&]() -> void {
-                        ex.template set<byrow>(i, buffer, options, this->work.get(), this->core);
+                        ex.template set<byrow>(i, options, this->work.get(), this->core);
                     },
                     [&]() -> void {
-                        core.template dense_extractor<byrow>(i, options, this->work.get());
+                        this->core->template run_dense_extractor<byrow>(i, options, this->work.get());
                     }
                 );
 #endif
             }
 
             i -= this->work->primary_block_start;
-            return this->work->bufwork->fetch_copy(i, buffer); // making a copy to avoid a possible reference to a transient buffer.
+            return this->work->bufextractor->fetch_copy(i, buffer); // making a copy to avoid a possible reference to a transient buffer.
         }
 
     private:
@@ -646,36 +658,44 @@ private:
             UnknownExtractor<byrow, selection_, true>(c, std::forward<Args_>(args)...), options(std::move(opt)) {}
 
         tatami::SparseRange<Data, Index> fetch(Index i, Data* vbuffer, Index* ibuffer) {
-            if (core.needs_reset(i, this->work.get())) {
+            if (this->core->needs_reset(i, this->work.get())) {
 #ifndef RATICATE_PARALLELIZE_UNKNOWN
-                core.template buffered_sparse_extractor_raw<byrow>(i, options, this->work.get());
+                this->core->template run_sparse_extractor<byrow>(i, options, this->work.get());
 #else
                 auto& ex = unknown_evaluator<Data, Index>();
                 auto& par = parallel_coordinator();
                 par.template lock<Data, Index>(
                     [&]() -> void {
-                        ex.template set<byrow>(i, vbuffer, ibuffer, options, this->work.get(), this->core);
+                        ex.template set<byrow>(i, options, this->work.get(), this->core);
                     },
                     [&]() -> void {
-                        core.template buffered_sparse_extractor_raw<byrow>(i, options, this->work.get());
+                        this->core->template run_sparse_extractor<byrow>(i, options, this->work.get());
                     }
                 );
 #endif
             }
 
             i -= this->work->primary_block_start;
-            tatami::SparseRange<Data, Index> output = this->work->bufwork->fetch_copy(i, vbuffer, ibuffer);
+            std::cout << "Index is " << i << std::endl;
+            std::cout << "Work pointer is " << (size_t)this->work->buffer.get() << std::endl;
+            std::cout << this->work->buffer->nrow() << " x " << this->work->buffer->ncol() << std::endl;
+            std::cout << "Extractor pointer is " << (size_t)this->work->bufextractor.get() << std::endl;
+            std::cout << "Target pointers are " << (size_t)vbuffer << "\t" << (size_t)ibuffer << std::endl;
+            tatami::SparseRange<Data, Index> output = this->work->bufextractor->fetch_copy(i, vbuffer, ibuffer);
+            std::cout << "Acquired " << output.number << std::endl;
 
             // Need to adjust the indices.
-            if (ibuffer) {
+            if (output.index) {
                 if constexpr(selection_ == tatami::DimensionSelectionType::BLOCK) {
                     for (size_t i = 0; i < output.number; ++i) {
-                        ibuffer[i] += this->block_start;
+                        ibuffer[i] = output.index[i] + this->block_start;
                     }
+                    output.index = ibuffer;
                 } else if constexpr(selection_ == tatami::DimensionSelectionType::INDEX) {
                     for (size_t i = 0; i < output.number; ++i) {
-                        ibuffer[i] = this->indices[ibuffer[i]];
+                        ibuffer[i] = this->indices[output.index[i]];
                     }
+                    output.index = ibuffer;
                 }
             }
 
