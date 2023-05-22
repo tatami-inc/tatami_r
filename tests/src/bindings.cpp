@@ -4,48 +4,35 @@
 #include <iostream>
 
 #ifdef TEST_CUSTOM_PARALLEL
-#define RATICATE_PARALLELIZE_UNKNOWN
-
-template<class Function> 
-void run(Function, size_t, size_t);
-#define TATAMI_CUSTOM_PARALLEL run
+#define TATAMI_R_PARALLELIZE_UNKNOWN
+#include "tatami_r/parallelize.hpp"
+#define TATAMI_CUSTOM_PARALLEL tatami_r::parallelize
 #endif
 
-#include "raticate/raticate.hpp"
+#include "tatami_r/tatami_r.hpp"
 
-#ifdef TEST_CUSTOM_PARALLEL
-template<class Function> 
-void run(Function f, size_t n, size_t t) {
-    raticate::parallelize<double, int>(std::move(f), n, t);
-}
-#endif
-
-typedef Rcpp::XPtr<raticate::Parsed<double, int> > RatXPtr;
+typedef Rcpp::XPtr<tatami::Matrix<double, int> > RatXPtr;
 
 //' @useDynLib raticate.tests
 //' @importFrom Rcpp sourceCpp
 //' @export
 //[[Rcpp::export(rng=false)]]
 SEXP parse(Rcpp::RObject seed) {
-    auto out = raticate::parse<double, int>(seed, true);
-    if (out.matrix == nullptr) {
-        throw std::runtime_error("failed to parse R object into a tatami::NumericMatrix");
-    }
-    return RatXPtr(new raticate::Parsed<double, int>(std::move(out)), true);
+    return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed));
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
 int nrow(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
-    return (ptr->matrix)->nrow();
+    return ptr->nrow();
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
 int ncol(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
-    return (ptr->matrix)->ncol();
+    return ptr->ncol();
 }
 
 /******************************************
@@ -56,11 +43,11 @@ int ncol(Rcpp::RObject parsed) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::NumericVector row(Rcpp::RObject parsed, int i) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->nrow()) {
+    if (i < 1 || i > ptr->nrow()) {
         throw std::runtime_error("requested row index out of range");
     }
-    Rcpp::NumericVector output((ptr->matrix)->ncol());
-    (ptr->matrix)->dense_row()->fetch(i - 1, static_cast<double*>(output.begin()));
+    Rcpp::NumericVector output(ptr->ncol());
+    ptr->dense_row()->fetch(i - 1, static_cast<double*>(output.begin()));
     return output;
 }
 
@@ -68,14 +55,14 @@ Rcpp::NumericVector row(Rcpp::RObject parsed, int i) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::NumericVector row_subset(Rcpp::RObject parsed, int i, int first, int last) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->nrow()) {
+    if (i < 1 || i > ptr->nrow()) {
         throw std::runtime_error("requested row index out of range");
     }
-    if (first < 1 || first > last || last > (ptr->matrix)->ncol()) {
+    if (first < 1 || first > last || last > ptr->ncol()) {
         throw std::runtime_error("requested subset indices out of range");
     }
     Rcpp::NumericVector output(last - first + 1);
-    (ptr->matrix)->dense_row(first - 1, output.size())->fetch_copy(i - 1, static_cast<double*>(output.begin()));
+    ptr->dense_row(first - 1, output.size())->fetch_copy(i - 1, static_cast<double*>(output.begin()));
     return output;
 }
 
@@ -84,11 +71,11 @@ Rcpp::NumericVector row_subset(Rcpp::RObject parsed, int i, int first, int last)
 //[[Rcpp::export(rng=false)]]
 Rcpp::NumericVector column(Rcpp::RObject parsed, int i) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->ncol()) {
+    if (i < 1 || i > ptr->ncol()) {
         throw std::runtime_error("requested column index out of range");
     }
-    Rcpp::NumericVector output((ptr->matrix)->nrow());
-    (ptr->matrix)->dense_column()->fetch_copy(i - 1, static_cast<double*>(output.begin()));
+    Rcpp::NumericVector output(ptr->nrow());
+    ptr->dense_column()->fetch_copy(i - 1, static_cast<double*>(output.begin()));
     return output;
 }
 
@@ -96,14 +83,14 @@ Rcpp::NumericVector column(Rcpp::RObject parsed, int i) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::NumericVector column_subset(Rcpp::RObject parsed, int i, int first, int last) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->ncol()) {
+    if (i < 1 || i > ptr->ncol()) {
         throw std::runtime_error("requested column index out of range");
     }
-    if (first < 1 || first > last || last > (ptr->matrix)->nrow()) {
+    if (first < 1 || first > last || last > ptr->nrow()) {
         throw std::runtime_error("requested subset indices out of range");
     }
     Rcpp::NumericVector output(last - first + 1);
-    (ptr->matrix)->dense_column(first - 1, output.size())->fetch_copy(i - 1, static_cast<double*>(output.begin()));
+    ptr->dense_column(first - 1, output.size())->fetch_copy(i - 1, static_cast<double*>(output.begin()));
     return output;
 }
 
@@ -125,10 +112,10 @@ Rcpp::List format_sparse_range(const RangeCopy& x) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::List sparse_row(Rcpp::RObject parsed, int i) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->nrow()) {
+    if (i < 1 || i > ptr->nrow()) {
         throw std::runtime_error("requested row index out of range");
     }
-    auto output = (ptr->matrix)->sparse_row()->fetch(i - 1);
+    auto output = ptr->sparse_row()->fetch(i - 1);
     return format_sparse_range(output);
 }
 
@@ -136,13 +123,13 @@ Rcpp::List sparse_row(Rcpp::RObject parsed, int i) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::List sparse_row_subset(Rcpp::RObject parsed, int i, int first, int last) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->nrow()) {
+    if (i < 1 || i > ptr->nrow()) {
         throw std::runtime_error("requested row index out of range");
     }
-    if (first < 1 || first > last || last > (ptr->matrix)->ncol()) {
+    if (first < 1 || first > last || last > ptr->ncol()) {
         throw std::runtime_error("requested subset indices out of range");
     }
-    auto output = (ptr->matrix)->sparse_row(first - 1, last - first + 1)->fetch(i - 1);
+    auto output = ptr->sparse_row(first - 1, last - first + 1)->fetch(i - 1);
     return format_sparse_range(output);
 }
 
@@ -151,10 +138,10 @@ Rcpp::List sparse_row_subset(Rcpp::RObject parsed, int i, int first, int last) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::List sparse_column(Rcpp::RObject parsed, int i) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->ncol()) {
+    if (i < 1 || i > ptr->ncol()) {
         throw std::runtime_error("requested column index out of range");
     }
-    auto output = (ptr->matrix)->sparse_column()->fetch(i - 1);
+    auto output = ptr->sparse_column()->fetch(i - 1);
     return format_sparse_range(output);
 }
 
@@ -162,13 +149,13 @@ Rcpp::List sparse_column(Rcpp::RObject parsed, int i) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::List sparse_column_subset(Rcpp::RObject parsed, int i, int first, int last) {
     RatXPtr ptr(parsed);
-    if (i < 1 || i > (ptr->matrix)->ncol()) {
+    if (i < 1 || i > ptr->ncol()) {
         throw std::runtime_error("requested column index out of range");
     }
-    if (first < 1 || first > last || last > (ptr->matrix)->nrow()) {
+    if (first < 1 || first > last || last > ptr->nrow()) {
         throw std::runtime_error("requested subset indices out of range");
     }
-    auto output = (ptr->matrix)->sparse_column(first - 1, last - first + 1)->fetch(i - 1);
+    auto output = ptr->sparse_column(first - 1, last - first + 1)->fetch(i - 1);
     return format_sparse_range(output);
 }
 
@@ -181,11 +168,11 @@ Rcpp::List sparse_column_subset(Rcpp::RObject parsed, int i, int first, int last
 Rcpp::List rows(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
 
-    size_t nr = (ptr->matrix)->nrow();
-    size_t nc = (ptr->matrix)->ncol();
+    size_t nr = ptr->nrow();
+    size_t nc = ptr->ncol();
     Rcpp::List output(nr);
 
-    auto wrk = ptr->matrix->dense_row();
+    auto wrk = ptr->dense_row();
     for (size_t r = 0; r < nr; ++r) {
         Rcpp::NumericVector current(nc);
         wrk->fetch_copy(r, static_cast<double*>(current.begin()));
@@ -200,11 +187,11 @@ Rcpp::List rows(Rcpp::RObject parsed) {
 Rcpp::List rows_subset(Rcpp::RObject parsed, int first, int last) {
     RatXPtr ptr(parsed);
 
-    size_t nr = (ptr->matrix)->nrow();
+    size_t nr = ptr->nrow();
     size_t len = last - first + 1;
     Rcpp::List output(nr);
 
-    auto wrk = ptr->matrix->dense_row(first - 1, last - first + 1);
+    auto wrk = ptr->dense_row(first - 1, last - first + 1);
     for (size_t r = 0; r < nr; ++r) {
         Rcpp::NumericVector current(len);
         wrk->fetch_copy(r, static_cast<double*>(current.begin()));
@@ -219,11 +206,11 @@ Rcpp::List rows_subset(Rcpp::RObject parsed, int first, int last) {
 Rcpp::List columns(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
 
-    size_t nr = (ptr->matrix)->nrow();
-    size_t nc = (ptr->matrix)->ncol();
+    size_t nr = ptr->nrow();
+    size_t nc = ptr->ncol();
     Rcpp::List output(nc);
 
-    auto wrk = ptr->matrix->dense_column();
+    auto wrk = ptr->dense_column();
     for (size_t c = 0; c < nc; ++c) {
         Rcpp::NumericVector current(nr);
         wrk->fetch_copy(c, static_cast<double*>(current.begin()));
@@ -238,11 +225,11 @@ Rcpp::List columns(Rcpp::RObject parsed) {
 Rcpp::List columns_subset(Rcpp::RObject parsed, int first, int last) {
     RatXPtr ptr(parsed);
 
-    size_t nc = (ptr->matrix)->ncol();
+    size_t nc = ptr->ncol();
     size_t len = last - first + 1;
     Rcpp::List output(nc);
 
-    auto wrk = ptr->matrix->dense_column(first - 1, last - first + 1);
+    auto wrk = ptr->dense_column(first - 1, last - first + 1);
     for (size_t c = 0; c < nc; ++c) {
         Rcpp::NumericVector current(len);
         wrk->fetch_copy(c, static_cast<double*>(current.begin()));
@@ -260,11 +247,11 @@ Rcpp::List columns_subset(Rcpp::RObject parsed, int first, int last) {
 Rcpp::List sparse_rows(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
 
-    size_t nr = (ptr->matrix)->nrow();
-    size_t nc = (ptr->matrix)->ncol();
+    size_t nr = ptr->nrow();
+    size_t nc = ptr->ncol();
     Rcpp::List output(nr);
 
-    auto wrk = ptr->matrix->sparse_row();
+    auto wrk = ptr->sparse_row();
     for (size_t r = 0; r < nr; ++r) {
         auto current = wrk->fetch(r);
         output[r] = format_sparse_range(current);
@@ -278,11 +265,11 @@ Rcpp::List sparse_rows(Rcpp::RObject parsed) {
 Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last) {
     RatXPtr ptr(parsed);
 
-    size_t nr = (ptr->matrix)->nrow();
+    size_t nr = ptr->nrow();
     size_t len = last - first + 1;
     Rcpp::List output(nr);
 
-    auto wrk = ptr->matrix->sparse_row(first - 1, last - first + 1);
+    auto wrk = ptr->sparse_row(first - 1, last - first + 1);
     for (size_t r = 0; r < nr; ++r) {
         auto current = wrk->fetch(r);
         output[r] = format_sparse_range(current);
@@ -296,11 +283,11 @@ Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last) {
 Rcpp::List sparse_columns(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
 
-    size_t nr = (ptr->matrix)->nrow();
-    size_t nc = (ptr->matrix)->ncol();
+    size_t nr = ptr->nrow();
+    size_t nc = ptr->ncol();
     Rcpp::List output(nc);
 
-    auto wrk = ptr->matrix->sparse_column();
+    auto wrk = ptr->sparse_column();
     for (size_t c = 0; c < nc; ++c) {
         auto current = wrk->fetch(c);
         output[c] = format_sparse_range(current);
@@ -314,11 +301,11 @@ Rcpp::List sparse_columns(Rcpp::RObject parsed) {
 Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last) {
     RatXPtr ptr(parsed);
 
-    size_t nc = (ptr->matrix)->ncol();
+    size_t nc = ptr->ncol();
     size_t len = last - first + 1;
     Rcpp::List output(nc);
 
-    auto wrk = ptr->matrix->sparse_column(first - 1, last - first + 1);
+    auto wrk = ptr->sparse_column(first - 1, last - first + 1);
     for (size_t c = 0; c < nc; ++c) {
         auto current = wrk->fetch(c);
         output[c] = format_sparse_range(current);
@@ -335,7 +322,7 @@ Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::NumericVector rowsums(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
-    auto out = tatami::row_sums((ptr->matrix).get());
+    auto out = tatami::row_sums(ptr.get());
     return Rcpp::NumericVector(out.begin(), out.end());
 }
 
@@ -343,11 +330,11 @@ Rcpp::NumericVector rowsums(Rcpp::RObject parsed) {
 //[[Rcpp::export(rng=false)]]
 Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
-    size_t NR = (ptr->matrix)->nrow();
+    size_t NR = ptr->nrow();
     std::vector<double> output(NR);
 
     tatami::parallelize([&](int, int start, int length) -> void {
-        auto wrk = ptr->matrix->dense_row();
+        auto wrk = ptr->dense_row();
         for (size_t r = start, e = start + length; r < e; ++r) {
             auto current = wrk->fetch(r);
             output[r] = std::accumulate(current.begin(), current.end(), 0.0);

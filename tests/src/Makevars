@@ -1,1 +1,9 @@
-PKG_CPPFLAGS=-I../../include -I../../build/_deps/tatami-src/include/ -DTEST_CUSTOM_PARALLEL -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2
+PKG_CPPFLAGS=-I../../include \
+    -I../../build/_deps/tatami-src/include/ \
+    -I../../build/_deps/manticore-src/include/ \
+    -DTEST_CUSTOM_PARALLEL \
+    -fstack-protector-strong \
+    -Wformat \
+    -Werror=format-security \
+    -Wdate-time \
+    -D_FORTIFY_SOURCE=2

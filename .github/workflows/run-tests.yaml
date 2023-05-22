@@ -51,4 +51,3 @@ jobs:
       run: |
         setwd("tests/tests")
         testthat::test_file("testthat.R", stop_on_failure=TRUE)
-

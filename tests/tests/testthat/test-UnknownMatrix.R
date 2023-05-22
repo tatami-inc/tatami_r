@@ -1,4 +1,4 @@
-# Check for correct parsing with SparseArraySeed objects.
+# Check for correct handling of UnknownMatrix objects.
 # library(testthat); library(raticate.tests); source("test-UnknownMatrix.R")
 
 library(Matrix)
