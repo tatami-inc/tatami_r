@@ -1,65 +1,40 @@
-# Convert R objects to `tatami` matrices
+# Read R objects via tatami 
 
 ## Overview
 
-**raticate** is an **Rcpp**-based header-only library for parsing R objects as `tatami::Matrix` instances.
-This enables use of R matrix data in [**tatami**](https://github.com/LTLA/tatami)-compatible C++ code such as [**libscran**](https://github.com/LTLA/libscran).
+**tatami_r** is an header-only library for reading matrix-like R objects in [**tatami**](https://github.com/tatami-inc/tatami).
 Usage is as simple as:
 
 ```cpp
-#include "raticate/raticate.hpp"
+#include "tatami_r/tatami_r.hpp"
 
 SEXP some_typical_rcpp_function(Rcpp::RObject x) {
-    auto parsed = raticate::parse(x, /* allow_unknown = */ false);
+    auto ptr = tatami_r::UnknownMatrix(x);
 
-    if (parsed.matrix == std::nullptr) {
-        // Do something if format of 'x' is not supported;
-        // probably throw an error.
-    } else {
-        // Do stuff with the tatami::Matrix.
-        parsed.matrix->nrow();
-        auto first_row = parsed.matrix->row(0);
-    }
+    // Do stuff with the tatami::Matrix.
+    ptr->nrow();
+    auto row_extractor = ptr->dense_row();
+    auto first_row = row_extractor->fetch(0);
 }
 ```
 
 And that's it, really.
-If you want more details, you can check out the [reference documentation](https://ltla.github.io/raticate).
-
-## Slightly more advanced usage
-
-Currently `parse()` knows about the following matrix formats:
-
-- ordinary logical, numeric or integer matrices.
-- `dgCMatrix` or `lgCMatrix` objects from the **Matrix** package.
-- `SparseArraySeed` objects from the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package.
-- `DelayedMatrix` objects wrapping any of the above, or containing the following delayed operations:
-  - Subsetting (as a `DelayedSubset` instance)
-  - Modification of dimnames (as a `DelayedSetDimnames` instance)
-  - Transposition (as a `DelayedAperm` instance)
-  - Combining (as a `DelayedAbind` instance)
-
-If `parse()` cannot interpret the format of `x`, it returns a `nullptr` by default.
-However, by setting `allow_unknown = true`, we can create a "unknown matrix fallback" that calls `DelayedArray::extract_array()` to extract an appropriate slice of the matrix.
-This is quite a bit slower as it involves a call into the R runtime.
-
-The `parsed` output object will also contain an R list named `.contents`.
-This holds references to the memory used by the `.matrix` member, preventing their premature garbage collection.
-Callers should ensure that the `.matrix` member (or any copies) does not outlive the `.contents` R list.
+If you want more details, you can check out the [reference documentation](https://tatami-inc.github.io/tatami_r).
+Also check out the [comments about safe parallelization](docs/parallel.md) when dealing with `tatami::Matrix` pointers that might contain `tatami_r::UnknownMatrix` objects.
 
 ## Deployment
 
-**raticate** is intended to be compiled with other relevant C++ code inside an R package.
+**tatami_r** is intended to be compiled with other relevant C++ code inside an R package.
 This is most easily done by modifying the package `DESCRIPTION` with:
 
 ```
 LinkingTo: beachmat
 ```
 
-which will automatically use the vendored copies of **raticate** (and **tatami**) inside the [**beachmat**](http://bioconductor.org/packages/beachmat) package.
+which will automatically use the vendored copies of **tatami_r** (and **tatami**) inside the [**beachmat**](http://bioconductor.org/packages/beachmat) package.
 Note that C++17 is required.
 
-If **beachmat** cannot be used, then the R package developer will need to copy the **raticate** and **tatami** `include/` directories into the package's `inst/include`,
+If **beachmat** cannot be used, then the R package developer will need to copy the **tatami_r** and **tatami** `include/` directories into the package's `inst/include`,
 and then add a `Makevars` file like:
 
 ```
