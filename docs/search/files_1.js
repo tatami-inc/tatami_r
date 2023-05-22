@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['raticate_2ehpp_0',['raticate.hpp',['../raticate_8hpp.html',1,'']]]
+  ['bind_5fintersection_2ehpp_0',['bind_intersection.hpp',['https://tatami-inc.github.io/tatami/bind__intersection_8hpp.html',1,'']]]
 ];

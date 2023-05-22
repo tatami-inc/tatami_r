@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['handling_20parallelization_0',['Handling parallelization',['../md_parallel.html',1,'']]]
+  ['read_20r_20objects_20via_20tatami_0',['Read R objects via tatami',['../index.html',1,'']]]
 ];

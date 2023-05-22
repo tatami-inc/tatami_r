@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['parsed_0',['Parsed',['../structraticate_1_1Parsed.html',1,'raticate']]]
+  ['arrayview_0',['ArrayView',['https://tatami-inc.github.io/tatami/classtatami_1_1ArrayView.html',1,'tatami']]]
 ];
