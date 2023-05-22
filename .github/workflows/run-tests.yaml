@@ -39,7 +39,7 @@ jobs:
     - name: Turn on parallelization flags
       if: ${{ matrix.parallel }}
       run: |
-        cat tests/src/Makevars | sed "s/^\(PKG_CPPFLAGS=.*\)$/\\1 -DTEST_CUSTOM_PARALLEL/" > .tmp
+        cat tests/src/Makevars | grep -v "TEST_CUSTOM_PARALLEL" > .tmp
         cat .tmp
         mv .tmp tests/src/Makevars
 
