@@ -104,7 +104,7 @@ $(function() {
 <div class="line"><span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; th : threads) {</div>
 <div class="line">    th.join();</div>
 <div class="line">}</div>
-<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:29</div></div>
+<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:30</div></div>
 </div><!-- fragment --><p>Even more simply, we provide the pre-packaged <code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code> method for use as a custom <b>tatami</b> parallelization scheme. This requires a little bit of care to use, as the <code>TATAMI_CUSTOM_PARALLEL</code> macro has to be set before any includes of <b>tatami</b> (which is done automatically by including <code><a class="el" href="tatami__r_8hpp.html" title="tatami bindings for arbitrary R matrices.">tatami_r/tatami_r.hpp</a></code>). We suggest using the following sequence of calls before any <b>tatami</b>-containing source file.</p>
 <div class="fragment"><div class="line"><span class="comment">// Must be defined before including tatami_r/parallelize.hpp</span></div>
 <div class="line"><span class="preprocessor">#define TATAMI_R_PARALLELIZE_UNKNOWN </span></div>
