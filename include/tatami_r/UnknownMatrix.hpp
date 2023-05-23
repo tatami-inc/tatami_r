@@ -116,9 +116,18 @@ public:
         return internal_sparse;
     }
 
+    double sparse_proportion() const {
+        return internal_sparse;
+    }
+
     bool prefer_rows() const {
         // All of the individual extract_array outputs are effectively column-major.
         return false;
+    }
+
+    double prefer_rows_proportion() const {
+        // See above.
+        return 0;
     }
 
     bool uses_oracle(bool) const {
