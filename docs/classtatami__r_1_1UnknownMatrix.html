@@ -107,8 +107,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aa6b547e59de3db1f60bd5ec6b4127c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4898d9cf2ba3a276df1e9af98486470"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#aa4898d9cf2ba3a276df1e9af98486470">sparse</a> () const</td></tr>
 <tr class="separator:aa4898d9cf2ba3a276df1e9af98486470"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8da3ae5a3077eec313e50c74877703fc"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#a8da3ae5a3077eec313e50c74877703fc">sparse_proportion</a> () const</td></tr>
+<tr class="separator:a8da3ae5a3077eec313e50c74877703fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae05e4af24dd6b2d0bb3b0e4ff0345932"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#ae05e4af24dd6b2d0bb3b0e4ff0345932">prefer_rows</a> () const</td></tr>
 <tr class="separator:ae05e4af24dd6b2d0bb3b0e4ff0345932"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefa5b409b39afdd482c15f741ec8e1a2"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#aefa5b409b39afdd482c15f741ec8e1a2">prefer_rows_proportion</a> () const</td></tr>
+<tr class="separator:aefa5b409b39afdd482c15f741ec8e1a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8696bdff8c313f4cd195f667d6c9bc0c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#a8696bdff8c313f4cd195f667d6c9bc0c">uses_oracle</a> (bool) const</td></tr>
 <tr class="separator:a8696bdff8c313f4cd195f667d6c9bc0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6768303642327d0f71d4b05acccf82c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="elRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a6008dbced6de41e5619156b5335f5762">tatami::FullDenseExtractor</a>&lt; Value_, Index_ &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#aa6768303642327d0f71d4b05acccf82c">dense_row</a> (const <a class="elRef" href="https://tatami-inc.github.io/tatami/structtatami_1_1Options.html">tatami::Options</a> &amp;opt) const</td></tr>
@@ -588,6 +592,35 @@ template&lt;typename Value_ , typename Index_ &gt; </div>
 
 </div>
 </div>
+<a id="aefa5b409b39afdd482c15f741ec8e1a2" name="aefa5b409b39afdd482c15f741ec8e1a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefa5b409b39afdd482c15f741ec8e1a2">&#9670;&#160;</a></span>prefer_rows_proportion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Value_ , typename Index_ &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="classtatami__r_1_1UnknownMatrix.html">tatami_r::UnknownMatrix</a>&lt; Value_, Index_ &gt;::prefer_rows_proportion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="elRef" href="https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html#a2ddcc730155ca894df1c58b0a963d5e7">tatami::Matrix&lt; Value_, Index_ &gt;</a>.</p>
+
+</div>
+</div>
 <a id="aa4898d9cf2ba3a276df1e9af98486470" name="aa4898d9cf2ba3a276df1e9af98486470"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa4898d9cf2ba3a276df1e9af98486470">&#9670;&#160;</a></span>sparse()</h2>
 
@@ -730,6 +763,35 @@ template&lt;typename Value_ , typename Index_ &gt; </div>
 </div><div class="memdoc">
 
 <p>Implements <a class="elRef" href="https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html#a120c3a294a1ffd715c86b136902b8c51">tatami::Matrix&lt; Value_, Index_ &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a8da3ae5a3077eec313e50c74877703fc" name="a8da3ae5a3077eec313e50c74877703fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8da3ae5a3077eec313e50c74877703fc">&#9670;&#160;</a></span>sparse_proportion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Value_ , typename Index_ &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="classtatami__r_1_1UnknownMatrix.html">tatami_r::UnknownMatrix</a>&lt; Value_, Index_ &gt;::sparse_proportion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="elRef" href="https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html#a8a1a29b602b903201fc36ad65f76c78c">tatami::Matrix&lt; Value_, Index_ &gt;</a>.</p>
 
 </div>
 </div>
