@@ -5,11 +5,13 @@
 #include "tatami/tatami.hpp"
 #include "SimpleMatrix.hpp"
 #include "SparseArraySeed.hpp"
+
 #include <vector>
 #include <memory>
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "parallelize.hpp"
 
@@ -173,16 +175,20 @@ private:
         std::shared_ptr<tatami::Extractor<tatami::DimensionSelectionType::FULL, sparse_, Value_, Index_> > bufextractor;
         Rcpp::RObject contents;
 
-        Index_ block_size;
+        // We define the number of chunks in the extracted block,
+        // as well as the size of the extracted block itself.
+        Index_ max_block_size_in_chunks;
+        Index_ max_block_size_in_elements;
 
         // No oracle, we just go for blocks.
         Index_ primary_block_start, primary_block_len;
 
         // With an oracle, we try to make some better decisions.
         tatami::OracleStream<Index_> prediction_stream;
-        std::unordered_map<Index_, Index_> predictors;
+        std::unordered_map<Index_, Index_> mapping;
+        std::unordered_set<Index_> used_chunks;
         std::vector<Index_> unique_predictions;
-        size_t predictions_made = 0, predictions_used = 0;
+        size_t predictions_used = 0, predictions_made = 0;
     };
 
 private:
@@ -202,13 +208,13 @@ private:
     Rcpp::List create_rounded_indices(Index_ i, Workspace<sparse_>* work) const {
         Rcpp::List indices(2);
         if constexpr(byrow_) {
-            auto row_rounded = round_indices(i, work->block_size, internal_nrow);
+            auto row_rounded = round_indices(i, work->max_block_size_in_elements, internal_nrow);
             work->primary_block_start = row_rounded.first;
             work->primary_block_len = row_rounded.second;
             indices[0] = create_consecutive_indices(row_rounded.first, row_rounded.second);
             indices[1] = work->secondary_indices;
         } else {
-            auto col_rounded = round_indices(i, work->block_size, internal_ncol);
+            auto col_rounded = round_indices(i, work->max_block_size_in_elements, internal_ncol);
             work->primary_block_start = col_rounded.first;
             work->primary_block_len = col_rounded.second;
             indices[0] = work->secondary_indices;
@@ -217,45 +223,84 @@ private:
         return indices;
     }
 
+    template<bool byrow_>
+    Index_ chunk_dim() const {
+        if constexpr(byrow_) {
+            return chunk_nrow;
+        } else {
+            return chunk_ncol;
+        }
+    }
+
     template<bool byrow_, bool sparse_>
     Rcpp::List create_next_indices(Workspace<sparse_>* work) const {
         auto& up = work->unique_predictions;
+        auto& map = work->mapping;
+        auto& used = work->used_chunks;
         up.clear();
-        work->predictors.clear();
+        map.clear();
+        used.clear();
 
+        auto& stream = work->prediction_stream;
         work->predictions_used = 0;
-        size_t max_predictions = work->block_size * 10;
-        auto& i = work->predictions_made;
-        for (i = 0; i < max_predictions; ++i) {
+        auto& made = work->predictions_made;
+        made = 0;
+        size_t max_predictions = work->max_block_size_in_elements * 10;
+        auto cdim = chunk_dim<byrow_>();
+
+        for (size_t i = 0; i < max_predictions; ++i) {
             Index_ current;
-            if (!work->prediction_stream.next(current)) {
+            if (!stream.next(current)) {
                 break;
             }
 
-            auto it = work->predictors.find(current);
-            if (it == work->predictors.end()) {
-                if (up.size() == work->block_size) {
-                    work->prediction_stream.back();
+            auto it = map.find(current);
+            if (it == map.end()) {
+                // If the chunking is non-trivial, we quit when the cached
+                // number of chunks is reached. This is equivalent to only
+                // loading an element from a chunk if we're sure that we can
+                // cache the entire chunk (even if we don't actually load the
+                // entire chunk), so as to avoid running out of space halfway
+                // through the chunk and requiring another read of the same
+                // chunk in the next set of predictions.
+                if (cdim > 1) {
+                    Index_ chunk = current / cdim;
+                    auto uIt = used.find(chunk);
+                    if (uIt == used.end()) {
+                        if (used.size() == work->max_block_size_in_chunks) {
+                            stream.back();
+                            break;
+                        }
+                        used.insert(chunk);
+                    }
+
+                } else if (map.size() == work->max_block_size_in_elements) {
+                    stream.back();
                     break;                    
                 }
 
-                work->predictors[current] = up.size();
+                map[current] = up.size();
                 up.push_back(current);
             }
+
+            ++made;
         }
 
+        // Creating sorted, 1-based indices to use in the DelayedArray extractors.
         if (!std::is_sorted(up.begin(), up.end())) {
             std::sort(up.begin(), up.end());
             Index_ counter = 0;
             for (auto x : up) {
-                work->predictors[x] = counter;
+                map[x] = counter;
                 ++counter;
             }
         }
+
         Rcpp::IntegerVector primary_indices(up.begin(), up.end());
-        for (auto& x : primary_indices) { // get to 1-based indices.
+        for (auto& x : primary_indices) { 
             ++x;
         }
+        work->primary_block_len = primary_indices.size();
 
         Rcpp::List indices(2);
         if constexpr(byrow_) {
@@ -322,7 +367,7 @@ private:
                     return this->create_next_indices<byrow_>(work2);
                 });
             }
-            i = work->predictors.find(i)->second;
+            i = work->mapping.find(i)->second;
             ++work->predictions_used;
 
         } else {
@@ -368,7 +413,6 @@ private:
         });
 #endif
 
-        check_buffered_dims<byrow_, true>(work->buffer.get(), work);
         work->bufextractor = tatami::new_extractor<byrow_, true>(work->buffer.get(), options);
     }
 
@@ -380,7 +424,7 @@ private:
                     return this->create_next_indices<byrow_>(work2);
                 });
             }
-            i = work->predictors.find(i)->second;
+            i = work->mapping.find(i)->second;
             ++work->predictions_used;
 
         } else {
@@ -418,8 +462,9 @@ private:
 
         static void define_block_size(const UnknownMatrix<Value_, Index_>* parent, Index_ len, Workspace<sparse_>& work) {
             double cache_elements = static_cast<double>(parent->cache_size) / (static_cast<double>(len) * static_cast<double>(sizeof(Value_)));
-            double chunk_dim = byrow_ ? parent->chunk_nrow : parent->chunk_ncol;
-            work.block_size = std::max(1.0, std::floor(cache_elements / chunk_dim)) * chunk_dim;
+            auto chunk_dim = parent->template chunk_dim<byrow_>();
+            work.max_block_size_in_chunks = std::max(1.0, std::floor(cache_elements / chunk_dim));
+            work.max_block_size_in_elements = work.max_block_size_in_chunks * chunk_dim;
         }
 
         UnknownExtractor(const UnknownMatrix<Value_, Index_>* p) : parent(p) { 
@@ -456,8 +501,8 @@ private:
             }
         }
 
-        void set_oracle(std::unique_ptr<tatami::Oracle<Index_> >) {
-            // No-op.
+        void set_oracle(std::unique_ptr<tatami::Oracle<Index_> > o) {
+            work->prediction_stream.set(std::move(o));
             return;
         }
 
