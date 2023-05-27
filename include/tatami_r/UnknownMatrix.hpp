@@ -107,7 +107,7 @@ public:
 
 private:
     Index_ internal_nrow, internal_ncol;
-    bool internal_sparse, internal_prefer_row;
+    bool internal_sparse, internal_prefer_rows;
 
     size_t cache_size;
     Index_ chunk_nrow, chunk_ncol;
@@ -129,8 +129,16 @@ public:
         return internal_sparse;
     }
 
+    double sparse_proportion() const {
+        return static_cast<double>(internal_sparse);
+    }
+
     bool prefer_rows() const {
         return internal_prefer_rows;
+    }
+
+    double prefer_rows_proportion() const {
+        return static_cast<double>(internal_prefer_rows);
     }
 
     bool uses_oracle(bool) const {
@@ -210,15 +218,15 @@ private:
     }
 
     template<bool byrow_, bool sparse_>
-    Rcpp::List create_next_indices(Index_ i, Workspace<sparse_>* work) const {
-        work->unique_predictions.clear();
+    Rcpp::List create_next_indices(Workspace<sparse_>* work) const {
+        auto& up = work->unique_predictions;
+        up.clear();
         work->predictors.clear();
-        bool recycle = true;
 
         work->predictions_used = 0;
         size_t max_predictions = work->block_size * 10;
         auto& i = work->predictions_made;
-        for (i = 0; i < max_predictions && work->unique_predictions.size() < work->block_size; ++i) {
+        for (i = 0; i < max_predictions; ++i) {
             Index_ current;
             if (!work->prediction_stream.next(current)) {
                 break;
@@ -226,20 +234,25 @@ private:
 
             auto it = work->predictors.find(current);
             if (it == work->predictors.end()) {
-                work->predictors[current] = 0;
-                unique_predictions.push_back(current);
+                if (up.size() == work->block_size) {
+                    work->prediction_stream.back();
+                    break;                    
+                }
+
+                work->predictors[current] = up.size();
+                up.push_back(current);
             }
         }
 
-        if (!std::is_sorted(unique_predictions.begin(), unique_predictions.end())) {
-            std::sort(unique_predictions.begin(), unique_predictions.end());
+        if (!std::is_sorted(up.begin(), up.end())) {
+            std::sort(up.begin(), up.end());
+            Index_ counter = 0;
+            for (auto x : up) {
+                work->predictors[x] = counter;
+                ++counter;
+            }
         }
-        Index_ counter = 0;
-        for (auto x : unique_predictions) {
-            work->predictors[x] = counter;
-            ++counter;
-        }
-        Rcpp::IntegerVector primary_indices(unique_predictions.begin(), unique_predictions.end());
+        Rcpp::IntegerVector primary_indices(up.begin(), up.end());
         for (auto& x : primary_indices) { // get to 1-based indices.
             ++x;
         }
@@ -305,8 +318,8 @@ private:
     const Value_* run_dense_extractor(Index_ i, Value_* buffer, const tatami::Options& options, Workspace<false>* work) const {
         if (work->prediction_stream.active()) {
             if (work->predictions_used == work->predictions_made) {
-                run_dense_extractor<byrow_>(i, options, work, [](Index_ i2, Workspace<false>* work2) -> Rcpp::List { 
-                    return create_next_indices<byrow_>(i2, work2);
+                run_dense_extractor<byrow_>(i, options, work, [&](Index_, Workspace<false>* work2) -> Rcpp::List { 
+                    return this->create_next_indices<byrow_>(work2);
                 });
             }
             i = work->predictors.find(i)->second;
@@ -314,8 +327,8 @@ private:
 
         } else {
             if (needs_reset(i, work)) {
-                run_dense_extractor<byrow_>(i, options, work, [](Index_ i2, Workspace<false>* work2) -> Rcpp::List { 
-                    return create_rounded_indices<byrow_>(i2, work2);
+                run_dense_extractor<byrow_>(i, options, work, [&](Index_ i2, Workspace<false>* work2) -> Rcpp::List { 
+                    return this->create_rounded_indices<byrow_>(i2, work2);
                 });
             }
             i -= work->primary_block_start;
@@ -326,7 +339,7 @@ private:
     }
 
     template<bool byrow_, class Function_>
-    void run_sparse_extractor(Index_ i, Value_* buffer, const tatami::Options& options, Workspace<false>* work, Function_ index_creator) const {
+    void run_sparse_extractor(Index_ i, const tatami::Options& options, Workspace<true>* work, Function_ index_creator) const {
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         // This involves some Rcpp initializations, so we lock it just in case.
         auto& mexec = executor();
@@ -355,16 +368,16 @@ private:
         });
 #endif
 
-        check_buffered_dims<byrow_, false>(work->buffer.get(), work);
-        work->bufextractor = tatami::new_extractor<byrow_, false>(work->buffer.get(), options);
+        check_buffered_dims<byrow_, true>(work->buffer.get(), work);
+        work->bufextractor = tatami::new_extractor<byrow_, true>(work->buffer.get(), options);
     }
 
     template<bool byrow_>
-    SparseRange<Value_, Index_> run_sparse_extractor(Index_ i, Value_* vbuffer, Index_* ibuffer, const tatami::Options& options, Workspace<true>* work) const {
+    tatami::SparseRange<Value_, Index_> run_sparse_extractor(Index_ i, Value_* vbuffer, Index_* ibuffer, const tatami::Options& options, Workspace<true>* work) const {
         if (work->prediction_stream.active()) {
             if (work->predictions_used == work->predictions_made) {
-                run_sparse_extractor<byrow_>(i, options, work, [](Index_ i2, Workspace<false>* work2) -> Rcpp::List { 
-                    return create_next_indices<byrow_>(i2, work2);
+                run_sparse_extractor<byrow_>(i, options, work, [&](Index_, Workspace<true>* work2) -> Rcpp::List { 
+                    return this->create_next_indices<byrow_>(work2);
                 });
             }
             i = work->predictors.find(i)->second;
@@ -372,8 +385,8 @@ private:
 
         } else {
             if (needs_reset(i, work)) {
-                run_sparse_extractor<byrow_>(i, options, work, [](Index_ i2, Workspace<false>* work2) -> Rcpp::List { 
-                    return create_rounded_indices<byrow_>(i2, work2);
+                run_sparse_extractor<byrow_>(i, options, work, [&](Index_ i2, Workspace<true>* work2) -> Rcpp::List { 
+                    return this->create_rounded_indices<byrow_>(i2, work2);
                 });
             }
             i -= work->primary_block_start;
@@ -403,16 +416,17 @@ private:
             return tmp;
         }
 
-        static void define_blocks(const UnknownMatrix<Value_, Index_>* parent, Index_ len, Workspace<sparse_>& work) {
+        static void define_block_size(const UnknownMatrix<Value_, Index_>* parent, Index_ len, Workspace<sparse_>& work) {
             double cache_elements = static_cast<double>(parent->cache_size) / (static_cast<double>(len) * static_cast<double>(sizeof(Value_)));
             double chunk_dim = byrow_ ? parent->chunk_nrow : parent->chunk_ncol;
-            work->block_size = std::max(1.0, std::floor(cache_elements / chunk_dim)) * chunk_dim;
+            work.block_size = std::max(1.0, std::floor(cache_elements / chunk_dim)) * chunk_dim;
         }
 
         UnknownExtractor(const UnknownMatrix<Value_, Index_>* p) : parent(p) { 
             if constexpr(selection_ == tatami::DimensionSelectionType::FULL) {
                 this->full_length = byrow_ ? p->internal_ncol : p->internal_nrow;
                 work.reset(setup_workspace(this->full_length));
+                define_block_size(parent, this->full_length, *work);
             }
         }
 
@@ -421,6 +435,7 @@ private:
                 this->block_start = start;
                 this->block_length = length;
                 work.reset(setup_workspace(start, length));
+                define_block_size(parent, this->block_length, *work);
             }
         }
 
@@ -429,6 +444,7 @@ private:
                 indices = std::move(idx);
                 this->index_length = indices.size();
                 work.reset(setup_workspace(indices));
+                define_block_size(parent, this->index_length, *work);
             }
         }
 
@@ -467,14 +483,31 @@ private:
     };
 
 private:
-    template<bool byrow, tatami::DimensionSelectionType selection_>
-    struct SparseUnknownExtractor : public UnknownExtractor<byrow, selection_, true> {
+    template<bool byrow_, tatami::DimensionSelectionType selection_>
+    struct SparseUnknownExtractor : public UnknownExtractor<byrow_, selection_, true> {
         template<typename ... Args_>
         SparseUnknownExtractor(const UnknownMatrix<Value_, Index_>* p, tatami::Options opt, Args_&&... args) : 
-            UnknownExtractor<byrow, selection_, true>(p, std::forward<Args_>(args)...), options(std::move(opt)) {}
+            UnknownExtractor<byrow_, selection_, true>(p, std::forward<Args_>(args)...), options(std::move(opt)) {}
 
         tatami::SparseRange<Value_, Index_> fetch(Index_ i, Value_* vbuffer, Index_* ibuffer) {
-            return this->parent->template run_sparse_extractor<byrow_>(i, vbuffer, ibuffer, options, this->work.get());
+            auto output = this->parent->template run_sparse_extractor<byrow_>(i, vbuffer, ibuffer, options, this->work.get());
+
+            // Need to adjust the indices.
+            if (output.index) {
+                if constexpr(selection_ == tatami::DimensionSelectionType::BLOCK) {
+                    for (size_t i = 0; i < output.number; ++i) {
+                        ibuffer[i] = output.index[i] + this->block_start;
+                    }
+                    output.index = ibuffer;
+                } else if constexpr(selection_ == tatami::DimensionSelectionType::INDEX) {
+                    for (size_t i = 0; i < output.number; ++i) {
+                        ibuffer[i] = this->indices[output.index[i]];
+                    }
+                    output.index = ibuffer;
+                }
+            }
+
+            return output;
         }
 
     private:
