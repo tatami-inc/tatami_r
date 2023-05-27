@@ -108,3 +108,23 @@ rowsums_manual <- function(parsed) {
     .Call('_raticate_tests_rowsums_manual', PACKAGE = 'raticate.tests', parsed)
 }
 
+#' @export
+dense_rows_guided <- function(parsed, targets) {
+    .Call('_raticate_tests_dense_rows_guided', PACKAGE = 'raticate.tests', parsed, targets)
+}
+
+#' @export
+dense_columns_guided <- function(parsed, targets) {
+    .Call('_raticate_tests_dense_columns_guided', PACKAGE = 'raticate.tests', parsed, targets)
+}
+
+#' @export
+sparse_rows_guided <- function(parsed, targets) {
+    .Call('_raticate_tests_sparse_rows_guided', PACKAGE = 'raticate.tests', parsed, targets)
+}
+
+#' @export
+sparse_columns_guided <- function(parsed, targets) {
+    .Call('_raticate_tests_sparse_columns_guided', PACKAGE = 'raticate.tests', parsed, targets)
+}
+

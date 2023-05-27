@@ -244,6 +244,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dense_rows_guided
+Rcpp::List dense_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
+RcppExport SEXP _raticate_tests_dense_rows_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
+    rcpp_result_gen = Rcpp::wrap(dense_rows_guided(parsed, targets));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dense_columns_guided
+Rcpp::List dense_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
+RcppExport SEXP _raticate_tests_dense_columns_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
+    rcpp_result_gen = Rcpp::wrap(dense_columns_guided(parsed, targets));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_rows_guided
+Rcpp::List sparse_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
+RcppExport SEXP _raticate_tests_sparse_rows_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_rows_guided(parsed, targets));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_columns_guided
+Rcpp::List sparse_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
+RcppExport SEXP _raticate_tests_sparse_columns_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_columns_guided(parsed, targets));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 1},
@@ -267,6 +311,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_sparse_columns_subset", (DL_FUNC) &_raticate_tests_sparse_columns_subset, 3},
     {"_raticate_tests_rowsums", (DL_FUNC) &_raticate_tests_rowsums, 1},
     {"_raticate_tests_rowsums_manual", (DL_FUNC) &_raticate_tests_rowsums_manual, 1},
+    {"_raticate_tests_dense_rows_guided", (DL_FUNC) &_raticate_tests_dense_rows_guided, 2},
+    {"_raticate_tests_dense_columns_guided", (DL_FUNC) &_raticate_tests_dense_columns_guided, 2},
+    {"_raticate_tests_sparse_rows_guided", (DL_FUNC) &_raticate_tests_sparse_rows_guided, 2},
+    {"_raticate_tests_sparse_columns_guided", (DL_FUNC) &_raticate_tests_sparse_columns_guided, 2},
     {NULL, NULL, 0}
 };
 
