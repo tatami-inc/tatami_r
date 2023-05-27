@@ -48,12 +48,12 @@ test_that("Works for dense UnknownMatrix objects", {
     # check that the oracle behaves correctly with unpredictable indices
     # (the consecutive case is handled by the rowsums).
     set.seed(19999)
-    indices <- sample(nrow(y))
+    indices <- sample(base::nrow(y))
     expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
     expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) dummy_sparse(y[i,])))
 
     set.seed(29999)
-    indices <- sample(ncol(y), ncol(y) * 2, replace=TRUE)
+    indices <- sample(base::ncol(y), base::ncol(y) * 2, replace=TRUE)
     expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
     expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) dummy_sparse(y[,i])))
 })
@@ -91,12 +91,12 @@ test_that("Works for sparse UnknownMatrix objects", {
     expect_equal(raticate.tests::rowsums_manual(z), rs)
 
     set.seed(39999)
-    indices <- sample(nrow(y), nrow(y) * 2, replace=TRUE)
+    indices <- sample(base::nrow(y), base::nrow(y) * 2, replace=TRUE)
     expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
     expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) extract_sparse(y[i,])))
 
     set.seed(49999)
-    indices <- sample(ncol(y), ncol(y) * 0.8)
+    indices <- sample(base::ncol(y), base::ncol(y) * 0.8)
     expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
     expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) extract_sparse(y[,i])))
 })
@@ -128,12 +128,12 @@ test_that("Behaves correctly with small block sizes", {
         expect_equal(raticate.tests::rowsums_manual(z), rs)
 
         set.seed(49999)
-        indices <- sample(nrow(y), nrow(y) * 0.5)
+        indices <- sample(base::nrow(y), base::nrow(y) * 0.5)
         expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
         expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) extract_sparse(y[i,])))
 
         set.seed(59999)
-        indices <- sample(ncol(y), ncol(y) * 2, replace=TRUE)
+        indices <- sample(base::ncol(y), base::ncol(y) * 2, replace=TRUE)
         expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
         expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) extract_sparse(y[,i])))
     }
@@ -170,12 +170,12 @@ test_that("Behaves correctly with small chunk sizes", {
         expect_equal(raticate.tests::rowsums_manual(z), rs)
 
         set.seed(69999)
-        indices <- sample(nrow(y), nrow(y) * 1.4, replace=TRUE)
+        indices <- sample(base::nrow(y), base::nrow(y) * 1.4, replace=TRUE)
         expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
         expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) extract_sparse(y[i,])))
 
         set.seed(79999)
-        indices <- sample(ncol(y), ncol(y) * 0.8, replace=TRUE)
+        indices <- sample(base::ncol(y), base::ncol(y) * 0.8, replace=TRUE)
         expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
         expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) extract_sparse(y[,i])))
     }
