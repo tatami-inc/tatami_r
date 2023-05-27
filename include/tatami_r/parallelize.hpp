@@ -11,6 +11,7 @@
 
 #include "manticore/manticore.hpp"
 #include <thread>
+#include <cmath>
 
 /**
  * @file parallelize.hpp
