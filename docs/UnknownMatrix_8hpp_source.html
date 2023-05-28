@@ -458,7 +458,7 @@ $(function() {
 <div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span> </div>
 <div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>        <span class="keywordflow">if</span> (internal_sparse) {</div>
 <div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>            <span class="keyword">auto</span> val0 = sparse_extractor(original_seed, indices);</div>
-<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>            <span class="keyword">auto</span> parsed = parse_SparseArraySeed&lt;Value_, Index_&gt;(val0);</div>
+<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>            <span class="keyword">auto</span> parsed = parse_SparseArraySeed&lt;Value_, Index_&gt;(val0, byrow_);</div>
 <div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>            check_buffered_dims&lt;byrow_, true, true&gt;(parsed.matrix.get(), work);</div>
 <div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span> </div>
 <div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span>            work-&gt;buffer = std::move(parsed.matrix);</div>
