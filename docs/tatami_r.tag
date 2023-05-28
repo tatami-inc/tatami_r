@@ -37,8 +37,8 @@
       <type></type>
       <name>UnknownMatrix</name>
       <anchorfile>classtatami__r_1_1UnknownMatrix.html</anchorfile>
-      <anchor>a11819f26faf8de99e8c900b357d84b25</anchor>
-      <arglist>(Rcpp::RObject seed)</arglist>
+      <anchor>a06483938467be132a2d45f6bbef98031</anchor>
+      <arglist>(Rcpp::RObject seed, size_t cache=-1)</arglist>
     </member>
   </compound>
   <compound kind="namespace">

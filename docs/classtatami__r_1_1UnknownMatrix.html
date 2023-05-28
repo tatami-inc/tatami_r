@@ -99,8 +99,8 @@ Inheritance diagram for tatami_r::UnknownMatrix&lt; Value_, Index_ &gt;:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a11819f26faf8de99e8c900b357d84b25"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#a11819f26faf8de99e8c900b357d84b25">UnknownMatrix</a> (Rcpp::RObject seed)</td></tr>
-<tr class="separator:a11819f26faf8de99e8c900b357d84b25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06483938467be132a2d45f6bbef98031"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#a06483938467be132a2d45f6bbef98031">UnknownMatrix</a> (Rcpp::RObject seed, size_t cache=-1)</td></tr>
+<tr class="separator:a06483938467be132a2d45f6bbef98031"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6e45c5be6ea19383fa36efeed47212b"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#aa6e45c5be6ea19383fa36efeed47212b">nrow</a> () const</td></tr>
 <tr class="separator:aa6e45c5be6ea19383fa36efeed47212b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6b547e59de3db1f60bd5ec6b4127c9f"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html#aa6b547e59de3db1f60bd5ec6b4127c9f">ncol</a> () const</td></tr>
@@ -237,8 +237,8 @@ class tatami_r::UnknownMatrix&lt; Value_, Index_ &gt;</div><p>Unknown matrix-lik
 </dl>
 <p>Pull data out of an unknown matrix-like object by calling methods from the <a href="https://bioconductor.org/packages/DelayedArray"><b>DelayedArray</b></a> package via <b>Rcpp</b>. This effectively extends <b>tatami</b> to work with any abstract numeric matrix that might be consumed by an R function. Note that this class should only be constructed in a serial context, and some additional effort is required to deal with parallelization of its methods; see <code><a class="el" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">executor()</a></code> for more details. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a11819f26faf8de99e8c900b357d84b25" name="a11819f26faf8de99e8c900b357d84b25"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11819f26faf8de99e8c900b357d84b25">&#9670;&#160;</a></span>UnknownMatrix()</h2>
+<a id="a06483938467be132a2d45f6bbef98031" name="a06483938467be132a2d45f6bbef98031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06483938467be132a2d45f6bbef98031">&#9670;&#160;</a></span>UnknownMatrix()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -252,8 +252,18 @@ template&lt;typename Value_ , typename Index_ &gt; </div>
           <td class="memname"><a class="el" href="classtatami__r_1_1UnknownMatrix.html">tatami_r::UnknownMatrix</a>&lt; Value_, Index_ &gt;::UnknownMatrix </td>
           <td>(</td>
           <td class="paramtype">Rcpp::RObject&#160;</td>
-          <td class="paramname"><em>seed</em></td><td>)</td>
+          <td class="paramname"><em>seed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>cache</em> = <code>-1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -264,7 +274,8 @@ template&lt;typename Value_ , typename Index_ &gt; </div>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">seed</td><td>A matrix-like R object.</td></tr>
+    <tr><td class="paramname">seed</td><td>A matrix-like R object. </td></tr>
+    <tr><td class="paramname">cache</td><td>Size of the cache, in bytes. If -1, this is determined from <code>DelayedArray::getAutoBlockSize()</code>.</td></tr>
   </table>
   </dd>
 </dl>
