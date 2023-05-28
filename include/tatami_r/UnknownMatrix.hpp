@@ -395,7 +395,7 @@ private:
 
         if (internal_sparse) {
             auto val0 = sparse_extractor(original_seed, indices);
-            auto parsed = parse_SparseArraySeed<Value_, Index_>(val0);
+            auto parsed = parse_SparseArraySeed<Value_, Index_>(val0, byrow_);
             check_buffered_dims<byrow_, true, true>(parsed.matrix.get(), work);
 
             work->buffer = std::move(parsed.matrix);
