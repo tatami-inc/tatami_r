@@ -44,6 +44,18 @@ test_that("Works for dense UnknownMatrix objects", {
     rs <- Matrix::rowSums(y)
     expect_equal(raticate.tests::rowsums(z), rs)
     expect_equal(raticate.tests::rowsums_manual(z), rs)
+
+    # check that the oracle behaves correctly with unpredictable indices
+    # (the consecutive case is handled by the rowsums).
+    set.seed(19999)
+    indices <- sample(base::nrow(y))
+    expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
+    expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) dummy_sparse(y[i,])))
+
+    set.seed(29999)
+    indices <- sample(base::ncol(y), base::ncol(y) * 2, replace=TRUE)
+    expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
+    expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) dummy_sparse(y[,i])))
 })
 
 test_that("Works for sparse UnknownMatrix objects", {
@@ -77,36 +89,54 @@ test_that("Works for sparse UnknownMatrix objects", {
     rs <- Matrix::rowSums(y)
     expect_equal(raticate.tests::rowsums(z), rs)
     expect_equal(raticate.tests::rowsums_manual(z), rs)
+
+    set.seed(39999)
+    indices <- sample(base::nrow(y), base::nrow(y) * 2, replace=TRUE)
+    expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
+    expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) extract_sparse(y[i,])))
+
+    set.seed(49999)
+    indices <- sample(base::ncol(y), base::ncol(y) * 0.8)
+    expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
+    expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) extract_sparse(y[,i])))
 })
 
 test_that("Behaves correctly with small block sizes", {
     y <- DelayedArray(abs(rsparsematrix(103, 51, 0.2))) # slightly offset from multiple, check for correct capping by dimension.
     y <- log1p(y) / rnorm(base::nrow(y))
+    on.exit(setAutoBlockSize())
 
-    blocksize <- 500
-    DelayedArray::setAutoBlockSize(blocksize * 8)
-    expect_equal(base::ncol(colAutoGrid(y)), ceiling(base::ncol(y) / floor(blocksize/base::nrow(y))))
-    expect_equal(base::nrow(rowAutoGrid(y)), ceiling(base::nrow(y) / floor(blocksize/base::ncol(y))))
+    for (blocksize in c(500, 2000, 10000)) {
+        DelayedArray::setAutoBlockSize(blocksize * 8)
 
-    z <- raticate.tests::parse(y)
-    expect_identical(raticate.tests::nrow(z), 103L)
-    expect_identical(raticate.tests::ncol(z), 51L)
+        z <- raticate.tests::parse(y)
+        expect_identical(raticate.tests::nrow(z), 103L)
+        expect_identical(raticate.tests::ncol(z), 51L)
 
-    expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
-    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
-    expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
-    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
+        expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
+        expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
+        expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
+        expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
 
-    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
-    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
-    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
-    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
+        expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
+        expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
+        expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
+        expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
-    rs <- Matrix::rowSums(y)
-    expect_equal(raticate.tests::rowsums(z), rs)
-    expect_equal(raticate.tests::rowsums_manual(z), rs)
+        rs <- Matrix::rowSums(y)
+        expect_equal(raticate.tests::rowsums(z), rs)
+        expect_equal(raticate.tests::rowsums_manual(z), rs)
 
-    setAutoBlockSize()
+        set.seed(49999)
+        indices <- sample(base::nrow(y), base::nrow(y) * 0.5)
+        expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
+        expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) extract_sparse(y[i,])))
+
+        set.seed(59999)
+        indices <- sample(base::ncol(y), base::ncol(y) * 2, replace=TRUE)
+        expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
+        expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) extract_sparse(y[,i])))
+    }
 })
 
 test_that("Behaves correctly with small chunk sizes", {
@@ -115,32 +145,40 @@ test_that("Behaves correctly with small chunk sizes", {
 
     y <- DelayedArray(new("MyOwnMatrix", rsparsematrix(39, 55, 0.2))) 
     y <- y * 2
+    on.exit(setAutoBlockSize())
 
     # Induce some interesting interaction with the block size.
-    blocksize <- 500
-    DelayedArray::setAutoBlockSize(blocksize * 8)
-    expect_true(base::ncol(colAutoGrid(y)) > 1)
-    expect_true(base::nrow(rowAutoGrid(y)) > 1)
+    for (blocksize in c(500, 2000, 10000)) {
+        DelayedArray::setAutoBlockSize(blocksize * 8)
 
-    z <- raticate.tests::parse(y)
-    expect_identical(raticate.tests::nrow(z), 39L)
-    expect_identical(raticate.tests::ncol(z), 55L)
+        z <- raticate.tests::parse(y)
+        expect_identical(raticate.tests::nrow(z), 39L)
+        expect_identical(raticate.tests::ncol(z), 55L)
 
-    expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
-    expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
-    expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
-    expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
+        expect_identical(raticate.tests::rows(z), lapply(seq_len(base::nrow(y)), function(i) y[i,]))
+        expect_identical(raticate.tests::rows_subset(z, 3, 5), lapply(seq_len(base::nrow(y)), function(i) y[i,3:5]))
+        expect_identical(raticate.tests::columns(z), lapply(seq_len(base::ncol(y)), function(i) y[,i]))
+        expect_identical(raticate.tests::columns_subset(z, 5, 16), lapply(seq_len(base::ncol(y)), function(i) y[5:16,i]))
 
-    expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
-    expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
-    expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
-    expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
+        expect_identical(raticate.tests::sparse_rows(z), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,])))
+        expect_identical(raticate.tests::sparse_rows_subset(z, 3, 15), lapply(seq_len(base::nrow(y)), function(i) extract_sparse(y[i,3:15], offset = 3)))
+        expect_identical(raticate.tests::sparse_columns(z), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[,i])))
+        expect_identical(raticate.tests::sparse_columns_subset(z, 5, 7), lapply(seq_len(base::ncol(y)), function(i) extract_sparse(y[5:7,i], offset = 5)))
 
-    rs <- Matrix::rowSums(y)
-    expect_equal(raticate.tests::rowsums(z), rs)
-    expect_equal(raticate.tests::rowsums_manual(z), rs)
+        rs <- Matrix::rowSums(y)
+        expect_equal(raticate.tests::rowsums(z), rs)
+        expect_equal(raticate.tests::rowsums_manual(z), rs)
 
-    setAutoBlockSize()
+        set.seed(69999)
+        indices <- sample(base::nrow(y), base::nrow(y) * 1.4, replace=TRUE)
+        expect_equal(raticate.tests::dense_rows_guided(z, indices), lapply(indices, function(i) y[i,]))
+        expect_equal(raticate.tests::sparse_rows_guided(z, indices), lapply(indices, function(i) extract_sparse(y[i,])))
+
+        set.seed(79999)
+        indices <- sample(base::ncol(y), base::ncol(y) * 0.8, replace=TRUE)
+        expect_equal(raticate.tests::dense_columns_guided(z, indices), lapply(indices, function(i) y[,i]))
+        expect_equal(raticate.tests::sparse_columns_guided(z, indices), lapply(indices, function(i) extract_sparse(y[,i])))
+    }
 })
 
 test_that("Behaves correctly with R-side errors", {

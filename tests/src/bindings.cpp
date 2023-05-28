@@ -242,6 +242,7 @@ Rcpp::List columns_subset(Rcpp::RObject parsed, int first, int last) {
 /********************************************
  *** Dense multiple row/column extractors ***
  ********************************************/
+
 //' @export
 //[[Rcpp::export(rng=false)]]
 Rcpp::List sparse_rows(Rcpp::RObject parsed) {
@@ -342,4 +343,92 @@ Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
     }, NR, 3); // 3 threads
 
     return Rcpp::NumericVector(output.begin(), output.end());
+}
+
+/*************************
+ *** Guided extractors ***
+ *************************/
+
+template<class Extractor_>
+std::vector<int> prepare_indices(const Rcpp::IntegerVector& targets, Extractor_& wrk) {
+    std::vector<int> copy(targets.begin(), targets.end());
+    for (auto& x : copy) { --x; }
+    wrk->set_oracle(std::make_unique<tatami::FixedOracle<int> >(copy.data(), copy.size()));
+    return copy;
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List dense_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
+    RatXPtr ptr(parsed);
+    auto wrk = ptr->dense_row();
+    auto copy = prepare_indices(targets, wrk);
+
+    size_t nc = ptr->ncol();
+    Rcpp::List output(copy.size());
+    size_t counter = 0;
+    for (auto r : copy) {
+        Rcpp::NumericVector current(nc);
+        wrk->fetch_copy(r, static_cast<double*>(current.begin()));
+        output[counter] = current;
+        ++counter;
+    }
+
+    return output;
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List dense_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
+    RatXPtr ptr(parsed);
+    auto wrk = ptr->dense_column();
+    auto copy = prepare_indices(targets, wrk);
+
+    size_t nr = ptr->nrow();
+    size_t counter = 0;
+    Rcpp::List output(copy.size());
+    for (auto c : copy) {
+        Rcpp::NumericVector current(nr);
+        wrk->fetch_copy(c, static_cast<double*>(current.begin()));
+        output[counter] = current;
+        ++counter;
+    }
+
+    return output;
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List sparse_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
+    RatXPtr ptr(parsed);
+    auto wrk = ptr->sparse_row();
+    auto copy = prepare_indices(targets, wrk);
+
+    size_t nc = ptr->ncol();
+    Rcpp::List output(copy.size());
+    size_t counter = 0;
+    for (auto r : copy) {
+        output[counter] = format_sparse_range(wrk->fetch(r));
+        ++counter;
+    }
+
+    return output;
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List sparse_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
+    RatXPtr ptr(parsed);
+    auto wrk = ptr->sparse_column();
+    auto copy = prepare_indices(targets, wrk);
+
+    size_t nr = ptr->nrow();
+    size_t counter = 0;
+    Rcpp::List output(copy.size());
+    for (auto c : copy) {
+        output[counter] = format_sparse_range(wrk->fetch(c));
+        ++counter;
+    }
+
+    return output;
 }
