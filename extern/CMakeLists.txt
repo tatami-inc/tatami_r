@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
   tatami
   GIT_REPOSITORY https://github.com/tatami-inc/tatami
-  GIT_TAG fb428b53b8bfd642db09d71ac34c41351e492b70
+  GIT_TAG 898039be5c0f9a4ff5de6f95ba7bdfd8d3940119
 )
 
 FetchContent_MakeAvailable(tatami)
@@ -11,7 +11,7 @@ FetchContent_MakeAvailable(tatami)
 FetchContent_Declare(
   manticore
   GIT_REPOSITORY https://github.com/tatami-inc/manticore
-  GIT_TAG 2b7e39b39583a2d6bc52b2b4548a06698c9198a2
+  GIT_TAG 313002dcea65ddb0fd334034f0f618626c736037
 )
 
 FetchContent_MakeAvailable(manticore)
