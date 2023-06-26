@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['options_0',['Options',['https://tatami-inc.github.io/tatami/structtatami_1_1Options.html',1,'tatami']]],
-  ['oracle_1',['Oracle',['https://tatami-inc.github.io/tatami/structtatami_1_1Oracle.html',1,'tatami']]],
-  ['oraclechunkcache_2',['OracleChunkCache',['https://tatami-inc.github.io/tatami/classtatami_1_1OracleChunkCache.html',1,'tatami']]],
-  ['oraclestream_3',['OracleStream',['https://tatami-inc.github.io/tatami/structtatami_1_1OracleStream.html',1,'tatami']]],
-  ['oraclestream_3c_20index_5f_20_3e_4',['OracleStream&lt; Index_ &gt;',['https://tatami-inc.github.io/tatami/structtatami_1_1OracleStream.html',1,'tatami']]]
+  ['semicompressedsparsematrix_0',['SemiCompressedSparseMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1SemiCompressedSparseMatrix.html',1,'tatami']]],
+  ['somenumericarray_1',['SomeNumericArray',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray.html',1,'tatami']]],
+  ['sparseextractor_2',['SparseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1SparseExtractor.html',1,'tatami']]],
+  ['sparserange_3',['SparseRange',['https://tatami-inc.github.io/tatami/structtatami_1_1SparseRange.html',1,'tatami']]],
+  ['sparserangecopy_4',['SparseRangeCopy',['https://tatami-inc.github.io/tatami/structtatami_1_1SparseRangeCopy.html',1,'tatami']]]
 ];
