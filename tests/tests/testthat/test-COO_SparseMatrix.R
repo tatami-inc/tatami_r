@@ -19,7 +19,7 @@ test_that("Works for numeric COO_SparseMatrix objects", {
 test_that("Works for integer COO_SparseMatrix objects", {
     x <- rsparsematrix(40, 50, 0.05)
     y <- as(x, "COO_SparseMatrix")
-    y@nzvals <- as.integer(ceiling(y@nzvals * 10))
+    y@nzdata <- as.integer(ceiling(y@nzdata * 10))
 
     z <- raticate.tests::parse(y)
     expect_identical(raticate.tests::nrow(z), 40L)
@@ -47,7 +47,7 @@ test_that("Handles CSC COO_SparseMatrix objects in sparse mode", {
     y <- as(x, "COO_SparseMatrix")
     o <- order(y@nzcoo[,2], y@nzcoo[,1])
     y@nzcoo <- y@nzcoo[o,]
-    y@nzvals <- y@nzvals[o]
+    y@nzdata <- y@nzdata[o]
 
     # CSR'ness is preserved.
     out <- extract_sparse_array(y, list(NULL, NULL))
@@ -72,7 +72,7 @@ test_that("Handles CSR COO_SparseMatrix objects", {
     y <- as(x, "COO_SparseMatrix")
     o <- order(y@nzcoo[,1], y@nzcoo[,2])
     y@nzcoo <- y@nzcoo[o,]
-    y@nzvals <- y@nzvals[o]
+    y@nzdata <- y@nzdata[o]
 
     # CSR'ness is preserved.
     out <- extract_sparse_array(y, list(NULL, NULL))
@@ -97,7 +97,7 @@ test_that("Handles unsorted COO_SparseMatrix objects", {
     y <- as(x, "COO_SparseMatrix")
     o <- sample(base::nrow(y@nzcoo))
     y@nzcoo <- y@nzcoo[o,]
-    y@nzvals <- y@nzvals[o]
+    y@nzdata <- y@nzdata[o]
 
     # Unsortedness is preserved.
     out <- extract_sparse_array(y, list(NULL, NULL))
