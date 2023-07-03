@@ -97,7 +97,7 @@ Parallelizing matrix iterations</h1>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
 <div class="ttc" id="anamespacetatami__r_html_aea54ff1c1c6a412b7c32f15814c0109e"><div class="ttname"><a href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize</a></div><div class="ttdeci">void parallelize(Function_ fun, size_t njobs, size_t nthreads)</div><div class="ttdef"><b>Definition</b> parallelize.hpp:59</div></div>
 <div class="ttc" id="aparallelize_8hpp_html"><div class="ttname"><a href="parallelize_8hpp.html">parallelize.hpp</a></div><div class="ttdoc">Safely parallelize for unknown matrices.</div></div>
-</div><!-- fragment --><p><code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code> can also be used as a custom <b>tatami</b> parallelization scheme. This requires a little bit of care as the <code>TATAMI_CUSTOM_PARALLEL</code> macro has to be set before any includes of <b>tatami</b> (which is done automatically by including <code><a class="el" href="tatami__r_8hpp.html" title="tatami bindings for arbitrary R matrices.">tatami_r/tatami_r.hpp</a></code>). We suggest using the following sequence of preprocessor statements before any <b>tatami</b>-containing source file.</p>
+</div><!-- fragment --><p><code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code> can also be used as a custom <b>tatami</b> parallelization scheme. This requires a little bit of care as the <code>TATAMI_CUSTOM_PARALLEL</code> macro has to be set before any includes of <b>tatami</b>... which itself is included by all <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> headers except for <code><a class="el" href="parallelize_8hpp.html" title="Safely parallelize for unknown matrices.">parallelize.hpp</a></code>, so it's easy to get wrong! We suggest using the following sequence of preprocessor statements before any <b>tatami</b>-containing source file. (If using <a href="https://github.com/tatami-inc/beachmat"><b>beachmat</b></a>'s <code>Rtatami.h</code> header, all of these preprocessor statements have already been added for our convenience.)</p>
 <div class="fragment"><div class="line"><span class="comment">// Must be defined before including tatami_r/parallelize.hpp</span></div>
 <div class="line"><span class="preprocessor">#define TATAMI_R_PARALLELIZE_UNKNOWN </span></div>
 <div class="line"><span class="preprocessor">#include &quot;<a class="code" href="parallelize_8hpp.html">tatami_r/parallelize.hpp</a>&quot;</span></div>
@@ -108,17 +108,18 @@ Parallelizing matrix iterations</h1>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &quot;<a class="code" href="tatami__r_8hpp.html">tatami_r/tatami_r.hpp</a>&quot;</span></div>
 <div class="ttc" id="atatami__r_8hpp_html"><div class="ttname"><a href="tatami__r_8hpp.html">tatami_r.hpp</a></div><div class="ttdoc">tatami bindings for arbitrary R matrices.</div></div>
-</div><!-- fragment --><p>If using <a href="https://github.com/tatami-inc/beachmat"><b>beachmat</b></a>'s <code>Rtatami.h</code> header, all of these preprocessor statements have already been added, so developers don't need to do all that.</p>
+</div><!-- fragment --><p>We can now use <code><a class="elRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a41e252422f9959a123ba390a941ae76f">tatami::parallelize()</a></code>, <code>TATAMI_CUSTOM_PARALLEL</code> and <code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code> interchangeably.</p>
 <h1><a class="anchor" id="autotoc_md8"></a>
 Using the main thread executor</h1>
 <p>We can perform our own calls to the R API inside each worker by wrapping it in the <b>manticore</b> executor. This will execute the user-provided function on the main thread before returning control to the worker. Developers do not have to do the usual <b>manticore</b> dance of <code>initialize()</code>, <code>listen()</code>, <code>finish_thread()</code>, and so on; this is all handled by <code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code> itself, so only <code>run()</code> needs to be specified.</p>
-<div class="fragment"><div class="line">auto&amp; mexec = tatami_r::executor();</div>
+<div class="fragment"><div class="line"><span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a>();</div>
 <div class="line"> </div>
-<div class="line">tatami_r::parallelize([&amp;](size_t thread_id, int start, int len) -&gt; void {</div>
-<div class="line">    mexec.run([&amp;]() -&gt; void {</div>
-<div class="line">        // Do something that touches the R API.</div>
+<div class="line"><a class="code hl_function" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize</a>([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line">    mexec.run([&amp;]() -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line">        <span class="comment">// Do something that touches the R API.</span></div>
 <div class="line">    });</div>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
+<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:34</div></div>
 </div><!-- fragment --><p>It is important to use the global executor provided by the <code><a class="el" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor()</a></code> function, as this is the same as that used inside <code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code>. Otherwise, if a different <code>manticore::Executor</code> instance is created, we will not be properly protected from simultaneous calls to the R API from different workers.</p>
 <h1><a class="anchor" id="autotoc_md9"></a>
 Under the hood</h1>
@@ -150,7 +151,6 @@ Under the hood</h1>
 <div class="line"><span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; th : threads) {</div>
 <div class="line">    th.join();</div>
 <div class="line">}</div>
-<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:34</div></div>
 </div><!-- fragment --><p>Check out the implementation of <code><a class="el" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize()</a></code> for more details.</p>
 <h1><a class="anchor" id="autotoc_md10"></a>
 Further comments</h1>
