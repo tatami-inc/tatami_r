@@ -1,20 +1,84 @@
 # Enabling parallelization
 
-By default, it is assumed that `tatami_r::UnknownMatrix` will only be used in a single-threaded context.
+## Overview
+
+By default, we assume that the `tatami_r::UnknownMatrix` will only be used in a single-threaded context.
 This is because the `UnknownMatrix` methods will call the R API, which is strictly single-threaded.
 In fact, it's worse than that: some experimentation indicates that R code can only be executed on the main thread.
 Otherwise, we get stack limit errors when R is called inside a worker, even with locking to enforce serial execution.
 I suspect that some other R-managed process (an event loop, perhaps?) is always running on the main thread;
 calling R from the worker will fail to block this process and lead to parallel execution between the worker and the main threads.
 
-As a result, some work is required to allow `UnknownMatrix` objects to operate in a parallel context.
-Here, we will be considering worker threads spawned via the `std::thread` library, where each worker may call methods of a `tatami_r::UnknownMatrix`.
-We use the [**manticore**](https://github.com/tatami-inc/manticore) library to allow each worker thread to pass a function for execution on the main thread;
-once execution is complete, the results are converted into something independent of R, and those are returned to the worker.
-This ensures that the R runtime is safely evaluated without requiring all **Rcpp** code to be lifted out of the `tatami::Matrix`'s getter methods
-(which would otherwise require a complete redesign of all applications that consume `tatami::Matrix` objects),
+That said, it is possible to use `UnknownMatrix` objects in a parallel context with some effort.
+Using the [**manticore**](https://github.com/tatami-inc/manticore) library, each worker thread can pass a function for execution on the main thread.
+Specifically, multiple workers can request execution of the various `extract_*_array()` functions on the main thread;
+once this is done, the extracted data is converted into something independent of R and returned to the worker.
+Our assumption is that most of each worker's time is spent computing on the extracted data rather than waiting on the main thread,
+such that parallelization still offers some performance improvement.
 
-Enabling a **manticore** parallel context is simple.
+## Parallelizing matrix iterations
+
+We provide a `tatami_r::parallelize()` function that handles all of the **manticore**-related boilerplate.
+The `UnknownMatrix` methods will safely run within the lambda passed to this function.
+
+```cpp
+// Must be defined before including tatami_r/parallelize.hpp
+#define TATAMI_R_PARALLELIZE_UNKNOWN 
+#include "tatami_r/parallelize.hpp"
+
+tatami_r::parallelize([&](size_t thread_id, int start, int len) -> void {
+    // Do something with the UnknownMatrix.
+    auto ext = ptr->dense_row();
+    std::vector<double> buffer(ptr->ncol());
+    for (int r = start, end = start + len; start < end; ++r) {
+        auto out = ext->fetch(r, buffer.data());
+        // Do something with each row.
+    }
+}, ptr->nrow(), num_threads);
+```
+
+`tatami_r::parallelize()` can also be used as a custom **tatami** parallelization scheme.
+This requires a little bit of care as the `TATAMI_CUSTOM_PARALLEL` macro has to be set before any includes of **tatami**...
+which itself is included by all **tatami_r** headers except for `parallelize.hpp`, so it's easy to get wrong!
+We suggest using the following sequence of preprocessor statements before any **tatami**-containing source file.
+(If using [**beachmat**](https://github.com/tatami-inc/beachmat)'s `Rtatami.h` header, all of these preprocessor statements have already been added for our convenience.)
+
+```cpp
+// Must be defined before including tatami_r/parallelize.hpp
+#define TATAMI_R_PARALLELIZE_UNKNOWN 
+#include "tatami_r/parallelize.hpp"
+
+// Defining the tatami parallelization scheme, which must 
+// occur before including tatami or tatami_r itself.
+#define TATAMI_CUSTOM_PARALLEL tatami_r::parallelize
+
+#include "tatami_r/tatami_r.hpp"
+```
+
+We can now use `tatami::parallelize()`, `TATAMI_CUSTOM_PARALLEL` and `tatami_r::parallelize()` interchangeably.
+
+## Using the main thread executor
+
+We can perform our own calls to the R API inside each worker by wrapping it in the **manticore** executor.
+This will execute the user-provided function on the main thread before returning control to the worker.
+Developers do not have to do the usual **manticore** dance of `initialize()`, `listen()`, `finish_thread()`, and so on; 
+this is all handled by `tatami_r::parallelize()` itself, so only `run()` needs to be specified.
+
+```cpp
+auto& mexec = tatami_r::executor();
+
+tatami_r::parallelize([&](size_t thread_id, int start, int len) -> void {
+    mexec.run([&]() -> void {
+        // Do something that touches the R API.
+    });
+}, ptr->nrow(), num_threads);
+```
+
+It is important to use the global executor provided by the `tatami_r::executor()` function, as this is the same as that used inside `tatami_r::parallelize()`.
+Otherwise, if a different `manticore::Executor` instance is created, we will not be properly protected from simultaneous calls to the R API from different workers.
+
+## Under the hood
+
 Assume that we already have a `tatami::Matrix` object that _might_ contain a `UnknownMatrix`.
 To enable safe parallel execution, we call `initialize()` before the parallel section and `listen()` afterwards.
 This diverts the R code to the main thread for execution while allowing all other **tatami**-related code to run inside each worker.
@@ -50,22 +114,10 @@ for (auto& th : threads) {
 }
 ```
 
-Even more simply, we provide the pre-packaged `tatami_r::parallelize()` method for use as a custom **tatami** parallelization scheme.
-This requires a little bit of care to use, as the `TATAMI_CUSTOM_PARALLEL` macro has to be set before any includes of **tatami** (which is done automatically by including `tatami_r/tatami_r.hpp`).
-We suggest using the following sequence of calls before any **tatami**-containing source file.
+Check out the implementation of `tatami_r::parallelize()` for more details.
 
-```cpp
-// Must be defined before including tatami_r/parallelize.hpp
-#define TATAMI_R_PARALLELIZE_UNKNOWN 
-#include "tatami_r/parallelize.hpp"
-
-// Defining the tatami parallelization scheme, which must 
-// occur before including tatami or tatami_r itself.
-#define TATAMI_CUSTOM_PARALLEL tatami_r::parallelize
-
-#include "tatami_r/tatami_r.hpp"
-```
+## Further comments
 
 Note that construction of the `UnknownMatrix` must always be performed on the main thread.
-This is because construction of the unknown fallback involves some calls into the R runtime;
-these are currently not protected from execution in worker contexts.
+This is because construction of the unknown fallback involves some calls into the R runtime; these are currently not protected from execution in worker contexts.
+Similarly, any **Rcpp**-based allocations - even default construction of classes like `Rcpp::NumericVector` - should be done in the main thread, just in case.

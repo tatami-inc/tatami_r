@@ -2,7 +2,8 @@
 
 ## Overview
 
-**tatami_r** is an header-only library for reading matrix-like R objects in [**tatami**](https://github.com/tatami-inc/tatami).
+**tatami_r** is an header-only library for reading abstract R matrices in [**tatami**](https://github.com/tatami-inc/tatami).
+This allows **tatami**-based C++ functions to accept and operate on any matrix-like R object containing numeric data.
 Usage is as simple as:
 
 ```cpp
@@ -20,7 +21,50 @@ SEXP some_typical_rcpp_function(Rcpp::RObject x) {
 
 And that's it, really.
 If you want more details, you can check out the [reference documentation](https://tatami-inc.github.io/tatami_r).
-Also check out the [comments about safe parallelization](docs/parallel.md) when dealing with `tatami::Matrix` pointers that might contain `tatami_r::UnknownMatrix` objects.
+
+## Implementation
+
+**tatami_r** assumes that the hosting R instance has installed the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package.
+The `UnknownMatrix` getters will then use the `extract_array()` and `extract_sparse_array()` R functions to retrieve data from the abstract R matrix.
+Note that this involves calling into R from C++, so high performance should not be expected here.
+Rather, the purpose of **tatami_r** is to keep **tatami**-based functions working when a native representation cannot be found for a particular matrix-like object.
+
+It is worth mentioning that the `UnknownMatrix` will always call the `extract_*_array()` functions, even when a native representation exists in **tatami** or one of its extension libraries.
+R package developers should instead use the `initializeCpp()` function from the [**beachmat**](https://bioconductor.org/packages/beachmat) package to map an arbitrary matrix to its appropriate representation.
+When such mappings exist, this allows the C++ code to operate without calling back into R for maximum efficiency.
+Nonetheless, if no mapping is known, **beachmat** will gracefully fall back to an `UnknownMatrix` to keep things running.
+
+# Enabling parallelization
+
+Given a `tatami_r::UnknownMatrix` or a `tatami::Matrix*` that might refer to one, we can easily parallelize operations with the `tatami_r::parallelize()` function.
+This accepts a lambda/functor with the thread ID and the range of jobs (in the example below, rows) to be processed.
+
+```cpp
+tatami_r::parallelize([&](size_t thread_id, int start, int len) -> void {
+    // Do something with the UnknownMatrix.
+    auto ext = ptr->dense_row();
+    std::vector<double> buffer(ptr->ncol());
+    for (int r = start, end = start + len; start < end; ++r) {
+        auto out = ext->fetch(r, buffer.data());
+        // Do something with each row.
+    }
+}, ptr->nrow(), num_threads);
+```
+
+Any calls to the `extract_*_array()` R functions are made thread-safe by the [**manticore**](https://github.com/tatami-inc/manticore) library.
+Developers can also access the **manticore** executor to safely perform their own R API calls from each thread.
+
+```cpp
+auto& mexec = tatami_r::executor();
+
+tatami_r::parallelize([&](size_t thread_id, int start, int len) -> void {
+    mexec.run([&]() -> void {
+        // Do something that touches the R API.
+    });
+}, ptr->nrow(), num_threads);
+```
+
+Check out the [comments about safe parallelization](docs/parallel.md) for more gory details.
 
 ## Deployment
 
