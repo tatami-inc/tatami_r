@@ -108,7 +108,7 @@ Enabling parallelization</h1>
 <div class="line">    }</div>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
 <div class="ttc" id="anamespacetatami__r_html_aea54ff1c1c6a412b7c32f15814c0109e"><div class="ttname"><a href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize</a></div><div class="ttdeci">void parallelize(Function_ fun, size_t njobs, size_t nthreads)</div><div class="ttdef"><b>Definition</b> parallelize.hpp:59</div></div>
-</div><!-- fragment --><p>Any calls to the <code>extract_*_array()</code> R functions are made thread-safe by the <a href="https://github.com/tatami-inc/manticore"><b>manticore</b></a> library. Developers can directly access the <b>manticore</b> executor to safely perform their own R API calls from each thread.</p>
+</div><!-- fragment --><p>Any calls to the <code>extract_*_array()</code> R functions are made thread-safe by the <a href="https://github.com/tatami-inc/manticore"><b>manticore</b></a> library. Developers can also access the <b>manticore</b> executor to safely perform their own R API calls from each thread.</p>
 <div class="fragment"><div class="line"><span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a>();</div>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="namespacetatami__r.html#aea54ff1c1c6a412b7c32f15814c0109e">tatami_r::parallelize</a>([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
