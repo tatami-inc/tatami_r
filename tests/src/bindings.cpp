@@ -249,7 +249,6 @@ Rcpp::List sparse_rows(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
 
     size_t nr = ptr->nrow();
-    size_t nc = ptr->ncol();
     Rcpp::List output(nr);
 
     auto wrk = ptr->sparse_row();
@@ -267,7 +266,6 @@ Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last) {
     RatXPtr ptr(parsed);
 
     size_t nr = ptr->nrow();
-    size_t len = last - first + 1;
     Rcpp::List output(nr);
 
     auto wrk = ptr->sparse_row(first - 1, last - first + 1);
@@ -284,7 +282,6 @@ Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last) {
 Rcpp::List sparse_columns(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
 
-    size_t nr = ptr->nrow();
     size_t nc = ptr->ncol();
     Rcpp::List output(nc);
 
@@ -303,7 +300,6 @@ Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last) {
     RatXPtr ptr(parsed);
 
     size_t nc = ptr->ncol();
-    size_t len = last - first + 1;
     Rcpp::List output(nc);
 
     auto wrk = ptr->sparse_column(first - 1, last - first + 1);
@@ -410,7 +406,6 @@ Rcpp::List sparse_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets)
     auto wrk = ptr->sparse_row();
     auto copy = prepare_indices(targets, wrk);
 
-    size_t nc = ptr->ncol();
     Rcpp::List output(copy.size());
     size_t counter = 0;
     for (auto r : copy) {
@@ -428,7 +423,6 @@ Rcpp::List sparse_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targe
     auto wrk = ptr->sparse_column();
     auto copy = prepare_indices(targets, wrk);
 
-    size_t nr = ptr->nrow();
     size_t counter = 0;
     Rcpp::List output(copy.size());
     for (auto c : copy) {
