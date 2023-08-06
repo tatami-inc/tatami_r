@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['number_0',['number',['https://tatami-inc.github.io/tatami/structtatami_1_1SparseRange.html#a46230be86a913041c8c04cbe0fee732c',1,'tatami::SparseRange::number'],['https://tatami-inc.github.io/tatami/structtatami_1_1SparseRangeCopy.html#adab7f22070406ccdf552d15c60d88f7b',1,'tatami::SparseRangeCopy::number']]]
+  ['pointers_0',['pointers',['https://tatami-inc.github.io/tatami/structtatami_1_1CompressedSparseContents.html#ad56fc74d757e9dcd8ffbdc48d5adc692',1,'tatami::CompressedSparseContents']]]
 ];

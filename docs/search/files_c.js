@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['tatami_2ehpp_0',['tatami.hpp',['https://tatami-inc.github.io/tatami/tatami_8hpp.html',1,'']]],
-  ['tatami_5fr_2ehpp_1',['tatami_r.hpp',['../tatami__r_8hpp.html',1,'']]]
+  ['utils_2ehpp_0',['utils.hpp',['https://tatami-inc.github.io/tatami/stats_2utils_8hpp.html',1,'']]]
 ];
