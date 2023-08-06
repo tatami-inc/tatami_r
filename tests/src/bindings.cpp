@@ -334,13 +334,19 @@ Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
     size_t NR = ptr->nrow();
     std::vector<double> output(NR);
 
+#ifdef TEST_CUSTOM_PARALLEL
+    int nthreads = 3;
+#else
+    int nthreads = 1;
+#endif
+
     tatami::parallelize([&](int, int start, int length) -> void {
         auto wrk = ptr->dense_row();
         for (size_t r = start, e = start + length; r < e; ++r) {
             auto current = wrk->fetch(r);
             output[r] = std::accumulate(current.begin(), current.end(), 0.0);
         }
-    }, NR, 3); // 3 threads
+    }, NR, nthreads); 
 
     return Rcpp::NumericVector(output.begin(), output.end());
 }
