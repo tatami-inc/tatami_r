@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(tatami_tatami CONFIG REQUIRED)
+find_dependency(tatami_manticore CONFIG REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/tatami_tatami_rTargets.cmake")
