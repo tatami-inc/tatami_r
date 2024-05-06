@@ -10,13 +10,6 @@
 
 namespace tatami_r { 
 
-template<typename Data_, typename Index_>
-struct Parsed {
-    std::shared_ptr<tatami::Matrix<Data_, Index_> > matrix;
-
-    Rcpp::List contents;
-};
-
 inline std::string make_to_string(const Rcpp::RObject& str) {
     Rcpp::StringVector as_str(str);
     if (as_str.size()!=1) { 
