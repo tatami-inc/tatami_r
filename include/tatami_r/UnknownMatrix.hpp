@@ -19,6 +19,17 @@
 namespace tatami_r {
 
 /**
+ * @cond
+ */
+namespace UnknownMatrix_internal {
+
+}
+/**
+ * @endcond
+ */
+
+
+/**
  * @brief Unknown matrix-like object in R.
  *
  * @tparam Value_ Numeric type of data value for the interface.
@@ -78,19 +89,88 @@ public:
         }
 
         {
-            Rcpp::Function fun = delayed_env["chunkdim"];
+            row_chunk_map.resize(internal_nrow);
+            col_chunk_map.resize(internal_ncol);
+
+            Rcpp::Function fun = delayed_env["chunkGrid"];
             Rcpp::RObject output = fun(seed);
+
             if (output == R_NilValue) {
-                chunk_nrow = 1;
-                chunk_ncol = 1;
-            } else {
-                Rcpp::IntegerVector chunks(output);
-                if (chunks.size() != 2 || chunks[0] < 0 || chunks[1] < 0) {
-                    auto ctype = get_class_name(original_seed);
-                    throw std::runtime_error("'chunkdim(<" + ctype + ">)' should return two non-negative integers");
+                std::iota(row_chunk_map.begin(), row_chunk_map.end(), static_cast<Index_>(0));
+                std::iota(col_chunk_map.begin(), col_chunk_map.end(), static_cast<Index_>(0));
+                row_chunks.reserve(internal_nrow);
+                for (Index_ r = 0; r < internal_nrow; ++r) {
+                    row_chunks.push_back(Rcpp::IntegerVector::create(r + 1));
                 }
-                chunk_nrow = chunks[0];
-                chunk_ncol = chunks[1];
+                col_chunks.reserve(internal_ncol);
+                for (Index_ c = 0; c < internal_ncol; ++c) {
+                    col_chunks.push_back(Rcpp::IntegerVector::create(c + 1));
+                }
+
+            } else {
+                auto grid_cls = get_class_name(output);
+
+                if (grid_cls == "RegularArrayGrid") {
+                    Rcpp::IntegerVector spacings(Rcpp::RObject(object.slot("spacings")));
+                    if (spacings.size() != 2) {
+                        throw std::runtime_error("'chunkGrid(<" + ctype + ">)@spacings' should be an integer vector of length 2 with non-negative values");
+                    }
+
+                    auto populate = [](Index_ extent, Index_ spacing, std::vector<Index_>& map, std::vector<Rcpp::IntegerVector>& chunks) {
+                        chunks.reserve((extent / spacing) + (extent % spacing > 0));
+                        Index_ start = 0;
+                        while (start != extent) {
+                            auto to_fill = std::min(spacing, extent - start);
+                            std::fill_n(map.begin() + start, to_fill, chunks.size());
+                            chunks.emplace_back(to_fill);
+                            auto& last = chunks.back();
+                            std::itoa(last.begin(), last.end(), start + 1);
+                            start += to_fill;
+                        }
+                    };
+
+                    Index_ row_spacing = spacings[0];
+                    if (row_spacing > 0) {
+                        populate(internal_nrow, row_spacing, row_chunk_map, row_chunks);
+                    }
+                    Index_ col_spacing = spacings[1];
+                    if (col_spacing > 0) {
+                        populate(internal_ncol, col_spacing, col_chunk_map, col_chunks);
+                    }
+
+                } else if (grid_cls == "ArbitraryArrayGrid") {
+                    Rcpp::List ticks(Rcpp::RObject(object.slot("tickmarks")));
+                    if (ticks.size() != 2) {
+                        throw std::runtime_error("'chunkGrid(<" + ctype + ">)@tickmarks' should return a list of length 2");
+                    }
+
+                    auto populate = [](Index_ extent, const Rcpp::IntegerVector& ticks, std::vector<Index_>& map, std::vector<Rcpp::IntegerVector>& chunks) {
+                        if (ticks.size() == 0 || ticks.back() != static_cast<int>(extent)) {
+                            throw std::runtime_error("invalid ticks in 'chunkGrid(<" + ctype + ">)@tickmarks");
+                        }
+                        chunks.reserve(ticks.size());
+                        int start = 0;
+                        for (auto t : ticks) {
+                            if (t < start) {
+                                throw std::runtime_error("invalid ticks in 'chunkGrid(<" + ctype + ">)@tickmarks'");
+                            }
+                            auto to_fill = t - start;
+                            std::fill_n(row_chunk_map.begin() + start, to_fill, row_chunks.size());
+                            chunks.emplace_back(to_fill);
+                            auto& last = chunks.back();
+                            std::itoa(last.begin(), last.end(), start + 1);
+                            start += to_fill;
+                        }
+                    };
+
+                    Rcpp::IntegerVector first(ticks[0]);
+                    populate(internal_nrow, first, row_chunk_map, row_chunks);
+                    Rcpp::IntegerVector second(ticks[1]);
+                    populate(internal_ncol, second, col_chunk_map, col_chunks);
+
+                } else {
+                    throw std::runtime_error("instance of unknown class '" + grid_cls + "' returned by 'chunkGrid(<" + ctype + ">)");
+                }
             }
         }
 
@@ -114,7 +194,8 @@ private:
     bool internal_sparse, internal_prefer_rows;
 
     size_t cache_size;
-    Index_ chunk_nrow, chunk_ncol;
+    std::vector<Rcpp::IntegerVector> row_chunks, col_chunks;
+    std::vector<Index_> row_chunk_map, col_chunk_map;
 
     Rcpp::RObject original_seed;
     Rcpp::Environment delayed_env, sparse_env;
@@ -510,11 +591,6 @@ private:
             } else {
                 return NULL;
             }
-        }
-
-        void set_oracle(std::unique_ptr<tatami::Oracle<Index_> > o) {
-            work->prediction_stream.set(std::move(o));
-            return;
         }
 
     protected:
