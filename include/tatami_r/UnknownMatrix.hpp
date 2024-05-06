@@ -3,6 +3,7 @@
 
 #include "Rcpp.h"
 #include "tatami/tatami.hpp"
+#include "tatami_chunked/tatami_chunked.hpp"
 #include "SimpleMatrix.hpp"
 #include "SVT_SparseMatrix.hpp"
 #include "COO_SparseMatrix.hpp"
@@ -22,6 +23,292 @@ namespace tatami_r {
  * @cond
  */
 namespace UnknownMatrix_internal {
+
+/*****************
+ ***** Dense *****
+ *****************/
+
+template<bool oracle_, typename Index_, typename CachedValue_>
+struct DenseBase {
+    DenseBase(
+        Rcpp::RObject mat, 
+        Rcpp::Function dense_extractor,
+        Index_ primary_chunk_length, 
+        Rcpp::IntegerVector secondary_extract, 
+        bool by_column,
+        const std::vector<Index_>& ticks,
+        const std::vector<Index_>& map,
+        size_t cache_size_in_bytes, 
+        bool require_minimum_cache,
+        tatami::MaybeOracle<oracle_, Index_> ora) : 
+        mat(std::move(mat)),
+        dense_extractor(std::move(dense_extractor)),
+        extract_args(2),
+        by_column(by_column),
+        chunk_ticks(ticks),
+        chunk_map(map),
+        cache(primary_chunk_length, secondary_extract.size(), cache_size_in_elements / sizeof(CachedValue_), require_minimum_cache, std::move(ora))
+    {
+        if (cache.num_slabs_in_cache == 0) {
+            solo.resize(secondary_extract.size());
+        }
+
+        if (by_column_) {
+            extract_args[0] = secondary_extract;
+        } else {
+            extract_args[1] = secondary_extract;
+        }
+    }
+
+    std::pair<const Slab*, Index_> fetch(Index_ i) {
+        if (cache.num_slabs_in_cache == 0) {
+            if constexpr(oracle_) {
+                i = cache.cache.next();
+            }
+
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+            // This involves some Rcpp initializations, so we lock it just in case.
+            auto& mexec = executor();
+            mexec.run([&]() -> void {
+#endif
+
+            extract_args[static_cast<int>(by_column)] = Rcpp::IntegerVector::create(i);
+            auto obj = dense_extractor(mat, extract_args);
+            parse_simple_matrix(obj, solo, !by_column);
+
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+            });
+#endif
+
+            return std::make_pair(&solo, static_cast<Index_>(0));
+
+        } else if constexpr(!oracle_) {
+            auto chosen = chunk_map[i];
+
+            const auto& slab = cache.cache.find(
+                chosen,
+                [&]() -> Slab {
+                    return Slab();
+                },
+                [&](Index_ id, Slab& cache) {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+                    // This involves some Rcpp initializations, so we lock it just in case.
+                    auto& mexec = executor();
+                    mexec.run([&]() -> void {
+#endif
+
+                    auto chunk_start = chunk_ticks[id], chunk_end = chunk_ticks[id + 1];
+                    Rcpp::IntegerVector primary_extract(chunk_end - chunk_start);
+                    std::iota(primary_extract.begin(), primary_extract.end(), chunk_start + 1);
+                    extract_args[static_cast<int>(by_column)] = primary_extract;
+                    auto obj = dense_extractor(mat, extract_args);
+                    parse_simple_matrix(obj, cache, !by_column);
+
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+                    });
+#endif
+                }
+            );
+            return std::make_pair(&slab, static_cast<Index_>(i - chunk_ticks[chosen]));
+
+        } else {
+            return cache.cache.next(
+                [&](Index_ i) -> std::pair<Index_, Index_> {
+                    auto chosen = chunk_map[i];
+                    return std::make_pair(chosen, static_cast<Index_>(i - chunk_ticks[chosen]));
+                },
+                [&]() -> Slab {
+                    return Slab();
+                },
+                [&](std::vector<std::pair<Index_, Slab*> >& to_populate) {
+                    if (!std::is_sorted(to_populate.begin(), to_populate.end(), [&](const std::pair<Index_, Slab*>& left, const std::pair<Index_, Slab*> right) { return left.first < right.first; })) {
+                        std::sort(to_populate.begin(), to_populate.end(), [&](const std::pair<Index_, Slab*>& left, const std::pair<Index_, Slab*> right) { return left.first < right.first; });
+                    }
+
+                    Index_ total_len = 0;
+                    for (const auto& p : to_populate) {
+                        total_len += chunk_ticks[p.first + 1] - chunk_ticks[p.first];
+                    }
+
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+                    // This involves some Rcpp initializations, so we lock it just in case.
+                    auto& mexec = executor();
+                    mexec.run([&]() -> void {
+#endif
+
+                    Rcpp::IntegerVector primary_extract(len);
+                    Index_ current = 0;
+                    for (const auto& p : to_populate) {
+                        Index_ to_fill = chunk_ticks[p.first + 1] - chunk_ticks[p.first];
+                        auto start = primary_extract.begin() + current;
+                        std::iota(start, start + to_fill, chunk_ticks[p.first] + 1);
+                        current += to_fill;
+                    }
+
+                    extract_args[static_cast<int>(by_column)] = primary_extract;
+                    auto obj = dense_extractor(mat, extract_args);
+
+                    current = 0;
+                    for (const auto& p : to_populate) {
+                        Index_ to_fill = chunk_ticks[p.first + 1] - chunk_ticks[p.first];
+                        parse_simple_matrix(obj, cache, transpose, current, to_fill);
+                        current += to_fill;
+                    }
+
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+                    });
+#endif
+                }
+            );
+        }
+    }
+
+public:
+    typedef std::vector<CachedValue_> Slab;
+
+protected:
+    Rcpp::RObject mat;
+    Rcpp::Function dense_extractor;
+    Rcpp::List extract_args;
+
+    bool by_column;
+    const std::vector<Index_>& chunk_ticks;
+    const std::vector<Index_>& chunk_map;
+
+    tatami_chunked::TypicalCacheWorkspace<oracle_, false, Index_, Slab> cache;
+
+    Slab solo;
+};
+
+template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
+struct DenseFull : public DenseBase<oracle_, Index_, CachedValue_> {
+    DenseFull(
+        Rcpp::RObject mat, 
+        Rcpp::Function dense_extractor,
+        Index_ primary_chunk_length, 
+        Index_ secondary_dim,
+        bool by_column,
+        const std::vector<Index_>& ticks,
+        const std::vector<Index_>& map,
+        size_t cache_size_in_bytes, 
+        bool require_minimum_cache,
+        tatami::MaybeOracle<oracle_, Index_> ora) : 
+        DenseBase<oracle_, Value_, Index_, CachedValue_>(
+            std::move(mat),
+            std::move(dense_extractor),
+            primary_chunk_length,
+            [&]() {
+                Rcpp::IntegerVector output(secondary_dim);
+                std::iota(output.begin(), output.end(), 1);
+                return output;
+            }(),
+            by_column,
+            ticks,
+            map,
+            cache_size_in_bytes,
+            require_minimum_cache
+        ),
+        full_extent(secondary_dim);
+    {}
+
+    const Value_* fetch(Index_ i, Value_* buffer) {
+        auto res = fetch_raw(i);
+        std::copy(res.first.data() + full_extent * i, full_extent, buffer);
+        return buffer;
+    }
+
+private:
+    size_t full_extent;
+};
+
+template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
+struct DenseBlock : public DenseBase<oracle_, Index_, CachedValue_> {
+    DenseBlock(
+        Rcpp::RObject mat, 
+        Rcpp::Function dense_extractor,
+        Index_ primary_chunk_length, 
+        Index_ block_start,
+        Index_ block_length,
+        bool by_column,
+        const std::vector<Index_>& ticks,
+        const std::vector<Index_>& map,
+        size_t cache_size_in_bytes, 
+        bool require_minimum_cache,
+        tatami::MaybeOracle<oracle_, Index_> ora) : 
+        DenseBase<oracle_, Value_, Index_, CachedValue_>(
+            std::move(mat),
+            std::move(dense_extractor),
+            primary_chunk_length,
+            [&]() {
+                Rcpp::IntegerVector output(block_length);
+                std::iota(output.begin(), output.end(), block_start + 1);
+                return output;
+            }(),
+            by_column,
+            ticks,
+            map,
+            cache_size_in_bytes,
+            require_minimum_cache
+        ),
+        block_length(secondary_dim);
+    {}
+
+    const Value_* fetch(Index_ i, Value_* buffer) {
+        auto res = fetch_raw(i);
+        std::copy(res.first.data() + block_length * i, block_length, buffer);
+        return buffer;
+    }
+
+private:
+    size_t block_length;
+};
+
+template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
+struct DenseIndexed : public DenseBase<oracle_, Index_, CachedValue_> {
+    DenseIndexed(
+        Rcpp::RObject mat, 
+        Rcpp::Function dense_extractor,
+        Index_ primary_chunk_length, 
+        const std::vector<Index_>& indices,
+        bool by_column,
+        const std::vector<Index_>& ticks,
+        const std::vector<Index_>& map,
+        size_t cache_size_in_bytes, 
+        bool require_minimum_cache,
+        tatami::MaybeOracle<oracle_, Index_> ora) : 
+        DenseBase<oracle_, Value_, Index_, CachedValue_>(
+            std::move(mat),
+            std::move(dense_extractor),
+            primary_chunk_length,
+            [&]() {
+                Rcpp::IntegerVector output(indices.begin(), indices.end());
+                for (auto& i : output) {
+                    ++i;
+                }
+                return output;
+            }(),
+            by_column,
+            ticks,
+            map,
+            cache_size_in_bytes,
+            require_minimum_cache
+        ),
+        num_indices(indices.size())
+    {}
+
+    const Value_* fetch(Index_ i, Value_* buffer) {
+        auto res = fetch_raw(i);
+        std::copy(res.first.data() + num_indices * i, num_indices, buffer);
+        return buffer;
+    }
+
+private:
+    size_t num_indices;
+};
+
+/******************
+ ***** Sparse *****
+ ******************/
 
 }
 /**
@@ -96,16 +383,14 @@ public:
             Rcpp::RObject output = fun(seed);
 
             if (output == R_NilValue) {
+                row_max_chunk_size = 1;
+                col_max_chunk_size = 1;
                 std::iota(row_chunk_map.begin(), row_chunk_map.end(), static_cast<Index_>(0));
                 std::iota(col_chunk_map.begin(), col_chunk_map.end(), static_cast<Index_>(0));
-                row_chunks.reserve(internal_nrow);
-                for (Index_ r = 0; r < internal_nrow; ++r) {
-                    row_chunks.push_back(Rcpp::IntegerVector::create(r + 1));
-                }
-                col_chunks.reserve(internal_ncol);
-                for (Index_ c = 0; c < internal_ncol; ++c) {
-                    col_chunks.push_back(Rcpp::IntegerVector::create(c + 1));
-                }
+                row_chunk_ticks.resize(internal_nrow + 1);
+                std::iota(row_chunk_ticks.begin(), row_chunk_ticks.end(), static_cast<Index_>(0));
+                col_chunk_ticks.resize(internal_col + 1);
+                std::iota(col_chunk_ticks.begin(), col_chunk_ticks.end(), static_cast<Index_>(0));
 
             } else {
                 auto grid_cls = get_class_name(output);
@@ -116,26 +401,25 @@ public:
                         throw std::runtime_error("'chunkGrid(<" + ctype + ">)@spacings' should be an integer vector of length 2 with non-negative values");
                     }
 
-                    auto populate = [](Index_ extent, Index_ spacing, std::vector<Index_>& map, std::vector<Rcpp::IntegerVector>& chunks) {
-                        chunks.reserve((extent / spacing) + (extent % spacing > 0));
+                    auto populate = [](Index_ extent, Index_ spacing, std::vector<Index_>& map, std::vector<Index_>& chunks) {
+                        ticks.reserve((extent / spacing) + (extent % spacing > 0) + 1);
                         Index_ start = 0;
+                        ticks.push_back(start);
                         while (start != extent) {
                             auto to_fill = std::min(spacing, extent - start);
                             std::fill_n(map.begin() + start, to_fill, chunks.size());
-                            chunks.emplace_back(to_fill);
-                            auto& last = chunks.back();
-                            std::itoa(last.begin(), last.end(), start + 1);
                             start += to_fill;
+                            ticks.push_back(start);
                         }
                     };
 
-                    Index_ row_spacing = spacings[0];
-                    if (row_spacing > 0) {
-                        populate(internal_nrow, row_spacing, row_chunk_map, row_chunks);
+                    row_max_chunk_size = spacings[0];
+                    if (row_max_chunk_size > 0) {
+                        populate(internal_nrow, row_max_chunk_size, row_chunk_map, row_chunk_ticks);
                     }
-                    Index_ col_spacing = spacings[1];
-                    if (col_spacing > 0) {
-                        populate(internal_ncol, col_spacing, col_chunk_map, col_chunks);
+                    col_max_chunk_size = chunk_sizes[1];
+                    if (col_max_chunk_size > 0) {
+                        populate(internal_ncol, col_max_chunk_size, col_chunk_map, col_chunk_ticks);
                     }
 
                 } else if (grid_cls == "ArbitraryArrayGrid") {
@@ -144,29 +428,33 @@ public:
                         throw std::runtime_error("'chunkGrid(<" + ctype + ">)@tickmarks' should return a list of length 2");
                     }
 
-                    auto populate = [](Index_ extent, const Rcpp::IntegerVector& ticks, std::vector<Index_>& map, std::vector<Rcpp::IntegerVector>& chunks) {
+                    auto populate = [](Index_ extent, const Rcpp::IntegerVector& ticks, std::vector<Index_>& map, std::vector<Index_>& new_ticks, Index_& chunk_size) {
                         if (ticks.size() == 0 || ticks.back() != static_cast<int>(extent)) {
                             throw std::runtime_error("invalid ticks in 'chunkGrid(<" + ctype + ">)@tickmarks");
                         }
+                        std::copy(ticks.begin(), ticks.end(), new_ticks.begin());
+
+                        max_chunk_size = 0;
                         chunks.reserve(ticks.size());
                         int start = 0;
+
                         for (auto t : ticks) {
                             if (t < start) {
                                 throw std::runtime_error("invalid ticks in 'chunkGrid(<" + ctype + ">)@tickmarks'");
                             }
                             auto to_fill = t - start;
+                            if (to_fill > chunk_size) {
+                                max_chunk_size = to_fill;
+                            }
                             std::fill_n(row_chunk_map.begin() + start, to_fill, row_chunks.size());
-                            chunks.emplace_back(to_fill);
-                            auto& last = chunks.back();
-                            std::itoa(last.begin(), last.end(), start + 1);
-                            start += to_fill;
+                            start = t;
                         }
                     };
 
                     Rcpp::IntegerVector first(ticks[0]);
-                    populate(internal_nrow, first, row_chunk_map, row_chunks);
+                    populate(internal_nrow, first, row_chunk_map, row_chunks, row_max_chunk_size);
                     Rcpp::IntegerVector second(ticks[1]);
-                    populate(internal_ncol, second, col_chunk_map, col_chunks);
+                    populate(internal_ncol, second, col_chunk_map, col_chunks, col_max_chunk_size);
 
                 } else {
                     throw std::runtime_error("instance of unknown class '" + grid_cls + "' returned by 'chunkGrid(<" + ctype + ">)");
@@ -174,18 +462,18 @@ public:
             }
         }
 
-        cache_size = cache;
-        if (cache_size == static_cast<size_t>(-1)) {
+        cache_size_in_bytes = cache;
+        if (cache_size_in_bytes == static_cast<size_t>(-1)) {
             Rcpp::Function fun = delayed_env["getAutoBlockSize"];
             Rcpp::NumericVector output = fun();
             if (output.size() != 1 || output[0] < 0) {
                 throw std::runtime_error("'getAutoBlockSize()' should return a non-negative number of bytes");
             }
-            cache_size = output[0];
+            cache_size_in_bytes = output[0];
         }
 
-        auto chunks_per_row = static_cast<double>(internal_ncol) / chunk_ncol;
-        auto chunks_per_col = static_cast<double>(internal_nrow) / chunk_nrow;
+        auto chunks_per_row = col_chunks.size();
+        auto chunks_per_col = row_chunks.size();
         internal_prefer_rows = chunks_per_row <= chunks_per_col;
     }
 
@@ -193,9 +481,20 @@ private:
     Index_ internal_nrow, internal_ncol;
     bool internal_sparse, internal_prefer_rows;
 
-    size_t cache_size;
-    std::vector<Rcpp::IntegerVector> row_chunks, col_chunks;
     std::vector<Index_> row_chunk_map, col_chunk_map;
+    std::vector<Index_> row_chunk_ticks, col_chunk_ticks;
+
+    // To decide how many chunks to store in the cache, we pretend the largest
+    // chunk is a good representative. This is a bit suboptimal for irregular
+    // chunks but the LruSlabCache class doesn't have a good way of dealing
+    // with this right now. The fundamental problem is that variable slabs will
+    // either (i) all reach the maximum allocation eventually, if slabs are
+    // reused, or (ii) require lots of allocations, if slabs are not reused, or
+    // (iii) require manual defragmentation, if slabs are reused in a manner
+    // that avoids inflation to the maximum allocation.
+    Index_ row_max_chunk_size, col_max_chunk_size;
+
+    size_t cache_size_in_bytes;
 
     Rcpp::RObject original_seed;
     Rcpp::Environment delayed_env, sparse_env;

@@ -1,40 +1,35 @@
 #ifndef TATAMI_R_SIMPLEMATRIX_HPP
 #define TATAMI_R_SIMPLEMATRIX_HPP
 
-#include "utils.hpp"
 #include "tatami/tatami.hpp"
-#include "tatami/utils/ArrayView.hpp"
+#include <algorithm>
 
 namespace tatami_r { 
 
-template<typename Data_ = double, typename Index_ = int, class InputObject_>
-Parsed<Data_, Index_> parse_simple_matrix_internal(const InputObject_& y) {
-    Parsed<Data_, Index_> output;
-
-    typedef typename std::remove_const<typename std::remove_reference<decltype(y[0])>::type>::type Value_;
-    tatami::ArrayView view(static_cast<const Value_*>(y.begin()), y.size());
-    output.matrix.reset(new tatami::DenseColumnMatrix<double, int, decltype(view)>(y.rows(), y.cols(), std::move(view)));
-
-    output.contents = Rcpp::List::create(y);
-    return output;
+template<class InputObject_, typename Value_, typename CachedValue_>
+void parse_simple_matrix_internal(const InputObject_& y, std::vector<CachedValue_>& cache, bool transpose) {
+    cache.resize(y.size());
+    if (transpose) {
+        // y is a column-major matrix, but transpose() expects a row-major
+        // input, so we just conceptually transpose it.
+        tatami::transpose(static_cast<const Value_*>(y.begin()), cache.data(), y.cols(), y.rows());
+    } else {
+        std::copy(y.begin(), y.end(), cache.data());
+    }
 }
 
-template<typename Data_ = double, typename Index_ = int>
-Parsed<Data_, Index_> parse_simple_matrix(const Rcpp::RObject& seed) {
-    Parsed<Data_, Index_> output;
-
+template<typename CachedValue_>
+void parse_simple_matrix(const Rcpp::RObject& seed, std::vector<CachedValue_>& cache, bool transpose) {
     if (seed.sexp_type() == REALSXP) {
         Rcpp::NumericMatrix y(seed);
-        output = parse_simple_matrix_internal<Data_, Index_>(y);
+        parse_simple_matrix_internal<double>(y, cache, transpose);
     } else if (seed.sexp_type() == INTSXP) {
         Rcpp::IntegerMatrix y(seed);
-        output = parse_simple_matrix_internal<Data_, Index_>(y);
+        parse_simple_matrix_internal<int>(y, cache, transpose);
     } else if (seed.sexp_type() == LGLSXP) {
         Rcpp::LogicalMatrix y(seed);
-        output = parse_simple_matrix_internal<Data_, Index_>(y);
+        parse_simple_matrix_internal<int>(y, cache, transpose);
     }
-
-    return output;
 }
 
 }
