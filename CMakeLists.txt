@@ -18,7 +18,7 @@ else()
     find_package(tatami_manticore CONFIG REQUIRED)
 endif()
 
-target_link_libraries(tatami_r INTERFACE tatami::tatami tatami::manticore)
+target_link_libraries(tatami_r INTERFACE tatami::tatami tatami::tatami_chunked tatami::manticore)
 
 # Switch between include directories depending on whether the downstream is
 # using the build directly or is using the installed package.

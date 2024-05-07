@@ -6,7 +6,11 @@ FetchContent_Declare(
   GIT_TAG master
 )
 
-FetchContent_MakeAvailable(tatami)
+FetchContent_Declare(
+  tatami_chunked
+  GIT_REPOSITORY https://github.com/tatami-inc/tatami_chunked
+  GIT_TAG master
+)
 
 FetchContent_Declare(
   manticore
@@ -15,3 +19,5 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(manticore)
+FetchContent_MakeAvailable(tatami)
+FetchContent_MakeAvailable(tatami_chunked)

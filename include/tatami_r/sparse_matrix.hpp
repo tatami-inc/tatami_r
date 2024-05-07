@@ -57,17 +57,19 @@ void parse_sparse_matrix_internal(
         InputObject_ curvalues(second);
         size_t nnz = curvalues.size();
         if (nnz != curindices.size()) {
+            auto ctype = get_class_name(seed);
             throw std::runtime_error("both vectors of an element of the 'SVT' slot in a " + ctype + " object should have the same length");
         }
 
         if constexpr(transpose_) {
+            auto idx = secondary_extract[c] - 1;
             for (size_t i = 0; i < nnz; ++i) {
                 auto ix = curindices[i];
                 if (needs_value) {
                     value_ptrs[ix] = curvalues[i];
                 }
                 if (needs_index) {
-                    index_ptrs[ix] = secondary_extract[c] - 1;
+                    index_ptrs[ix] = idx;
                 }
                 ++(counts[ix]);
             }
@@ -102,7 +104,7 @@ void parse_sparse_matrix(
         // Can't be bothered to write a parser for COO_SparseMatrix objects,
         // which are soon-to-be-superceded by SVT_SparseMatrix anyway; so we
         // just forcibly coerce it.
-        Rcpp::Environment::namespace_env methods_env("methods");
+        auto methods_env = Rcpp::Environment::namespace_env("methods");
         Rcpp::Function converter(methods_env["as"]);
         seed = converter(seed, Rcpp::CharacterVector::create("SVT_SparseMatrix"));
     }
