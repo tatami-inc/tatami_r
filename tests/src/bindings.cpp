@@ -17,8 +17,11 @@ typedef Rcpp::XPtr<tatami::Matrix<double, int> > RatXPtr;
 //' @importFrom Rcpp sourceCpp
 //' @export
 //[[Rcpp::export(rng=false)]]
-SEXP parse(Rcpp::RObject seed) {
-    return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed));
+SEXP parse(Rcpp::RObject seed, double cache_size, bool require_min) {
+    tatami_r::Options opt;
+    opt.maximum_cache_size = cache_size;
+    opt.require_minimum_cache = require_min;
+    return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed, opt));
 }
 
 //' @export
@@ -47,6 +50,14 @@ void check_idx(const Rcpp::IntegerVector& idx, int primary) {
     }
 }
 
+std::shared_ptr<tatami::FixedVectorOracle<int> > create_oracle(const Rcpp::IntegerVector& idx) {
+    std::vector<int> predictions(idx.begin(), idx.end());
+    for (auto& p : predictions) {
+        --p;
+    }
+    return std::make_shared<tatami::FixedVectorOracle<int> >(std::move(predictions));
+}
+
 template<bool oracle_, class Extractor_>
 Rcpp::NumericVector format_dense_output(Extractor_* ext, int i, int len) {
     Rcpp::NumericVector vec(len);
@@ -69,7 +80,7 @@ auto create_extractor(const RatXPtr& ptr, bool row, const Rcpp::IntegerVector& i
     opt.sparse_extract_index = needs_index;
 
     if constexpr(oracle_) {
-        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, std::make_shared<tatami::FixedViewOracle<int> >(static_cast<const int*>(idx.begin()), idx.size()), opt);
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, create_oracle(idx), opt);
     } else {
         return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, false, opt);
     }
@@ -85,7 +96,7 @@ Rcpp::List dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx) {
     auto ext = create_extractor<false, oracle_>(ptr, row, idx);
     Rcpp::List output(idx.size());
     for (size_t i = 0, end = idx.size(); i < end; ++i) {
-        output[i] = format_dense_output<oracle_>(ext.get(), i, secondary);
+        output[i] = format_dense_output<oracle_>(ext.get(), idx[i] - 1, secondary);
     }
     return output;
 }
@@ -119,7 +130,7 @@ auto create_extractor(const RatXPtr& ptr, bool row, const Rcpp::IntegerVector& i
     opt.sparse_extract_index = needs_index;
 
     if constexpr(oracle_) {
-        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, std::make_shared<tatami::FixedViewOracle<int> >(static_cast<const int*>(idx.begin()), idx.size()), first - 1, len, opt);
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, create_oracle(idx), first - 1, len, opt);
     } else {
         return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, false, first - 1, len, opt);
     }
@@ -136,7 +147,7 @@ Rcpp::List dense_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, 
     auto ext = create_extractor<false, oracle_>(ptr, row, idx, first, len);
     Rcpp::List output(idx.size());
     for (size_t i = 0, end = idx.size(); i < end; ++i) {
-        output[i] = format_dense_output<oracle_>(ext.get(), i, len);
+        output[i] = format_dense_output<oracle_>(ext.get(), idx[i] - 1, len);
     }
     return output;
 }
@@ -179,7 +190,7 @@ auto create_extractor(const RatXPtr& ptr, bool row, const Rcpp::IntegerVector& i
     }
 
     if constexpr(oracle_) {
-        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, std::make_shared<tatami::FixedViewOracle<int> >(static_cast<const int*>(idx.begin()), idx.size()), std::move(subs), opt);
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, create_oracle(idx), std::move(subs), opt);
     } else {
         return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, false, std::move(subs), opt);
     }
@@ -196,7 +207,7 @@ Rcpp::List dense_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx
     auto ext = create_extractor<false, oracle_>(ptr, row, idx, subset);
     Rcpp::List output(idx.size());
     for (size_t i = 0, end = idx.size(); i < end; ++i) {
-        output[i] = format_dense_output<oracle_>(ext.get(), i, subset.size());
+        output[i] = format_dense_output<oracle_>(ext.get(), idx[i] - 1, subset.size());
     }
 
     return output;
@@ -280,7 +291,7 @@ Rcpp::List sparse_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, 
     std::vector<int> ibuffer(secondary);
 
     for (size_t i = 0, end = idx.size(); i < end; ++i) {
-        output[i] = format_sparse_output<oracle_>(ext.get(), i, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
+        output[i] = format_sparse_output<oracle_>(ext.get(), idx[i] - 1, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
     }
 
     return output;
@@ -316,7 +327,7 @@ Rcpp::List sparse_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx,
     Rcpp::List output(idx.size());
 
     for (size_t i = 0, end = idx.size(); i < end; ++i) {
-        output[i] = format_sparse_output<oracle_>(ext.get(), i, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
+        output[i] = format_sparse_output<oracle_>(ext.get(), idx[i] - 1, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
     }
     return output;
 }
@@ -351,7 +362,7 @@ Rcpp::List sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector id
     Rcpp::List output(idx.size());
 
     for (size_t i = 0, end = idx.size(); i < end; ++i) {
-        output[i] = format_sparse_output<oracle_>(ext.get(), i, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
+        output[i] = format_sparse_output<oracle_>(ext.get(), idx[i] - 1, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
     }
     return output;
 }

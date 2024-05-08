@@ -108,9 +108,9 @@ void parse_sparse_matrix(
         parse_sparse_matrix_internal<transpose_, Rcpp::IntegerVector, INTSXP, int>(seed, value_ptrs, index_ptrs, counts);
     } else if (type == "logical") {
         parse_sparse_matrix_internal<transpose_, Rcpp::LogicalVector, LGLSXP, int>(seed, value_ptrs, index_ptrs, counts);
-    } 
-
-    throw std::runtime_error("unsupported type '" + type + "' for a " + ctype);
+    } else {
+        throw std::runtime_error("unsupported type '" + type + "' for a " + ctype);
+    }
 }
 
 }

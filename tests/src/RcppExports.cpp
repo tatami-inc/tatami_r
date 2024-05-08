@@ -11,12 +11,14 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // parse
-SEXP parse(Rcpp::RObject seed);
-RcppExport SEXP _raticate_tests_parse(SEXP seedSEXP) {
+SEXP parse(Rcpp::RObject seed, double cache_size, bool require_min);
+RcppExport SEXP _raticate_tests_parse(SEXP seedSEXP, SEXP cache_sizeSEXP, SEXP require_minSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(parse(seed));
+    Rcpp::traits::input_parameter< double >::type cache_size(cache_sizeSEXP);
+    Rcpp::traits::input_parameter< bool >::type require_min(require_minSEXP);
+    rcpp_result_gen = Rcpp::wrap(parse(seed, cache_size, require_min));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -210,7 +212,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 1},
+    {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 3},
     {"_raticate_tests_nrow", (DL_FUNC) &_raticate_tests_nrow, 1},
     {"_raticate_tests_ncol", (DL_FUNC) &_raticate_tests_ncol, 1},
     {"_raticate_tests_myopic_dense_full", (DL_FUNC) &_raticate_tests_myopic_dense_full, 3},

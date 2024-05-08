@@ -4,8 +4,8 @@
 #' @useDynLib raticate.tests
 #' @importFrom Rcpp sourceCpp
 #' @export
-parse <- function(seed) {
-    .Call('_raticate_tests_parse', PACKAGE = 'raticate.tests', seed)
+parse <- function(seed, cache_size, require_min) {
+    .Call('_raticate_tests_parse', PACKAGE = 'raticate.tests', seed, cache_size, require_min)
 }
 
 #' @export

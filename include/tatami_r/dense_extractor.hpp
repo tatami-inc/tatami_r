@@ -83,7 +83,7 @@ private:
             mexec.run([&]() -> void {
 #endif
 
-            extract_args[static_cast<int>(by_column)] = Rcpp::IntegerVector::create(i);
+            extract_args[static_cast<int>(by_column)] = Rcpp::IntegerVector::create(i + 1);
             auto obj = dense_extractor(mat, extract_args);
             if (by_column) {
                 parse_dense_matrix<false>(obj, solo, 0, 0, secondary_length, 1);
@@ -193,7 +193,8 @@ private:
 public:
     const Value_* fetch(Index_ i, Value_* buffer) {
         auto res = fetch_raw(i);
-        std::copy_n(res.first->data() + this->secondary_length * i, this->secondary_length, buffer);
+        size_t shift = this->secondary_length * static_cast<size_t>(res.second); // cast to size_t to avoid overflow.
+        std::copy_n(res.first->data() + shift, this->secondary_length, buffer);
         return buffer;
     }
 };
