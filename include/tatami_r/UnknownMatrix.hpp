@@ -157,6 +157,7 @@ public:
                         max_chunk_size = 0;
                         int start = 0;
                         map.resize(extent);
+                        Index_ counter = 0;
 
                         for (auto t : ticks) {
                             if (t < start) {
@@ -166,7 +167,8 @@ public:
                             if (to_fill > max_chunk_size) {
                                 max_chunk_size = to_fill;
                             }
-                            std::fill_n(map.begin() + start, to_fill, map.size());
+                            std::fill_n(map.begin() + start, to_fill, counter);
+                            ++counter;
                             start = t;
                         }
                     };

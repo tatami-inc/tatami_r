@@ -1,3 +1,5 @@
+library(DelayedArray)
+
 dummy_sparse <- function(v, offset = 1L) {
     list(index = seq_along(v) + as.integer(offset) - 1L, value = v)
 }
