@@ -12,8 +12,7 @@ void parse_sparse_matrix_internal(
     Rcpp::RObject seed, 
     std::vector<CachedValue_*>& value_ptrs, 
     std::vector<CachedIndex_*>& index_ptrs, 
-    std::vector<size_t>& counts, 
-    const Rcpp::IntegerVector& secondary_extract)
+    std::vector<Index_>& counts)
 {
     auto dims = parse_dims(seed.slot("dim"));
     int NR = dims.first;
@@ -62,42 +61,35 @@ void parse_sparse_matrix_internal(
         }
 
         if constexpr(transpose_) {
-            auto idx = secondary_extract[c] - 1;
             for (size_t i = 0; i < nnz; ++i) {
                 auto ix = curindices[i];
                 if (needs_value) {
-                    value_ptrs[ix] = curvalues[i];
+                    *(value_ptrs[ix]) = curvalues[i];
                 }
                 if (needs_index) {
-                    index_ptrs[ix] = idx;
+                    *(index_ptrs[ix]) = c;
                 }
                 ++(counts[ix]);
             }
 
         } else {
             if (needs_value) {
-                auto vptr = value_ptrs[c];
-                std::copy(curvalues.begin(), curvalues.end(), vptr);
+                std::copy(curvalues.begin(), curvalues.end(), value_ptrs[c]);
             }
             if (needs_index) {
-                auto iptr = index_ptrs[c];
-                for (auto c : curindices) {
-                    *iptr = secondary_extract[c];
-                    ++iptr;
-                }
+                std::copy(curindices.begin(), curindices.end(), index_ptrs[c]);
             }
             counts[c] = nnz;
         }
     }
 }
 
-template<bool transpose_, class InputObject_, SEXPTYPE desired_sexp_, typename InputValue_, typename CachedValue_, typename CachedIndex_, typename Index_>
+template<bool transpose_, typename CachedValue_, typename CachedIndex_, typename Index_>
 void parse_sparse_matrix(
     Rcpp::RObject seed,
     std::vector<CachedValue_*>& value_ptrs, 
     std::vector<CachedIndex_*>& index_ptrs, 
-    std::vector<Index_>& counts, 
-    const Rcpp::IntegerVector& secondary_extract)
+    std::vector<Index_>& counts)
 {
     auto ctype = get_class_name(seed);
     if (ctype != "SVT_SparseMatrix") {
@@ -111,11 +103,11 @@ void parse_sparse_matrix(
 
     std::string type = Rcpp::as<std::string>(seed.slot("type"));
     if (type == "double") {
-        parse_sparse_matrix_internal<transpose_, Rcpp::NumericVector, REALSXP, double>(seed, value_ptrs, index_ptrs, counts, secondary_extract);
+        parse_sparse_matrix_internal<transpose_, Rcpp::NumericVector, REALSXP, double>(seed, value_ptrs, index_ptrs, counts);
     } else if (type == "integer") {
-        parse_sparse_matrix_internal<transpose_, Rcpp::IntegerVector, INTSXP, int>(seed, value_ptrs, index_ptrs, counts, secondary_extract);
+        parse_sparse_matrix_internal<transpose_, Rcpp::IntegerVector, INTSXP, int>(seed, value_ptrs, index_ptrs, counts);
     } else if (type == "logical") {
-        parse_sparse_matrix_internal<transpose_, Rcpp::LogicalVector, LGLSXP, int>(seed, value_ptrs, index_ptrs, counts, secondary_extract);
+        parse_sparse_matrix_internal<transpose_, Rcpp::LogicalVector, LGLSXP, int>(seed, value_ptrs, index_ptrs, counts);
     } 
 
     throw std::runtime_error("unsupported type '" + type + "' for a " + ctype);

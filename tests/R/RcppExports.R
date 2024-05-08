@@ -19,112 +19,62 @@ ncol <- function(parsed) {
 }
 
 #' @export
-row <- function(parsed, i) {
-    .Call('_raticate_tests_row', PACKAGE = 'raticate.tests', parsed, i)
+myopic_dense_full <- function(parsed, row, idx) {
+    .Call('_raticate_tests_myopic_dense_full', PACKAGE = 'raticate.tests', parsed, row, idx)
 }
 
 #' @export
-row_subset <- function(parsed, i, first, last) {
-    .Call('_raticate_tests_row_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+oracular_dense_full <- function(parsed, row, idx) {
+    .Call('_raticate_tests_oracular_dense_full', PACKAGE = 'raticate.tests', parsed, row, idx)
 }
 
 #' @export
-column <- function(parsed, i) {
-    .Call('_raticate_tests_column', PACKAGE = 'raticate.tests', parsed, i)
+myopic_dense_block <- function(parsed, row, idx, first, len) {
+    .Call('_raticate_tests_myopic_dense_block', PACKAGE = 'raticate.tests', parsed, row, idx, first, len)
 }
 
 #' @export
-column_subset <- function(parsed, i, first, last) {
-    .Call('_raticate_tests_column_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+oracular_dense_block <- function(parsed, row, idx, first, len) {
+    .Call('_raticate_tests_oracular_dense_block', PACKAGE = 'raticate.tests', parsed, row, idx, first, len)
 }
 
 #' @export
-sparse_row <- function(parsed, i) {
-    .Call('_raticate_tests_sparse_row', PACKAGE = 'raticate.tests', parsed, i)
+myopic_dense_indexed <- function(parsed, row, idx, subset) {
+    .Call('_raticate_tests_myopic_dense_indexed', PACKAGE = 'raticate.tests', parsed, row, idx, subset)
 }
 
 #' @export
-sparse_row_subset <- function(parsed, i, first, last) {
-    .Call('_raticate_tests_sparse_row_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+oracular_dense_indexed <- function(parsed, row, idx, subset) {
+    .Call('_raticate_tests_oracular_dense_indexed', PACKAGE = 'raticate.tests', parsed, row, idx, subset)
 }
 
 #' @export
-sparse_column <- function(parsed, i) {
-    .Call('_raticate_tests_sparse_column', PACKAGE = 'raticate.tests', parsed, i)
+myopic_sparse_full <- function(parsed, row, idx, needs_value, needs_index) {
+    .Call('_raticate_tests_myopic_sparse_full', PACKAGE = 'raticate.tests', parsed, row, idx, needs_value, needs_index)
 }
 
 #' @export
-sparse_column_subset <- function(parsed, i, first, last) {
-    .Call('_raticate_tests_sparse_column_subset', PACKAGE = 'raticate.tests', parsed, i, first, last)
+oracular_sparse_full <- function(parsed, row, idx, needs_value, needs_index) {
+    .Call('_raticate_tests_oracular_sparse_full', PACKAGE = 'raticate.tests', parsed, row, idx, needs_value, needs_index)
 }
 
 #' @export
-rows <- function(parsed) {
-    .Call('_raticate_tests_rows', PACKAGE = 'raticate.tests', parsed)
+myopic_sparse_block <- function(parsed, row, idx, first, len, needs_value, needs_index) {
+    .Call('_raticate_tests_myopic_sparse_block', PACKAGE = 'raticate.tests', parsed, row, idx, first, len, needs_value, needs_index)
 }
 
 #' @export
-rows_subset <- function(parsed, first, last) {
-    .Call('_raticate_tests_rows_subset', PACKAGE = 'raticate.tests', parsed, first, last)
+oracular_sparse_block <- function(parsed, row, idx, first, len, needs_value, needs_index) {
+    .Call('_raticate_tests_oracular_sparse_block', PACKAGE = 'raticate.tests', parsed, row, idx, first, len, needs_value, needs_index)
 }
 
 #' @export
-columns <- function(parsed) {
-    .Call('_raticate_tests_columns', PACKAGE = 'raticate.tests', parsed)
+myopic_sparse_indexed <- function(parsed, row, idx, subset, needs_value, needs_index) {
+    .Call('_raticate_tests_myopic_sparse_indexed', PACKAGE = 'raticate.tests', parsed, row, idx, subset, needs_value, needs_index)
 }
 
 #' @export
-columns_subset <- function(parsed, first, last) {
-    .Call('_raticate_tests_columns_subset', PACKAGE = 'raticate.tests', parsed, first, last)
-}
-
-#' @export
-sparse_rows <- function(parsed) {
-    .Call('_raticate_tests_sparse_rows', PACKAGE = 'raticate.tests', parsed)
-}
-
-#' @export
-sparse_rows_subset <- function(parsed, first, last) {
-    .Call('_raticate_tests_sparse_rows_subset', PACKAGE = 'raticate.tests', parsed, first, last)
-}
-
-#' @export
-sparse_columns <- function(parsed) {
-    .Call('_raticate_tests_sparse_columns', PACKAGE = 'raticate.tests', parsed)
-}
-
-#' @export
-sparse_columns_subset <- function(parsed, first, last) {
-    .Call('_raticate_tests_sparse_columns_subset', PACKAGE = 'raticate.tests', parsed, first, last)
-}
-
-#' @export
-rowsums <- function(parsed) {
-    .Call('_raticate_tests_rowsums', PACKAGE = 'raticate.tests', parsed)
-}
-
-#' @export
-rowsums_manual <- function(parsed) {
-    .Call('_raticate_tests_rowsums_manual', PACKAGE = 'raticate.tests', parsed)
-}
-
-#' @export
-dense_rows_guided <- function(parsed, targets) {
-    .Call('_raticate_tests_dense_rows_guided', PACKAGE = 'raticate.tests', parsed, targets)
-}
-
-#' @export
-dense_columns_guided <- function(parsed, targets) {
-    .Call('_raticate_tests_dense_columns_guided', PACKAGE = 'raticate.tests', parsed, targets)
-}
-
-#' @export
-sparse_rows_guided <- function(parsed, targets) {
-    .Call('_raticate_tests_sparse_rows_guided', PACKAGE = 'raticate.tests', parsed, targets)
-}
-
-#' @export
-sparse_columns_guided <- function(parsed, targets) {
-    .Call('_raticate_tests_sparse_columns_guided', PACKAGE = 'raticate.tests', parsed, targets)
+oracular_sparse_indexed <- function(parsed, row, idx, subset, needs_value, needs_index) {
+    .Call('_raticate_tests_oracular_sparse_indexed', PACKAGE = 'raticate.tests', parsed, row, idx, subset, needs_value, needs_index)
 }
 

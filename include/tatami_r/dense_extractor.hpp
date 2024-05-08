@@ -16,18 +16,18 @@ namespace UnknownMatrix_internal {
 template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
 struct DenseBase : public tatami::DenseExtractor<oracle_, Value_, Index_> {
     DenseBase(
-        Rcpp::RObject mat, 
-        Rcpp::Function dense_extractor,
-        Index_ max_primary_chunk_length, 
+        const Rcpp::RObject& mat, 
+        const Rcpp::Function& dense_extractor,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Rcpp::IntegerVector secondary_extract, 
         bool by_column,
+        Index_ max_primary_chunk_length, 
         const std::vector<Index_>& ticks,
         const std::vector<Index_>& map,
         size_t cache_size_in_bytes, 
         bool require_minimum_cache) : 
-        mat(std::move(mat)),
-        dense_extractor(std::move(dense_extractor)),
+        mat(mat),
+        dense_extractor(dense_extractor),
         extract_args(2),
         by_column(by_column),
         chunk_ticks(ticks),
@@ -57,8 +57,8 @@ struct DenseBase : public tatami::DenseExtractor<oracle_, Value_, Index_> {
 private:
     typedef std::vector<CachedValue_> Slab;
 
-    Rcpp::RObject mat;
-    Rcpp::Function dense_extractor;
+    const Rcpp::RObject& mat;
+    const Rcpp::Function& dense_extractor;
     Rcpp::List extract_args;
 
     bool by_column;
@@ -175,9 +175,9 @@ private:
                         auto chunk_start = chunk_ticks[p.first];
                         Index_ chunk_len = chunk_ticks[p.first + 1] - chunk_start;
                         if (by_column) {
-                            parse_dense_matrix<false>(obj, cache, 0, chunk_start, secondary_length, chunk_len);
+                            parse_dense_matrix<false>(obj, *p.second, 0, chunk_start, secondary_length, chunk_len);
                         } else {
-                            parse_dense_matrix<true>(obj, cache, chunk_start, 0, chunk_len, secondary_length);
+                            parse_dense_matrix<true>(obj, *p.second, chunk_start, 0, chunk_len, secondary_length);
                         }
                         current += chunk_len;
                     }
@@ -193,7 +193,7 @@ private:
 public:
     const Value_* fetch(Index_ i, Value_* buffer) {
         auto res = fetch_raw(i);
-        std::copy(res.first.data() + this->secondary_length * i, this->secondary_length, buffer);
+        std::copy_n(res.first->data() + this->secondary_length * i, this->secondary_length, buffer);
         return buffer;
     }
 };
@@ -201,20 +201,19 @@ public:
 template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
 struct DenseFull : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
     DenseFull(
-        Rcpp::RObject mat, 
-        Rcpp::Function dense_extractor,
-        Index_ max_primary_chunk_length, 
+        const Rcpp::RObject& mat, 
+        const Rcpp::Function& dense_extractor,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Index_ secondary_dim,
         bool by_column,
+        Index_ max_primary_chunk_length, 
         const std::vector<Index_>& ticks,
         const std::vector<Index_>& map,
         size_t cache_size_in_bytes, 
         bool require_minimum_cache) :
         DenseBase<oracle_, Value_, Index_, CachedValue_>(
-            std::move(mat),
-            std::move(dense_extractor),
-            max_primary_chunk_length,
+            mat,
+            dense_extractor,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(secondary_dim);
@@ -222,6 +221,7 @@ struct DenseFull : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
                 return output;
             }(),
             by_column,
+            max_primary_chunk_length,
             ticks,
             map,
             cache_size_in_bytes,
@@ -233,8 +233,8 @@ struct DenseFull : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
 template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
 struct DenseBlock : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
     DenseBlock(
-        Rcpp::RObject mat, 
-        Rcpp::Function dense_extractor,
+        const Rcpp::RObject& mat, 
+        const Rcpp::Function& dense_extractor,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Index_ block_start,
         Index_ block_length,
@@ -245,8 +245,8 @@ struct DenseBlock : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
         size_t cache_size_in_bytes, 
         bool require_minimum_cache) :
         DenseBase<oracle_, Value_, Index_, CachedValue_>(
-            std::move(mat),
-            std::move(dense_extractor),
+            mat,
+            dense_extractor,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(block_length);
@@ -258,7 +258,7 @@ struct DenseBlock : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
             ticks,
             map,
             cache_size_in_bytes,
-            require_minimum_cache,
+            require_minimum_cache
         )
     {}
 };
@@ -266,8 +266,8 @@ struct DenseBlock : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
 template<bool oracle_, typename Value_, typename Index_, typename CachedValue_>
 struct DenseIndexed : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
     DenseIndexed(
-        Rcpp::RObject mat, 
-        Rcpp::Function dense_extractor,
+        const Rcpp::RObject& mat, 
+        const Rcpp::Function& dense_extractor,
         tatami::MaybeOracle<oracle_, Index_> ora,
         tatami::VectorPtr<Index_> indices_ptr,
         bool by_column,
@@ -277,8 +277,8 @@ struct DenseIndexed : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
         size_t cache_size_in_bytes, 
         bool require_minimum_cache) :
         DenseBase<oracle_, Value_, Index_, CachedValue_>(
-            std::move(mat),
-            std::move(dense_extractor),
+            mat,
+            dense_extractor,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(indices_ptr->begin(), indices_ptr->end());
@@ -292,7 +292,7 @@ struct DenseIndexed : public DenseBase<oracle_, Value_, Index_, CachedValue_> {
             ticks,
             map,
             cache_size_in_bytes,
-            require_minimum_cache,
+            require_minimum_cache
         )
     {}
 };

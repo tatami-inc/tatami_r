@@ -35,345 +35,168 @@ int ncol(Rcpp::RObject parsed) {
     return ptr->ncol();
 }
 
-/******************************************
- *** Dense single row/column extractors ***
- ******************************************/
+/******************
+ *** Dense full ***
+ ******************/
 
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::NumericVector row(Rcpp::RObject parsed, int i) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->nrow()) {
-        throw std::runtime_error("requested row index out of range");
-    }
-    Rcpp::NumericVector output(ptr->ncol());
-    ptr->dense_row()->fetch(i - 1, static_cast<double*>(output.begin()));
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::NumericVector row_subset(Rcpp::RObject parsed, int i, int first, int last) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->nrow()) {
-        throw std::runtime_error("requested row index out of range");
-    }
-    if (first < 1 || first > last || last > ptr->ncol()) {
-        throw std::runtime_error("requested subset indices out of range");
-    }
-    Rcpp::NumericVector output(last - first + 1);
-    ptr->dense_row(first - 1, output.size())->fetch_copy(i - 1, static_cast<double*>(output.begin()));
-    return output;
-}
-
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::NumericVector column(Rcpp::RObject parsed, int i) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->ncol()) {
-        throw std::runtime_error("requested column index out of range");
-    }
-    Rcpp::NumericVector output(ptr->nrow());
-    ptr->dense_column()->fetch_copy(i - 1, static_cast<double*>(output.begin()));
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::NumericVector column_subset(Rcpp::RObject parsed, int i, int first, int last) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->ncol()) {
-        throw std::runtime_error("requested column index out of range");
-    }
-    if (first < 1 || first > last || last > ptr->nrow()) {
-        throw std::runtime_error("requested subset indices out of range");
-    }
-    Rcpp::NumericVector output(last - first + 1);
-    ptr->dense_column(first - 1, output.size())->fetch_copy(i - 1, static_cast<double*>(output.begin()));
-    return output;
-}
-
-/*******************************************
- *** Sparse single row/column extractors ***
- *******************************************/
-
-template<class RangeCopy>
-Rcpp::List format_sparse_range(const RangeCopy& x) {
-    Rcpp::IntegerVector idx(x.index.begin(), x.index.end());
-    for (auto& i : idx) { ++i; }
-    return Rcpp::List::create(
-        Rcpp::Named("index") = idx,
-        Rcpp::Named("value") = Rcpp::NumericVector(x.value.begin(), x.value.end())
-    );
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_row(Rcpp::RObject parsed, int i) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->nrow()) {
-        throw std::runtime_error("requested row index out of range");
-    }
-    auto output = ptr->sparse_row()->fetch(i - 1);
-    return format_sparse_range(output);
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_row_subset(Rcpp::RObject parsed, int i, int first, int last) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->nrow()) {
-        throw std::runtime_error("requested row index out of range");
-    }
-    if (first < 1 || first > last || last > ptr->ncol()) {
-        throw std::runtime_error("requested subset indices out of range");
-    }
-    auto output = ptr->sparse_row(first - 1, last - first + 1)->fetch(i - 1);
-    return format_sparse_range(output);
-}
-
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_column(Rcpp::RObject parsed, int i) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->ncol()) {
-        throw std::runtime_error("requested column index out of range");
-    }
-    auto output = ptr->sparse_column()->fetch(i - 1);
-    return format_sparse_range(output);
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_column_subset(Rcpp::RObject parsed, int i, int first, int last) {
-    RatXPtr ptr(parsed);
-    if (i < 1 || i > ptr->ncol()) {
-        throw std::runtime_error("requested column index out of range");
-    }
-    if (first < 1 || first > last || last > ptr->nrow()) {
-        throw std::runtime_error("requested subset indices out of range");
-    }
-    auto output = ptr->sparse_column(first - 1, last - first + 1)->fetch(i - 1);
-    return format_sparse_range(output);
-}
-
-/********************************************
- *** Dense multiple row/column extractors ***
- ********************************************/
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List rows(Rcpp::RObject parsed) {
-    RatXPtr ptr(parsed);
-
-    size_t nr = ptr->nrow();
-    size_t nc = ptr->ncol();
-    Rcpp::List output(nr);
-
-    auto wrk = ptr->dense_row();
-    for (size_t r = 0; r < nr; ++r) {
-        Rcpp::NumericVector current(nc);
-        wrk->fetch_copy(r, static_cast<double*>(current.begin()));
-        output[r] = current;
-    }
-
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List rows_subset(Rcpp::RObject parsed, int first, int last) {
-    RatXPtr ptr(parsed);
-
-    size_t nr = ptr->nrow();
-    size_t len = last - first + 1;
-    Rcpp::List output(nr);
-
-    auto wrk = ptr->dense_row(first - 1, last - first + 1);
-    for (size_t r = 0; r < nr; ++r) {
-        Rcpp::NumericVector current(len);
-        wrk->fetch_copy(r, static_cast<double*>(current.begin()));
-        output[r] = current;
-    }
-
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List columns(Rcpp::RObject parsed) {
-    RatXPtr ptr(parsed);
-
-    size_t nr = ptr->nrow();
-    size_t nc = ptr->ncol();
-    Rcpp::List output(nc);
-
-    auto wrk = ptr->dense_column();
-    for (size_t c = 0; c < nc; ++c) {
-        Rcpp::NumericVector current(nr);
-        wrk->fetch_copy(c, static_cast<double*>(current.begin()));
-        output[c] = current;
-    }
-
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List columns_subset(Rcpp::RObject parsed, int first, int last) {
-    RatXPtr ptr(parsed);
-
-    size_t nc = ptr->ncol();
-    size_t len = last - first + 1;
-    Rcpp::List output(nc);
-
-    auto wrk = ptr->dense_column(first - 1, last - first + 1);
-    for (size_t c = 0; c < nc; ++c) {
-        Rcpp::NumericVector current(len);
-        wrk->fetch_copy(c, static_cast<double*>(current.begin()));
-        output[c] = current;
-    }
-
-    return output;
-}
-
-/********************************************
- *** Dense multiple row/column extractors ***
- ********************************************/
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_rows(Rcpp::RObject parsed) {
-    RatXPtr ptr(parsed);
-
-    size_t nr = ptr->nrow();
-    Rcpp::List output(nr);
-
-    auto wrk = ptr->sparse_row();
-    for (size_t r = 0; r < nr; ++r) {
-        auto current = wrk->fetch(r);
-        output[r] = format_sparse_range(current);
-    }
-
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last) {
-    RatXPtr ptr(parsed);
-
-    size_t nr = ptr->nrow();
-    Rcpp::List output(nr);
-
-    auto wrk = ptr->sparse_row(first - 1, last - first + 1);
-    for (size_t r = 0; r < nr; ++r) {
-        auto current = wrk->fetch(r);
-        output[r] = format_sparse_range(current);
-    }
-
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_columns(Rcpp::RObject parsed) {
-    RatXPtr ptr(parsed);
-
-    size_t nc = ptr->ncol();
-    Rcpp::List output(nc);
-
-    auto wrk = ptr->sparse_column();
-    for (size_t c = 0; c < nc; ++c) {
-        auto current = wrk->fetch(c);
-        output[c] = format_sparse_range(current);
-    }
-
-    return output;
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last) {
-    RatXPtr ptr(parsed);
-
-    size_t nc = ptr->ncol();
-    Rcpp::List output(nc);
-
-    auto wrk = ptr->sparse_column(first - 1, last - first + 1);
-    for (size_t c = 0; c < nc; ++c) {
-        auto current = wrk->fetch(c);
-        output[c] = format_sparse_range(current);
-    }
-
-    return output;
-}
-
-/*********************************
- *** Parallelizable extractors ***
- *********************************/
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::NumericVector rowsums(Rcpp::RObject parsed) {
-    RatXPtr ptr(parsed);
-    auto out = tatami::row_sums(ptr.get());
-    return Rcpp::NumericVector(out.begin(), out.end());
-}
-
-//' @export
-//[[Rcpp::export(rng=false)]]
-Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed) {
-    RatXPtr ptr(parsed);
-    size_t NR = ptr->nrow();
-    std::vector<double> output(NR);
-
-#ifdef TEST_CUSTOM_PARALLEL
-    int nthreads = 3;
-#else
-    int nthreads = 1;
-#endif
-
-    tatami::parallelize([&](int, int start, int length) -> void {
-        auto wrk = ptr->dense_row();
-        for (size_t r = start, e = start + length; r < e; ++r) {
-            auto current = wrk->fetch(r);
-            output[r] = std::accumulate(current.begin(), current.end(), 0.0);
+void check_idx(const Rcpp::IntegerVector& idx, int primary) {
+    for (auto i : idx) {
+        if (i < 1 || i > primary) {
+            throw std::runtime_error("requested primary index out of range");
         }
-    }, NR, nthreads); 
-
-    return Rcpp::NumericVector(output.begin(), output.end());
+    }
 }
 
-/*************************
- *** Guided extractors ***
- *************************/
+template<bool oracle_, class Extractor_>
+Rcpp::NumericVector format_dense_output(Extractor_* ext, int i, int len) {
+    Rcpp::NumericVector vec(len);
+    auto optr = static_cast<double*>(vec.begin());
+    auto iptr = [&]() {
+        if constexpr(oracle_) {
+            return ext->fetch(optr);
+        } else {
+            return ext->fetch(i, optr);
+        }
+    }();
+    tatami::copy_n(iptr, len, optr);
+    return vec;
+}
 
-template<class Extractor_>
-std::vector<int> prepare_indices(const Rcpp::IntegerVector& targets, Extractor_& wrk) {
-    std::vector<int> copy(targets.begin(), targets.end());
-    for (auto& x : copy) { --x; }
-    wrk->set_oracle(std::make_unique<tatami::FixedOracle<int> >(copy.data(), copy.size()));
-    return copy;
+template<bool sparse_, bool oracle_>
+auto create_extractor(const RatXPtr& ptr, bool row, const Rcpp::IntegerVector& idx, bool needs_value = true, bool needs_index = true) {
+    tatami::Options opt;
+    opt.sparse_extract_value = needs_value;
+    opt.sparse_extract_index = needs_index;
+
+    if constexpr(oracle_) {
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, std::make_shared<tatami::FixedViewOracle<int> >(static_cast<const int*>(idx.begin()), idx.size()), opt);
+    } else {
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, false, opt);
+    }
+}
+
+template<bool oracle_>
+Rcpp::List dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx) {
+    RatXPtr ptr(parsed);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+    check_idx(idx, primary);
+
+    auto ext = create_extractor<false, oracle_>(ptr, row, idx);
+    Rcpp::List output(idx.size());
+    for (size_t i = 0, end = idx.size(); i < end; ++i) {
+        output[i] = format_dense_output<oracle_>(ext.get(), i, secondary);
+    }
+    return output;
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-Rcpp::List dense_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
-    RatXPtr ptr(parsed);
-    auto wrk = ptr->dense_row();
-    auto copy = prepare_indices(targets, wrk);
+Rcpp::List myopic_dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx) {
+    return dense_full<false>(std::move(parsed), row, std::move(idx));
+}
 
-    size_t nc = ptr->ncol();
-    Rcpp::List output(copy.size());
-    size_t counter = 0;
-    for (auto r : copy) {
-        Rcpp::NumericVector current(nc);
-        wrk->fetch_copy(r, static_cast<double*>(current.begin()));
-        output[counter] = current;
-        ++counter;
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List oracular_dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx) {
+    return dense_full<true>(std::move(parsed), row, std::move(idx));
+}
+
+/*******************
+ *** Dense block ***
+ *******************/
+
+void check_block(int first, int len, int secondary) {
+    if (first < 1 || len < 0 || first + len - 1 > secondary) {
+        throw std::runtime_error("requested block out of range");
+    }
+}
+
+template<bool sparse_, bool oracle_>
+auto create_extractor(const RatXPtr& ptr, bool row, const Rcpp::IntegerVector& idx, int first, int len, bool needs_value = true, bool needs_index = true) {
+    tatami::Options opt;
+    opt.sparse_extract_value = needs_value;
+    opt.sparse_extract_index = needs_index;
+
+    if constexpr(oracle_) {
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, std::make_shared<tatami::FixedViewOracle<int> >(static_cast<const int*>(idx.begin()), idx.size()), first - 1, len, opt);
+    } else {
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, false, first - 1, len, opt);
+    }
+}
+
+template<bool oracle_>
+Rcpp::List dense_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len) {
+    RatXPtr ptr(parsed);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+    check_idx(idx, primary);
+    check_block(first, len, secondary);
+
+    auto ext = create_extractor<false, oracle_>(ptr, row, idx, first, len);
+    Rcpp::List output(idx.size());
+    for (size_t i = 0, end = idx.size(); i < end; ++i) {
+        output[i] = format_dense_output<oracle_>(ext.get(), i, len);
+    }
+    return output;
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List myopic_dense_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len) {
+    return dense_block<false>(std::move(parsed), row, std::move(idx), first, len);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List oracular_dense_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len) {
+    return dense_block<true>(std::move(parsed), row, std::move(idx), first, len);
+}
+
+/********************
+ *** Dense subset ***
+ ********************/
+
+void check_subset(const Rcpp::IntegerVector& subset, int secondary) {
+    int last = 0;
+    for (auto s : subset) {
+        if (s <= last || s > secondary) {
+            throw std::runtime_error("subset vector should be sorted and within range");
+        }
+        last = s;
+    }
+}
+
+template<bool sparse_, bool oracle_>
+auto create_extractor(const RatXPtr& ptr, bool row, const Rcpp::IntegerVector& idx, const Rcpp::IntegerVector& subset, bool needs_value = true, bool needs_index = true) {
+    tatami::Options opt;
+    opt.sparse_extract_value = needs_value;
+    opt.sparse_extract_index = needs_index;
+
+    auto subs = std::make_shared<std::vector<int> >(subset.begin(), subset.end());
+    for (auto& s : *subs) {
+        --s;
+    }
+
+    if constexpr(oracle_) {
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, std::make_shared<tatami::FixedViewOracle<int> >(static_cast<const int*>(idx.begin()), idx.size()), std::move(subs), opt);
+    } else {
+        return tatami::new_extractor<sparse_, oracle_>(ptr.get(), row, false, std::move(subs), opt);
+    }
+}
+
+template<bool oracle_>
+Rcpp::List dense_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset) {
+    RatXPtr ptr(parsed);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+    check_idx(idx, primary);
+    check_subset(subset, secondary);
+
+    auto ext = create_extractor<false, oracle_>(ptr, row, idx, subset);
+    Rcpp::List output(idx.size());
+    for (size_t i = 0, end = idx.size(); i < end; ++i) {
+        output[i] = format_dense_output<oracle_>(ext.get(), i, subset.size());
     }
 
     return output;
@@ -381,19 +204,83 @@ Rcpp::List dense_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) 
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-Rcpp::List dense_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
-    RatXPtr ptr(parsed);
-    auto wrk = ptr->dense_column();
-    auto copy = prepare_indices(targets, wrk);
+Rcpp::List myopic_dense_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset) {
+    return dense_indexed<false>(std::move(parsed), row, std::move(idx), std::move(subset));
+}
 
-    size_t nr = ptr->nrow();
-    size_t counter = 0;
-    Rcpp::List output(copy.size());
-    for (auto c : copy) {
-        Rcpp::NumericVector current(nr);
-        wrk->fetch_copy(c, static_cast<double*>(current.begin()));
-        output[counter] = current;
-        ++counter;
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List oracular_dense_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset) {
+    return dense_indexed<true>(std::move(parsed), row, std::move(idx), std::move(subset));
+}
+
+/*******************
+ *** Sparse full ***
+ *******************/
+
+template<bool oracle_, class Extractor_>
+Rcpp::RObject format_sparse_output(Extractor_* ext, int i, double* vbuffer, int* ibuffer, bool needs_value, bool needs_index) {
+    if (needs_index && needs_value) {
+        auto x = [&](){
+            if constexpr(oracle_) {
+                return ext->fetch(vbuffer, ibuffer);
+            } else {
+                return ext->fetch(i, vbuffer, ibuffer);
+            }
+        }();
+        Rcpp::NumericVector outv(x.value, x.value + x.number);
+        Rcpp::IntegerVector outi(x.index, x.index + x.number);
+        for (auto& i : outi) { ++i; }
+        return Rcpp::List::create(Rcpp::Named("index") = outi, Rcpp::Named("value") = outv);
+
+    } else if (needs_index) {
+        auto x = [&](){
+            if constexpr(oracle_) {
+                return ext->fetch(NULL, ibuffer);
+            } else {
+                return ext->fetch(i, NULL, ibuffer);
+            }
+        }();
+        Rcpp::IntegerVector outi(x.index, x.index + x.number);
+        for (auto& i : outi) { ++i; }
+        return outi;
+
+    } else if (needs_value) {
+        auto x = [&](){
+            if constexpr(oracle_) {
+                return ext->fetch(vbuffer, NULL);
+            } else {
+                return ext->fetch(i, vbuffer, NULL);
+            }
+        }();
+        return Rcpp::NumericVector(x.value, x.value + x.number);
+
+    } else {
+        auto x = [&](){
+            if constexpr(oracle_) {
+                return ext->fetch(NULL, NULL);
+            } else {
+                return ext->fetch(i, NULL, NULL);
+            }
+        }();
+        return Rcpp::IntegerVector::create(x.number);
+    }
+}
+
+template<bool oracle_>
+Rcpp::List sparse_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, bool needs_value, bool needs_index) {
+    RatXPtr ptr(parsed);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+    check_idx(idx, primary);
+
+    auto ext = create_extractor<true, oracle_>(ptr, row, idx, needs_value, needs_index);
+    Rcpp::List output(idx.size());
+    std::vector<double> vbuffer(secondary);
+    std::vector<int> ibuffer(secondary);
+
+    for (size_t i = 0, end = idx.size(); i < end; ++i) {
+        output[i] = format_sparse_output<oracle_>(ext.get(), i, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
     }
 
     return output;
@@ -401,34 +288,82 @@ Rcpp::List dense_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector target
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
+Rcpp::List myopic_sparse_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, bool needs_value, bool needs_index) {
+    return sparse_full<false>(std::move(parsed), row, std::move(idx), needs_value, needs_index);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List oracular_sparse_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, bool needs_value, bool needs_index) {
+    return sparse_full<true>(std::move(parsed), row, std::move(idx), needs_value, needs_index);
+}
+
+/********************
+ *** Sparse block ***
+ ********************/
+
+template<bool oracle_>
+Rcpp::List sparse_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len, bool needs_value, bool needs_index) {
     RatXPtr ptr(parsed);
-    auto wrk = ptr->sparse_row();
-    auto copy = prepare_indices(targets, wrk);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+    check_idx(idx, primary);
+    check_block(first, len, secondary);
 
-    Rcpp::List output(copy.size());
-    size_t counter = 0;
-    for (auto r : copy) {
-        output[counter] = format_sparse_range(wrk->fetch(r));
-        ++counter;
+    auto ext = create_extractor<true, oracle_>(ptr, row, idx, first, len, needs_value, needs_index);
+    std::vector<double> vbuffer(len);
+    std::vector<int> ibuffer(len);
+    Rcpp::List output(idx.size());
+
+    for (size_t i = 0, end = idx.size(); i < end; ++i) {
+        output[i] = format_sparse_output<oracle_>(ext.get(), i, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
     }
-
     return output;
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-Rcpp::List sparse_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets) {
+Rcpp::List myopic_sparse_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len, bool needs_value, bool needs_index) {
+    return sparse_block<false>(std::move(parsed), row, std::move(idx), first, len, needs_value, needs_index);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List oracular_sparse_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len, bool needs_value, bool needs_index) {
+    return sparse_block<true>(std::move(parsed), row, std::move(idx), first, len, needs_value, needs_index);
+}
+
+/**********************
+ *** Sparse indexed ***
+ **********************/
+
+template<bool oracle_>
+Rcpp::List sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset, bool needs_value, bool needs_index) {
     RatXPtr ptr(parsed);
-    auto wrk = ptr->sparse_column();
-    auto copy = prepare_indices(targets, wrk);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+    check_idx(idx, primary);
+    check_subset(subset, secondary);
 
-    size_t counter = 0;
-    Rcpp::List output(copy.size());
-    for (auto c : copy) {
-        output[counter] = format_sparse_range(wrk->fetch(c));
-        ++counter;
+    auto ext = create_extractor<true, oracle_>(ptr, row, idx, subset, needs_value, needs_index);
+    std::vector<double> vbuffer(subset.size());
+    std::vector<int> ibuffer(subset.size());
+    Rcpp::List output(idx.size());
+
+    for (size_t i = 0, end = idx.size(); i < end; ++i) {
+        output[i] = format_sparse_output<oracle_>(ext.get(), i, vbuffer.data(), ibuffer.data(), needs_value, needs_index);
     }
-
     return output;
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List myopic_sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset, bool needs_value, bool needs_index) {
+    return sparse_indexed<false>(std::move(parsed), row, std::move(idx), std::move(subset), needs_value, needs_index);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::List oracular_sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset, bool needs_value, bool needs_index) {
+    return sparse_indexed<true>(std::move(parsed), row, std::move(idx), std::move(subset), needs_value, needs_index);
 }
