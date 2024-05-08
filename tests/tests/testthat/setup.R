@@ -13,6 +13,17 @@ get_cache_size <- function(mat, cache.fraction) {
     cache.fraction * nrow(mat) * ncol(mat) * type.size
 }
 
+create_predictions <- function(iterdim, step, mode) {
+    iseq <- seq(1, iterdim, by=step)
+    if (mode == "reverse") {
+        rev(iseq)
+    } else if (mode == "random") {
+        sample(iseq)
+    } else {
+        iseq
+    }
+}
+
 pretty_name <- function(prefix, params) {
     paste0(prefix, "[", paste(vapply(colnames(params), function(x) paste0(x, "=", deparse(params[,x][[1]])), ""), collapse=", "), "]")
 }
@@ -27,20 +38,23 @@ full_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        step = c(1, 5, 10)
+        mode = c("forward", "reverse", "random"),
+        step = c(1, 5, 10),
+        stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
         cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
+        mode <- scenarios[i, "mode"]
         step <- scenarios[i,"step"]
 
         iterdim <- if (row) nrow(mat) else ncol(mat) 
         otherdim <- if (row) ncol(mat) else nrow(mat)
-        iseq <- seq(1, iterdim, by=step)
+        iseq <- create_predictions(iterdim, step, mode)
 
-        test_that(pretty_name("dense full simple ", scenarios[i,]), {
+        test_that(pretty_name("dense full ", scenarios[i,]), {
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_full(ptr, row, iseq)
             } else {
@@ -54,7 +68,7 @@ full_test_suite <- function(mat, cache.fraction) {
             }
         })
 
-        test_that(pretty_name("sparse full simple ", scenarios[i,]), {
+        test_that(pretty_name("sparse full ", scenarios[i,]), {
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_full
             } else {
@@ -100,26 +114,29 @@ block_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
+        mode = c("forward", "reverse", "random"),
         step = c(1, 5, 10),
-        block = list(c(0, 0.3), c(0.2, 0.66), c(0.6, 0.37))
+        block = list(c(0, 0.3), c(0.2, 0.66), c(0.6, 0.37)),
+        stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
         cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
+        mode <- scenarios[i, "mode"]
         step <- scenarios[i,"step"]
 
         iterdim <- if (row) nrow(mat) else ncol(mat) 
         otherdim <- if (row) ncol(mat) else nrow(mat)
-        iseq <- seq(1, iterdim, by=step)
+        iseq <- create_predictions(iterdim, step, mode)
 
         block <- scenarios[i,"block"][[1]]
         bstart <- floor(block[[1]] * otherdim) + 1L
         blen <- floor(block[[2]] * otherdim)
         keep <- (bstart - 1L) + seq_len(blen)
 
-        test_that(pretty_name("dense block simple ", scenarios[i,]), {
+        test_that(pretty_name("dense block ", scenarios[i,]), {
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_block(ptr, row, iseq, bstart, blen) 
             } else {
@@ -133,7 +150,7 @@ block_test_suite <- function(mat, cache.fraction) {
             }
         })
 
-        test_that(pretty_name("sparse block simple ", scenarios[i,]), {
+        test_that(pretty_name("sparse block ", scenarios[i,]), {
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_block
             } else {
@@ -179,25 +196,28 @@ index_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
+        mode = c("forward", "reverse", "random"),
         step = c(1, 5, 10),
-        index = list(c(0, 3), c(0.33, 4), c(0.5, 5))
+        index = list(c(0, 3), c(0.33, 4), c(0.5, 5)),
+        stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
         cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
+        mode <- scenarios[i, "mode"]
         step <- scenarios[i,"step"]
 
         iterdim <- if (row) nrow(mat) else ncol(mat) 
         otherdim <- if (row) ncol(mat) else nrow(mat)
-        iseq <- seq(1, iterdim, by=step)
+        iseq <- create_predictions(iterdim, step, mode)
 
         index_params <- scenarios[i,"index"][[1]]
         istart <- floor(index_params[[1]] * otherdim) + 1L
         keep <- seq(istart, otherdim, by=index_params[[2]])
 
-        test_that(pretty_name("dense index simple ", scenarios[i,]), {
+        test_that(pretty_name("dense index ", scenarios[i,]), {
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_indexed(ptr, row, iseq, keep) 
             } else {
@@ -211,7 +231,7 @@ index_test_suite <- function(mat, cache.fraction) {
             }
         })
 
-        test_that(pretty_name("sparse index simple ", scenarios[i,]), {
+        test_that(pretty_name("sparse index ", scenarios[i,]), {
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_indexed
             } else {
@@ -247,8 +267,105 @@ index_test_suite <- function(mat, cache.fraction) {
     }
 }
 
+reuse_test_suite <- function(mat, cache.fraction) {
+    cache.size <- get_cache_size(mat, cache.fraction)
+    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+    expect_identical(nrow(mat), raticate.tests::nrow(ptr))
+    expect_identical(ncol(mat), raticate.tests::ncol(ptr))
+
+    scenarios <- expand.grid(
+        cache = cache.fraction,
+        row = c(TRUE, FALSE),
+        oracle = c(FALSE, TRUE),
+        step = c(1, 5, 10),
+        mode = c("forward", "alternating", "random"),
+        stringsAsFactors=FALSE
+    )
+
+    for (i in seq_len(nrow(scenarios))) {
+        cache <- scenarios[i,"cache"]
+        row <- scenarios[i,"row"]
+        oracle <- scenarios[i,"oracle"]
+        step <- scenarios[i,"step"]
+        mode <- scenarios[i,"mode"]
+
+        iterdim <- if (row) nrow(mat) else ncol(mat) 
+        otherdim <- if (row) ncol(mat) else nrow(mat)
+
+        # Creating a vector of predictions where we constantly double back to
+        # re-use previous elements.
+        iseq <- (function() {
+            predictions <- list()
+            i <- 0L
+            while (i < iterdim) {
+                current <- i + seq_len(step * 2)
+                current <- current[current <= iterdim]
+                if (mode == "alternating") {
+                    if (length(predictions) %% 2 == 1L) {
+                        current <- rev(current)
+                    }
+                } else if (mode == "random") {
+                    current <- sample(current)
+                }
+                predictions <- append(predictions, list(current))
+                i <- i + step
+            }
+            unlist(predictions)
+        })()
+
+        test_that(pretty_name("dense full re-used ", scenarios[i,]), {
+            if (oracle) {
+                extracted <- raticate.tests::oracular_dense_full(ptr, row, iseq)
+            } else {
+                extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
+            }
+            for (i in seq_along(iseq)) {
+                j <- iseq[i]
+                expected <- if (row) mat[j,] else mat[,j]
+                expected <- as.double(expected)
+                expect_identical(extracted[[i]], expected)
+            }
+        })
+
+        test_that(pretty_name("sparse full re-used ", scenarios[i,]), {
+            if (oracle) {
+                FUN <- raticate.tests::oracular_sparse_full
+            } else {
+                FUN <- raticate.tests::myopic_sparse_full
+            }
+            extractor.b <- FUN(ptr, row, iseq, TRUE, TRUE)
+            extractor.i <- FUN(ptr, row, iseq, FALSE, TRUE)
+            extractor.v <- FUN(ptr, row, iseq, TRUE, FALSE)
+            extractor.n <- FUN(ptr, row, iseq, FALSE, FALSE)
+
+            ncount <- 0L
+            for (i in seq_along(iseq)) {
+                j <- iseq[i]
+                expected <- if (row) mat[j,] else mat[,j]
+                expected <- as.double(expected)
+
+                both <- extractor.b[[i]]
+                observed <- numeric(otherdim)
+                observed[both$index] <- both$value
+                expect_identical(observed, expected)
+
+                expect_identical(both$index, extractor.i[[i]])
+                expect_identical(both$value, extractor.v[[i]])
+                expect_identical(length(both$value), extractor.n[[i]])
+
+                ncount <- ncount + length(both$value)
+            }
+
+            if (DelayedArray::is_sparse(mat)) {
+                expect_true(ncount < nrow(mat) * ncol(mat))
+            }
+        })
+    }
+}
+
 big_test_suite <- function(mat, cache.fraction) {
     full_test_suite(mat, cache.fraction)
     block_test_suite(mat, cache.fraction)
     index_test_suite(mat, cache.fraction)
+    reuse_test_suite(mat, cache.fraction)
 }
