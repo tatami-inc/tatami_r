@@ -19,6 +19,16 @@ ncol <- function(parsed) {
 }
 
 #' @export
+prefer_row <- function(parsed) {
+    .Call('_raticate_tests_prefer_row', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
+is_sparse <- function(parsed) {
+    .Call('_raticate_tests_is_sparse', PACKAGE = 'raticate.tests', parsed)
+}
+
+#' @export
 myopic_dense_full <- function(parsed, row, idx) {
     .Call('_raticate_tests_myopic_dense_full', PACKAGE = 'raticate.tests', parsed, row, idx)
 }

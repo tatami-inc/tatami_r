@@ -109,6 +109,11 @@ public:
                 col_chunk_ticks.resize(internal_ncol + 1);
                 std::iota(col_chunk_ticks.begin(), col_chunk_ticks.end(), static_cast<Index_>(0));
 
+                // Both dense and sparse inputs are implicitly column-major, so
+                // if there isn't chunking information to the contrary, we'll
+                // favor extraction of the columns.
+                internal_prefer_rows = false;
+
             } else {
                 auto grid_cls = get_class_name(grid);
 
@@ -183,6 +188,11 @@ public:
                     throw std::runtime_error("instance of unknown class '" + grid_cls + "' returned by 'chunkGrid(<" + ctype + ">)");
                 }
             }
+
+            // Choose the dimension that requires pulling out fewer chunks.
+            auto chunks_per_row = col_chunk_ticks.size() - 1;
+            auto chunks_per_col = row_chunk_ticks.size() - 1;
+            internal_prefer_rows = chunks_per_row <= chunks_per_col;
         }
 
         cache_size_in_bytes = opt.maximum_cache_size;
@@ -195,10 +205,6 @@ public:
             }
             cache_size_in_bytes = bsize[0];
         }
-
-        auto chunks_per_row = col_chunk_ticks.size() - 1;
-        auto chunks_per_col = row_chunk_ticks.size() - 1;
-        internal_prefer_rows = chunks_per_row <= chunks_per_col;
     }
 
     /**

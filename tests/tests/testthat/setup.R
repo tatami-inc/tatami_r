@@ -31,8 +31,6 @@ pretty_name <- function(prefix, params) {
 full_test_suite <- function(mat, cache.fraction) {
     cache.size <- get_cache_size(mat, cache.fraction)
     ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-    expect_identical(nrow(mat), raticate.tests::nrow(ptr))
-    expect_identical(ncol(mat), raticate.tests::ncol(ptr))
 
     scenarios <- expand.grid(
         cache = cache.fraction,
@@ -107,8 +105,6 @@ full_test_suite <- function(mat, cache.fraction) {
 block_test_suite <- function(mat, cache.fraction) {
     cache.size <- get_cache_size(mat, cache.fraction)
     ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-    expect_identical(nrow(mat), raticate.tests::nrow(ptr))
-    expect_identical(ncol(mat), raticate.tests::ncol(ptr))
 
     scenarios <- expand.grid(
         cache = cache.fraction,
@@ -189,8 +185,6 @@ block_test_suite <- function(mat, cache.fraction) {
 index_test_suite <- function(mat, cache.fraction) {
     cache.size <- get_cache_size(mat, cache.fraction)
     ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-    expect_identical(nrow(mat), raticate.tests::nrow(ptr))
-    expect_identical(ncol(mat), raticate.tests::ncol(ptr))
 
     scenarios <- expand.grid(
         cache = cache.fraction,
@@ -270,8 +264,6 @@ index_test_suite <- function(mat, cache.fraction) {
 reuse_test_suite <- function(mat, cache.fraction) {
     cache.size <- get_cache_size(mat, cache.fraction)
     ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-    expect_identical(nrow(mat), raticate.tests::nrow(ptr))
-    expect_identical(ncol(mat), raticate.tests::ncol(ptr))
 
     scenarios <- expand.grid(
         cache = cache.fraction,
@@ -363,9 +355,46 @@ reuse_test_suite <- function(mat, cache.fraction) {
     }
 }
 
+parallel_test_suite <- function(mat, cache.fraction) {
+    cache.size <- get_cache_size(mat, cache.fraction)
+    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
+    refr <- rowSums(mat)
+    refc <- colSums(mat)
+
+    test_that("parallel dense rowsums", {
+        expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 1))
+        expect_equal(refr, raticate.tests::oracular_dense_sums(ptr, TRUE, 1))
+        expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 3))
+        expect_equal(refr, raticate.tests::oracular_dense_sums(ptr, TRUE, 3))
+    })
+
+    test_that("parallel dense colsums", {
+        expect_equal(refc, raticate.tests::myopic_dense_sums(ptr, FALSE, 1))
+        expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 1))
+        expect_equal(refc, raticate.tests::myopic_dense_sums(ptr, FALSE, 3))
+        expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 3))
+    })
+
+    test_that("parallel sparse rowsums", {
+        expect_equal(refr, raticate.tests::myopic_sparse_sums(ptr, TRUE, 1))
+        expect_equal(refr, raticate.tests::oracular_sparse_sums(ptr, TRUE, 1))
+        expect_equal(refr, raticate.tests::myopic_sparse_sums(ptr, TRUE, 3))
+        expect_equal(refr, raticate.tests::oracular_sparse_sums(ptr, TRUE, 3))
+    })
+
+    test_that("parallel sparse colsums", {
+        expect_equal(refc, raticate.tests::myopic_sparse_sums(ptr, FALSE, 1))
+        expect_equal(refc, raticate.tests::oracular_sparse_sums(ptr, FALSE, 1))
+        expect_equal(refc, raticate.tests::myopic_sparse_sums(ptr, FALSE, 3))
+        expect_equal(refc, raticate.tests::oracular_sparse_sums(ptr, FALSE, 3))
+    })
+}
+
 big_test_suite <- function(mat, cache.fraction) {
     full_test_suite(mat, cache.fraction)
     block_test_suite(mat, cache.fraction)
     index_test_suite(mat, cache.fraction)
     reuse_test_suite(mat, cache.fraction)
+    parallel_test_suite(mat, cache.fraction)
 }

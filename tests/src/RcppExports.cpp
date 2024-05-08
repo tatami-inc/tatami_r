@@ -42,6 +42,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// prefer_row
+bool prefer_row(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_prefer_row(SEXP parsedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    rcpp_result_gen = Rcpp::wrap(prefer_row(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// is_sparse
+bool is_sparse(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_is_sparse(SEXP parsedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    rcpp_result_gen = Rcpp::wrap(is_sparse(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
 // myopic_dense_full
 Rcpp::List myopic_dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx);
 RcppExport SEXP _raticate_tests_myopic_dense_full(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP) {
@@ -215,6 +235,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 3},
     {"_raticate_tests_nrow", (DL_FUNC) &_raticate_tests_nrow, 1},
     {"_raticate_tests_ncol", (DL_FUNC) &_raticate_tests_ncol, 1},
+    {"_raticate_tests_prefer_row", (DL_FUNC) &_raticate_tests_prefer_row, 1},
+    {"_raticate_tests_is_sparse", (DL_FUNC) &_raticate_tests_is_sparse, 1},
     {"_raticate_tests_myopic_dense_full", (DL_FUNC) &_raticate_tests_myopic_dense_full, 3},
     {"_raticate_tests_oracular_dense_full", (DL_FUNC) &_raticate_tests_oracular_dense_full, 3},
     {"_raticate_tests_myopic_dense_block", (DL_FUNC) &_raticate_tests_myopic_dense_block, 5},

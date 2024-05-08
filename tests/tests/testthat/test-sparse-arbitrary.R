@@ -11,16 +11,31 @@ ArbitraryChunkedSparseMatrix <- function(mat, numticks) {
 }
 
 set.seed(200000)
-NR <- 54
-NC <- 201
-mat <- ArbitraryChunkedSparseMatrix(Matrix::rsparsematrix(NR, NC, 0.2), numticks=c(17, 14))
-expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
-expect_true(is_sparse(mat))
-big_test_suite(mat, cache.fraction = 0.01)
-big_test_suite(mat, cache.fraction = 0.1)
 
-NR <- 178
-NC <- 85 
-mat <- ArbitraryChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=0.1), ncol=NC), numticks=c(30, 20))
-big_test_suite(mat, cache.fraction = 0.01)
-big_test_suite(mat, cache.fraction = 0.1)
+{
+    NR <- 54
+    NC <- 201
+    mat <- ArbitraryChunkedSparseMatrix(Matrix::rsparsematrix(NR, NC, 0.2), numticks=c(17, 14))
+    expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
+    expect_true(is_sparse(mat))
+
+    parsed <- raticate.tests::parse(mat, 0, FALSE)
+    expect_true(raticate.tests::is_sparse(parsed))
+    expect_false(raticate.tests::prefer_rows(parsed))
+
+    big_test_suite(mat, cache.fraction = 0.01)
+    big_test_suite(mat, cache.fraction = 0.1)
+}
+
+{
+    NR <- 178
+    NC <- 85 
+    mat <- ArbitraryChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=0.1), ncol=NC), numticks=c(20, 20))
+
+    parsed <- raticate.tests::parse(mat, 0, FALSE)
+    expect_true(raticate.tests::is_sparse(parsed))
+    expect_true(raticate.tests::prefer_rows(parsed))
+
+    big_test_suite(mat, cache.fraction = 0.01)
+    big_test_suite(mat, cache.fraction = 0.1)
+}

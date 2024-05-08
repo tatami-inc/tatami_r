@@ -10,15 +10,39 @@ ArbitraryChunkedMatrix <- function(mat, numticks) {
 }
 
 set.seed(200000)
-NR <- 61
-NC <- 159 
-mat <- ArbitraryChunkedMatrix(matrix(runif(NR * NC), ncol=NC), numticks=c(11L, 20L))
-expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
-big_test_suite(mat, cache.fraction = 0.01)
-big_test_suite(mat, cache.fraction = 0.1)
 
-NR <- 187
-NC <- 92
-mat <- ArbitraryChunkedMatrix(matrix(rpois(NR * NC, lambda=2), ncol=NC), numticks=c(13, 15))
-big_test_suite(mat, cache.fraction = 0.01)
-big_test_suite(mat, cache.fraction = 0.1)
+{
+    NR <- 61
+    NC <- 159 
+    mat <- ArbitraryChunkedMatrix(matrix(runif(NR * NC), ncol=NC), numticks=c(11L, 20L))
+
+    test_that("dense arbitrary-chunked double matrix passes basic checks", {
+        expect_type(mat, "double")
+        expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
+
+        parsed <- raticate.tests::parse(mat, 0, FALSE)
+        expect_false(raticate.tests::is_sparse(parsed))
+        expect_false(raticate.tests::prefer_rows(parsed))
+    })
+
+    big_test_suite(mat, cache.fraction = 0.01)
+    big_test_suite(mat, cache.fraction = 0.1)
+}
+
+{
+    NR <- 187
+    NC <- 92
+    mat <- ArbitraryChunkedMatrix(matrix(rpois(NR * NC, lambda=2), ncol=NC), numticks=c(19, 15))
+
+    test_that("dense arbitrary-chunked integer matrix passes basic checks", {
+        expect_type(mat, "integer")
+        expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
+
+        parsed <- raticate.tests::parse(mat, 0, FALSE)
+        expect_false(raticate.tests::is_sparse(parsed))
+        expect_true(raticate.tests::prefer_rows(parsed))
+    })
+
+    big_test_suite(mat, cache.fraction = 0.01)
+    big_test_suite(mat, cache.fraction = 0.1)
+}

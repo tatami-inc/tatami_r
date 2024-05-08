@@ -38,6 +38,20 @@ int ncol(Rcpp::RObject parsed) {
     return ptr->ncol();
 }
 
+//' @export
+//[[Rcpp::export(rng=false)]]
+bool prefer_row(Rcpp::RObject parsed) {
+    RatXPtr ptr(parsed);
+    return ptr->prefer_rows();
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+bool is_sparse(Rcpp::RObject parsed) {
+    RatXPtr ptr(parsed);
+    return ptr->prefer_rows();
+}
+
 /******************
  *** Dense full ***
  ******************/
@@ -377,4 +391,107 @@ Rcpp::List myopic_sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVe
 //[[Rcpp::export(rng=false)]]
 Rcpp::List oracular_sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset, bool needs_value, bool needs_index) {
     return sparse_indexed<true>(std::move(parsed), row, std::move(idx), std::move(subset), needs_value, needs_index);
+}
+
+/****************
+ *** Row sums ***
+ ****************/
+
+Rcpp::NumericVector collapse_vector(const std::vector<std::vector<double> >& temp) {
+    size_t total = 0;
+    for (const auto& t : temp) {
+        total += t.size();
+    }
+
+    Rcpp::NumericVector output(total);
+    auto start = output.begin();
+    for (const auto& t : temp) {
+        std::copy(t.begin(), t.end(), start);
+        start += t.size();
+    }
+
+    return output;
+}
+
+template<bool oracle_>
+Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+    RatXPtr ptr(parsed);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+
+    std::vector<std::vector<double> > output(num_threads);
+    tatami_r::parallelize([&](int w, int start, int len) {
+        auto ext = [&]() {
+            if constexpr(oracle_) {
+                return tatami::new_extractor<false, oracle_>(ptr.get(), row, std::make_shared<tatami::ConsecutiveOracle<int> >(start, len));
+            } else {
+                return tatami::new_extractor<false, oracle_>(ptr.get(), row, false);
+            }
+        }();
+
+        std::vector<double> buffer(secondary);
+        auto& mine = output[w];
+        mine.resize(len);
+
+        for (int i = 0; i < len; ++i) {
+            auto iptr = [&]() {
+                if constexpr(oracle_) {
+                    return ext->fetch(buffer.data());
+                } else {
+                    return ext->fetch(i + start, buffer.data());
+                }
+            }();
+            mine[i] = std::accumulate(iptr, iptr + secondary, 0.0);
+        }
+    }, primary, num_threads);
+
+    return collapse_vector(output);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector myopic_dense_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+    return dense_sums<false>(std::move(parsed), row, num_threads);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector oracular_dense_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+    return dense_sums<true>(std::move(parsed), row, num_threads);
+}
+
+template<bool oracle_>
+Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+    RatXPtr ptr(parsed);
+    int primary = (row ? ptr->nrow() : ptr->ncol());
+    int secondary = (!row ? ptr->nrow() : ptr->ncol());
+
+    std::vector<std::vector<double> > output(num_threads);
+    tatami_r::parallelize([&](int w, int start, int len) {
+        auto ext = [&]() {
+            if constexpr(oracle_) {
+                return tatami::new_extractor<true, oracle_>(ptr.get(), row, std::make_shared<tatami::ConsecutiveOracle<int> >(start, len));
+            } else {
+                return tatami::new_extractor<true, oracle_>(ptr.get(), row, false);
+            }
+        }();
+
+        std::vector<double> vbuffer(secondary);
+        std::vector<int> ibuffer(secondary);
+        auto& mine = output[w];
+        mine.resize(len);
+
+        for (int i = 0; i < len; ++i) {
+            auto range = [&]() {
+                if constexpr(oracle_) {
+                    return ext->fetch(vbuffer.data(), ibuffer.data());
+                } else {
+                    return ext->fetch(i + start, vbuffer.data(), ibuffer.data());
+                }
+            }();
+            mine[i] = std::accumulate(range.value, range.value + range.number, 0.0);
+        }
+    }, primary, num_threads);
+
+    return collapse_vector(output);
 }
