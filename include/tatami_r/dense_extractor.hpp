@@ -112,8 +112,8 @@ private:
                     mexec.run([&]() -> void {
 #endif
 
-                    auto chunk_start = chunk_ticks[id], chunk_end = chunk_ticks[id + 1];
-                    size_t chunk_len = chunk_end - chunk_start;
+                    auto chunk_start = chunk_ticks[id];
+                    size_t chunk_len = chunk_ticks[id + 1] - chunk_start;
                     Rcpp::IntegerVector primary_extract(chunk_len);
                     std::iota(primary_extract.begin(), primary_extract.end(), chunk_start + 1);
                     extract_args[static_cast<int>(by_column)] = primary_extract;

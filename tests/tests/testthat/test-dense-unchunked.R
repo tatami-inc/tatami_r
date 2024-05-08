@@ -1,11 +1,12 @@
 # This tests the dense matrix extraction.
-# library(testthat); source("setup.R"); source("test-matrix.R")
+# library(testthat); source("setup.R"); source("test-dense-unchunked.R")
 
 set.seed(100000)
 NR <- 49
 NC <- 103
 mat <- matrix(runif(NR * NC), ncol=NC)
 expect_type(mat, "double")
+expect_null(DelayedArray::chunkGrid(mat))
 big_test_suite(mat, cache.fraction = 0)
 big_test_suite(mat, cache.fraction = 0.01)
 big_test_suite(mat, cache.fraction = 0.1)

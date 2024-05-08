@@ -113,7 +113,7 @@ public:
                 auto grid_cls = get_class_name(grid);
 
                 if (grid_cls == "RegularArrayGrid") {
-                    Rcpp::IntegerVector spacings(Rcpp::RObject(seed.slot("spacings")));
+                    Rcpp::IntegerVector spacings(Rcpp::RObject(grid.slot("spacings")));
                     if (spacings.size() != 2) {
                         auto ctype = get_class_name(seed);
                         throw std::runtime_error("'chunkGrid(<" + ctype + ">)@spacings' should be an integer vector of length 2 with non-negative values");
@@ -128,7 +128,7 @@ public:
                             ticks.push_back(start);
                             while (start != extent) {
                                 auto to_fill = std::min(spacing, extent - start);
-                                std::fill_n(map.begin() + start, to_fill, ticks.size());
+                                std::fill_n(map.begin() + start, to_fill, ticks.size() - 1);
                                 start += to_fill;
                                 ticks.push_back(start);
                             }
@@ -141,7 +141,7 @@ public:
                     populate(internal_ncol, col_max_chunk_size, col_chunk_map, col_chunk_ticks);
 
                 } else if (grid_cls == "ArbitraryArrayGrid") {
-                    Rcpp::List ticks(Rcpp::RObject(seed.slot("tickmarks")));
+                    Rcpp::List ticks(Rcpp::RObject(grid.slot("tickmarks")));
                     if (ticks.size() != 2) {
                         auto ctype = get_class_name(seed);
                         throw std::runtime_error("'chunkGrid(<" + ctype + ">)@tickmarks' should return a list of length 2");
