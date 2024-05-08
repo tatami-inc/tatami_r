@@ -15,7 +15,6 @@ void parse_sparse_matrix_internal(
     std::vector<Index_>& counts)
 {
     auto dims = parse_dims(seed.slot("dim"));
-    int NR = dims.first;
     int NC = dims.second;
 
     Rcpp::List svt = seed.slot("SVT");
@@ -55,7 +54,7 @@ void parse_sparse_matrix_internal(
         }
         InputObject_ curvalues(second);
         size_t nnz = curvalues.size();
-        if (nnz != curindices.size()) {
+        if (nnz != static_cast<size_t>(curindices.size())) {
             auto ctype = get_class_name(seed);
             throw std::runtime_error("both vectors of an element of the 'SVT' slot in a " + ctype + " object should have the same length");
         }

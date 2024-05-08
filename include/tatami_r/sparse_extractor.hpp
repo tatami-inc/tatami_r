@@ -81,8 +81,8 @@ public:
 protected:
     const Rcpp::RObject& mat;
     const Rcpp::Function& sparse_extractor;
-    Rcpp::IntegerVector secondary_indices;
     Rcpp::List extract_args;
+    Rcpp::IntegerVector secondary_indices;
 
     bool by_column;
     const std::vector<Index_>& chunk_ticks;
@@ -473,7 +473,6 @@ const Value_* densify(const Slab_& slab, Index_ offset, size_t secondary_length,
     auto iptr = slab.index.data() + shift;
 
     std::fill_n(buffer, secondary_length, 0);
-    Index_ n = slab.count[offset];
     for (Index_ i = 0, end = slab.count[offset]; i < end; ++i, ++vptr, ++iptr) {
         buffer[*iptr] = *vptr;
     }
