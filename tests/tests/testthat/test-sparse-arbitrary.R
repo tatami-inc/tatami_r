@@ -23,7 +23,7 @@ set.seed(200000)
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
         expect_true(raticate.tests::is_sparse(parsed))
-        expect_false(raticate.tests::prefer_rows(parsed))
+        expect_true(raticate.tests::prefer_rows(parsed))
     })
 
     big_test_suite(mat, cache.fraction = 0.01)

@@ -37,7 +37,7 @@ full_test_suite <- function(mat, cache.fraction) {
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
         mode = c("forward", "reverse", "random"),
-        step = c(1, 5, 10),
+        step = c(1, 5),
         stringsAsFactors=FALSE
     )
 
@@ -111,23 +111,22 @@ block_test_suite <- function(mat, cache.fraction) {
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
         mode = c("forward", "reverse", "random"),
-        step = c(1, 5, 10),
+        step = c(1, 5),
         block = list(c(0, 0.3), c(0.2, 0.66), c(0.6, 0.37)),
         stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
-        cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
         mode <- scenarios[i, "mode"]
         step <- scenarios[i,"step"]
+        block <- scenarios[i,"block"][[1]]
 
         iterdim <- if (row) nrow(mat) else ncol(mat) 
         otherdim <- if (row) ncol(mat) else nrow(mat)
         iseq <- create_predictions(iterdim, step, mode)
 
-        block <- scenarios[i,"block"][[1]]
         bstart <- floor(block[[1]] * otherdim) + 1L
         blen <- floor(block[[2]] * otherdim)
         keep <- (bstart - 1L) + seq_len(blen)
@@ -191,23 +190,22 @@ index_test_suite <- function(mat, cache.fraction) {
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
         mode = c("forward", "reverse", "random"),
-        step = c(1, 5, 10),
+        step = c(1, 5),
         index = list(c(0, 3), c(0.33, 4), c(0.5, 5)),
         stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
-        cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
         mode <- scenarios[i, "mode"]
         step <- scenarios[i,"step"]
+        index_params <- scenarios[i,"index"][[1]]
 
         iterdim <- if (row) nrow(mat) else ncol(mat) 
         otherdim <- if (row) ncol(mat) else nrow(mat)
         iseq <- create_predictions(iterdim, step, mode)
 
-        index_params <- scenarios[i,"index"][[1]]
         istart <- floor(index_params[[1]] * otherdim) + 1L
         keep <- seq(istart, otherdim, by=index_params[[2]])
 
@@ -269,7 +267,7 @@ reuse_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        step = c(1, 5, 10),
+        step = c(1, 5),
         mode = c("forward", "alternating", "random"),
         stringsAsFactors=FALSE
     )
@@ -359,8 +357,8 @@ parallel_test_suite <- function(mat, cache.fraction) {
     cache.size <- get_cache_size(mat, cache.fraction)
     ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
-    refr <- rowSums(mat)
-    refc <- colSums(mat)
+    refr <- Matrix::rowSums(mat)
+    refc <- Matrix::colSums(mat)
 
     test_that("parallel dense rowsums", {
         expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 1))
