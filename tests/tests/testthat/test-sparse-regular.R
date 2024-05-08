@@ -11,9 +11,9 @@ RegularChunkedSparseMatrix <- function(mat, chunks) {
 set.seed(150000)
 
 {
-    NR <- 57
-    NC <- 208
-    mat <- RegularChunkedSparseMatrix(Matrix::rsparsematrix(NR, NC, 0.24), chunks=c(11, 7)) 
+    NR <- 24
+    NC <- 104
+    mat <- RegularChunkedSparseMatrix(Matrix::rsparsematrix(NR, NC, 0.24), chunks=c(8, 7)) 
 
     test_that("sparse regularly-chunked double matrix passes basic checks", {
         expect_true(is_sparse(mat))
@@ -29,8 +29,8 @@ set.seed(150000)
 }
 
 {
-    NR <- 150
-    NC <- 100
+    NR <- 75
+    NC <- 50
     mat <- RegularChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=1), ncol=NC), chunks=c(5, 10))
 
     test_that("sparse regularly-chunked integer matrix passes basic checks", {

@@ -395,4 +395,5 @@ big_test_suite <- function(mat, cache.fraction) {
     index_test_suite(mat, cache.fraction)
     reuse_test_suite(mat, cache.fraction)
     parallel_test_suite(mat, cache.fraction)
+    gc(full=TRUE)
 }

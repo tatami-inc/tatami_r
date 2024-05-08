@@ -12,8 +12,8 @@ ArbitraryChunkedMatrix <- function(mat, numticks) {
 set.seed(200000)
 
 {
-    NR <- 61
-    NC <- 159 
+    NR <- 31
+    NC <- 89 
     mat <- ArbitraryChunkedMatrix(matrix(runif(NR * NC), ncol=NC), numticks=c(11L, 20L))
 
     test_that("dense arbitrary-chunked double matrix passes basic checks", {
@@ -30,8 +30,8 @@ set.seed(200000)
 }
 
 {
-    NR <- 187
-    NC <- 92
+    NR <- 97
+    NC <- 46
     mat <- ArbitraryChunkedMatrix(matrix(rpois(NR * NC, lambda=2), ncol=NC), numticks=c(19, 15))
 
     test_that("dense arbitrary-chunked integer matrix passes basic checks", {

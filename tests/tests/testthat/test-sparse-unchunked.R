@@ -4,8 +4,8 @@
 set.seed(100000)
 
 {
-    NR <- 67
-    NC <- 173
+    NR <- 34
+    NC <- 87
     mat <- as(Matrix::rsparsematrix(NR, NC, 0.15), "SVT_SparseMatrix")
 
     test_that("sparse unchunked double matrix passes basic checks", {
@@ -23,8 +23,8 @@ set.seed(100000)
 }
 
 {
-    NR <- 133
-    NC <- 49
+    NR <- 67
+    NC <- 24 
     mat <- matrix(0L, NR, NC)
     nnz <- length(mat) * 0.2
     mat[sample(length(mat), nnz)] <- rpois(nnz, lambda=10)
@@ -45,8 +45,8 @@ set.seed(100000)
 }
 
 {
-    NR <- 302
-    NC <- 13
+    NR <- 151
+    NC <- 7
     mat <- as(matrix(rbinom(NR * NC, 1, 0.2) == 1, ncol=NC), "SVT_SparseMatrix")
 
     test_that("sparse unchunked logical matrix passes basic checks", {

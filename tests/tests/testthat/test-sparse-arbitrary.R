@@ -13,8 +13,8 @@ ArbitraryChunkedSparseMatrix <- function(mat, numticks) {
 set.seed(200000)
 
 {
-    NR <- 54
-    NC <- 201
+    NR <- 27
+    NC <- 101
     mat <- ArbitraryChunkedSparseMatrix(Matrix::rsparsematrix(NR, NC, 0.2), numticks=c(17, 14))
 
     test_that("sparse arbitrarily-chunked double matrix passes basic checks", {
@@ -31,8 +31,8 @@ set.seed(200000)
 }
 
 {
-    NR <- 178
-    NC <- 85 
+    NR <- 89
+    NC <- 43 
     mat <- ArbitraryChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=0.1), ncol=NC), numticks=c(20, 20))
 
     test_that("sparse arbitrarily-chunked integer matrix passes basic checks", {

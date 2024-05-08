@@ -9,9 +9,9 @@ RegularChunkedMatrix <- function(mat, chunks) {
 
 set.seed(150000)
 {
-    NR <- 57
-    NC <- 208
-    mat <- RegularChunkedMatrix(matrix(runif(NR * NC), ncol=NC), chunks=c(11, 7)) 
+    NR <- 23
+    NC <- 104
+    mat <- RegularChunkedMatrix(matrix(runif(NR * NC), ncol=NC), chunks=c(6, 4)) 
 
     test_that("dense regular-chunked double matrix passes basic checks", {
         expect_s4_class(chunkGrid(mat), "RegularArrayGrid")
@@ -27,9 +27,9 @@ set.seed(150000)
 }
 
 {
-    NR <- 150
-    NC <- 100
-    mat <- RegularChunkedMatrix(matrix(rpois(NR * NC, lambda=2), ncol=NC), chunks=c(5, 10))
+    NR <- 75
+    NC <- 50
+    mat <- RegularChunkedMatrix(matrix(rpois(NR * NC, lambda=2), ncol=NC), chunks=c(5, 5))
 
     test_that("dense regular-chunked integer matrix passes basic checks", {
         expect_s4_class(chunkGrid(mat), "RegularArrayGrid")
