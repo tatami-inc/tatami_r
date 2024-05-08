@@ -14,15 +14,13 @@ void parse_sparse_matrix_internal(
     std::vector<CachedIndex_*>& index_ptrs, 
     std::vector<Index_>& counts)
 {
-    auto dims = parse_dims(seed.slot("dim"));
-    int NC = dims.second;
-
-    Rcpp::List svt = seed.slot("SVT");
-    if (svt.size() != NC) {
-        auto ctype = get_class_name(seed);
-        throw std::runtime_error(std::string("'SVT' slot in a ") + ctype + " object should have length equal to the number of columns");
+    Rcpp::RObject raw_svt = seed.slot("SVT");
+    if (raw_svt == R_NilValue) {
+        return;
     }
 
+    Rcpp::List svt(raw_svt);
+    int NC = svt.size();
     bool needs_value = !value_ptrs.empty();
     bool needs_index = !index_ptrs.empty();
 
@@ -62,13 +60,14 @@ void parse_sparse_matrix_internal(
         if constexpr(transpose_) {
             for (size_t i = 0; i < nnz; ++i) {
                 auto ix = curindices[i];
+                auto& shift = counts[ix];
                 if (needs_value) {
-                    *(value_ptrs[ix]) = curvalues[i];
+                    value_ptrs[ix][shift] = curvalues[i];
                 }
                 if (needs_index) {
-                    *(index_ptrs[ix]) = c;
+                    index_ptrs[ix][shift] = c;
                 }
-                ++(counts[ix]);
+                ++shift;
             }
 
         } else {

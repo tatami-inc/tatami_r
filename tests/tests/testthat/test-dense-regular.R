@@ -4,7 +4,7 @@
 setClass("RegularChunkedMatrix", contains="matrix", slots=c(chunks="integer"))
 setMethod("chunkdim", "RegularChunkedMatrix", function(x) x@chunks)
 RegularChunkedMatrix <- function(mat, chunks) {
-    DelayedArray(new("RegularChunkedMatrix", mat, chunks=as.integer(chunks)))
+    new("RegularChunkedMatrix", mat, chunks=as.integer(chunks))
 }
 
 set.seed(150000)

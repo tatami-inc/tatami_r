@@ -123,7 +123,7 @@ protected:
             mexec.run([&]() -> void {
 #endif
 
-            extract_args[static_cast<int>(by_column)] = Rcpp::IntegerVector::create(i);
+            extract_args[static_cast<int>(by_column)] = Rcpp::IntegerVector::create(i + 1);
             auto obj = sparse_extractor(mat, extract_args);
 
             if (by_column) {
@@ -468,7 +468,7 @@ private:
 
 template<typename Slab_, typename Value_, typename Index_>
 const Value_* densify(const Slab_& slab, Index_ offset, size_t secondary_length, Value_* buffer) {
-    auto shift = static_cast<size_t>(offset) * secondary_length; // cast to size_t to avoid overflow.
+    size_t shift = static_cast<size_t>(offset) * secondary_length; // cast to size_t to avoid overflow.
     auto vptr = slab.value.data() + shift;
     auto iptr = slab.index.data() + shift;
 
