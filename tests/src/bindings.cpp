@@ -18,29 +18,33 @@ typedef Rcpp::XPtr<tatami::Matrix<double, int> > RatXPtr;
 //' @export
 //[[Rcpp::export(rng=false)]]
 SEXP parse(Rcpp::RObject seed, double cache_size, bool require_min) {
-    tatami_r::Options opt;
-    opt.maximum_cache_size = cache_size;
-    opt.require_minimum_cache = require_min;
-    return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed, opt));
+    if (cache_size < 0) {
+        tatami_r::Options opt;
+        opt.maximum_cache_size = cache_size;
+        opt.require_minimum_cache = require_min;
+        return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed, opt));
+    } else {
+        return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed));
+    }
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-int nrow(Rcpp::RObject parsed) {
+int num_rows(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
     return ptr->nrow();
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-int ncol(Rcpp::RObject parsed) {
+int num_columns(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
     return ptr->ncol();
 }
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-bool prefer_row(Rcpp::RObject parsed) {
+bool prefer_rows(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
     return ptr->prefer_rows();
 }
@@ -49,7 +53,7 @@ bool prefer_row(Rcpp::RObject parsed) {
 //[[Rcpp::export(rng=false)]]
 bool is_sparse(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
-    return ptr->prefer_rows();
+    return ptr->sparse();
 }
 
 /******************
@@ -494,4 +498,16 @@ Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, int num_threads)
     }, primary, num_threads);
 
     return collapse_vector(output);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector myopic_sparse_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+    return sparse_sums<false>(std::move(parsed), row, num_threads);
+}
+
+//' @export
+//[[Rcpp::export(rng=false)]]
+Rcpp::NumericVector oracular_sparse_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+    return sparse_sums<true>(std::move(parsed), row, num_threads);
 }

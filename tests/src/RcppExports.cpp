@@ -22,33 +22,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// nrow
-int nrow(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_nrow(SEXP parsedSEXP) {
+// num_rows
+int num_rows(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_num_rows(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(nrow(parsed));
+    rcpp_result_gen = Rcpp::wrap(num_rows(parsed));
     return rcpp_result_gen;
 END_RCPP
 }
-// ncol
-int ncol(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_ncol(SEXP parsedSEXP) {
+// num_columns
+int num_columns(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_num_columns(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(ncol(parsed));
+    rcpp_result_gen = Rcpp::wrap(num_columns(parsed));
     return rcpp_result_gen;
 END_RCPP
 }
-// prefer_row
-bool prefer_row(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_prefer_row(SEXP parsedSEXP) {
+// prefer_rows
+bool prefer_rows(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_prefer_rows(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(prefer_row(parsed));
+    rcpp_result_gen = Rcpp::wrap(prefer_rows(parsed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -230,12 +230,60 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// myopic_dense_sums
+Rcpp::NumericVector myopic_dense_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_myopic_dense_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_dense_sums(parsed, row, num_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// oracular_dense_sums
+Rcpp::NumericVector oracular_dense_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_oracular_dense_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_dense_sums(parsed, row, num_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// myopic_sparse_sums
+Rcpp::NumericVector myopic_sparse_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_myopic_sparse_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_sparse_sums(parsed, row, num_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// oracular_sparse_sums
+Rcpp::NumericVector oracular_sparse_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_oracular_sparse_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_sparse_sums(parsed, row, num_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 3},
-    {"_raticate_tests_nrow", (DL_FUNC) &_raticate_tests_nrow, 1},
-    {"_raticate_tests_ncol", (DL_FUNC) &_raticate_tests_ncol, 1},
-    {"_raticate_tests_prefer_row", (DL_FUNC) &_raticate_tests_prefer_row, 1},
+    {"_raticate_tests_num_rows", (DL_FUNC) &_raticate_tests_num_rows, 1},
+    {"_raticate_tests_num_columns", (DL_FUNC) &_raticate_tests_num_columns, 1},
+    {"_raticate_tests_prefer_rows", (DL_FUNC) &_raticate_tests_prefer_rows, 1},
     {"_raticate_tests_is_sparse", (DL_FUNC) &_raticate_tests_is_sparse, 1},
     {"_raticate_tests_myopic_dense_full", (DL_FUNC) &_raticate_tests_myopic_dense_full, 3},
     {"_raticate_tests_oracular_dense_full", (DL_FUNC) &_raticate_tests_oracular_dense_full, 3},
@@ -249,6 +297,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_raticate_tests_oracular_sparse_block", (DL_FUNC) &_raticate_tests_oracular_sparse_block, 7},
     {"_raticate_tests_myopic_sparse_indexed", (DL_FUNC) &_raticate_tests_myopic_sparse_indexed, 6},
     {"_raticate_tests_oracular_sparse_indexed", (DL_FUNC) &_raticate_tests_oracular_sparse_indexed, 6},
+    {"_raticate_tests_myopic_dense_sums", (DL_FUNC) &_raticate_tests_myopic_dense_sums, 3},
+    {"_raticate_tests_oracular_dense_sums", (DL_FUNC) &_raticate_tests_oracular_dense_sums, 3},
+    {"_raticate_tests_myopic_sparse_sums", (DL_FUNC) &_raticate_tests_myopic_sparse_sums, 3},
+    {"_raticate_tests_oracular_sparse_sums", (DL_FUNC) &_raticate_tests_oracular_sparse_sums, 3},
     {NULL, NULL, 0}
 };
 

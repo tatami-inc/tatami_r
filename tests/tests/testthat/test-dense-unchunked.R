@@ -13,8 +13,8 @@ set.seed(100000)
         expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_identical(NR, raticate.tests::nrow(parsed))
-        expect_identical(NC, raticate.tests::ncol(parsed))
+        expect_equal(NR, raticate.tests::num_rows(parsed))
+        expect_equal(NC, raticate.tests::num_columns(parsed))
         expect_false(raticate.tests::is_sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
@@ -31,10 +31,11 @@ set.seed(100000)
 
     test_that("dense unchunked integer matrix passes basic checks", {
         expect_type(mat, "integer")
+        expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_identical(NR, raticate.tests::nrow(parsed))
-        expect_identical(NC, raticate.tests::ncol(parsed))
+        expect_equal(NR, raticate.tests::num_rows(parsed))
+        expect_equal(NC, raticate.tests::num_columns(parsed))
         expect_false(raticate.tests::is_sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
@@ -51,10 +52,11 @@ set.seed(100000)
 
     test_that("dense unchunked logical matrix passes basic checks", {
         expect_type(mat, "logical")
+        expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_identical(NR, raticate.tests::nrow(parsed))
-        expect_identical(NC, raticate.tests::ncol(parsed))
+        expect_equal(NR, raticate.tests::num_rows(parsed))
+        expect_equal(NC, raticate.tests::num_columns(parsed))
         expect_false(raticate.tests::is_sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })

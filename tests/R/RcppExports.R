@@ -9,18 +9,18 @@ parse <- function(seed, cache_size, require_min) {
 }
 
 #' @export
-nrow <- function(parsed) {
-    .Call('_raticate_tests_nrow', PACKAGE = 'raticate.tests', parsed)
+num_rows <- function(parsed) {
+    .Call('_raticate_tests_num_rows', PACKAGE = 'raticate.tests', parsed)
 }
 
 #' @export
-ncol <- function(parsed) {
-    .Call('_raticate_tests_ncol', PACKAGE = 'raticate.tests', parsed)
+num_columns <- function(parsed) {
+    .Call('_raticate_tests_num_columns', PACKAGE = 'raticate.tests', parsed)
 }
 
 #' @export
-prefer_row <- function(parsed) {
-    .Call('_raticate_tests_prefer_row', PACKAGE = 'raticate.tests', parsed)
+prefer_rows <- function(parsed) {
+    .Call('_raticate_tests_prefer_rows', PACKAGE = 'raticate.tests', parsed)
 }
 
 #' @export
@@ -86,5 +86,25 @@ myopic_sparse_indexed <- function(parsed, row, idx, subset, needs_value, needs_i
 #' @export
 oracular_sparse_indexed <- function(parsed, row, idx, subset, needs_value, needs_index) {
     .Call('_raticate_tests_oracular_sparse_indexed', PACKAGE = 'raticate.tests', parsed, row, idx, subset, needs_value, needs_index)
+}
+
+#' @export
+myopic_dense_sums <- function(parsed, row, num_threads) {
+    .Call('_raticate_tests_myopic_dense_sums', PACKAGE = 'raticate.tests', parsed, row, num_threads)
+}
+
+#' @export
+oracular_dense_sums <- function(parsed, row, num_threads) {
+    .Call('_raticate_tests_oracular_dense_sums', PACKAGE = 'raticate.tests', parsed, row, num_threads)
+}
+
+#' @export
+myopic_sparse_sums <- function(parsed, row, num_threads) {
+    .Call('_raticate_tests_myopic_sparse_sums', PACKAGE = 'raticate.tests', parsed, row, num_threads)
+}
+
+#' @export
+oracular_sparse_sums <- function(parsed, row, num_threads) {
+    .Call('_raticate_tests_oracular_sparse_sums', PACKAGE = 'raticate.tests', parsed, row, num_threads)
 }
 

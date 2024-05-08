@@ -187,12 +187,12 @@ public:
                     auto ctype = get_class_name(seed);
                     throw std::runtime_error("instance of unknown class '" + grid_cls + "' returned by 'chunkGrid(<" + ctype + ">)");
                 }
-            }
 
-            // Choose the dimension that requires pulling out fewer chunks.
-            auto chunks_per_row = col_chunk_ticks.size() - 1;
-            auto chunks_per_col = row_chunk_ticks.size() - 1;
-            internal_prefer_rows = chunks_per_row <= chunks_per_col;
+                // Choose the dimension that requires pulling out fewer chunks.
+                auto chunks_per_row = col_chunk_ticks.size() - 1;
+                auto chunks_per_col = row_chunk_ticks.size() - 1;
+                internal_prefer_rows = chunks_per_row <= chunks_per_col;
+            }
         }
 
         cache_size_in_bytes = opt.maximum_cache_size;
