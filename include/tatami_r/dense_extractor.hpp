@@ -175,9 +175,9 @@ private:
                         auto chunk_start = chunk_ticks[p.first];
                         Index_ chunk_len = chunk_ticks[p.first + 1] - chunk_start;
                         if (by_column) {
-                            parse_dense_matrix<false>(obj, *p.second, 0, chunk_start, secondary_length, chunk_len);
+                            parse_dense_matrix<false>(obj, *p.second, 0, current, secondary_length, chunk_len);
                         } else {
-                            parse_dense_matrix<true>(obj, *p.second, chunk_start, 0, chunk_len, secondary_length);
+                            parse_dense_matrix<true>(obj, *p.second, current, 0, chunk_len, secondary_length);
                         }
                         current += chunk_len;
                     }
