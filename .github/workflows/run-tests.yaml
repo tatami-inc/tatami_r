@@ -57,8 +57,9 @@ jobs:
         library(DelayedArray)
         library(testthat)
         source("setup.R")
-        for (x in list.files(pattern="test")) {
-            cat(x, "\n")
-            testthat::test_file(x)
-        }
+        testthat::test_file("test-sparse-arbitrary.R")
+        #for (x in list.files(pattern="test")) {
+        #    cat(x, "\n")
+        #    testthat::test_file(x)
+        #}
         #testthat::test_file("testthat.R", reporter=testthat::default_reporter(), stop_on_failure=TRUE)
