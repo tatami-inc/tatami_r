@@ -468,7 +468,7 @@ Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, int num_threads) 
             if constexpr(oracle_) {
                 return ext->fetch(buffer.data());
             } else {
-                return ext->fetch(i + start, buffer.data());
+                return ext->fetch(i, buffer.data());
             }
         }();
         output[i] = std::accumulate(iptr, iptr + secondary, 0.0);

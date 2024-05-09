@@ -33,7 +33,7 @@ set.seed(200000)
 {
     NR <- 89
     NC <- 43 
-    mat <- ArbitraryChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=0.1), ncol=NC), numticks=c(20, 20))
+    mat <- ArbitraryChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=0.1), ncol=NC), numticks=c(20, 21))
 
     test_that("sparse arbitrarily-chunked integer matrix passes basic checks", {
         expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
@@ -41,7 +41,7 @@ set.seed(200000)
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
         expect_true(raticate.tests::sparse(parsed))
-        expect_true(raticate.tests::prefer_rows(parsed))
+        expect_false(raticate.tests::prefer_rows(parsed))
     })
 
     big_test_suite(mat, cache.fraction = 0.01)
