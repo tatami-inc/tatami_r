@@ -21,7 +21,7 @@ set.seed(200000)
         expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_false(raticate.tests::is_sparse(parsed))
+        expect_false(raticate.tests::sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
@@ -39,7 +39,7 @@ set.seed(200000)
         expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_false(raticate.tests::is_sparse(parsed))
+        expect_false(raticate.tests::sparse(parsed))
         expect_true(raticate.tests::prefer_rows(parsed))
     })
 

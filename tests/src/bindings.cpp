@@ -51,7 +51,7 @@ bool prefer_rows(Rcpp::RObject parsed) {
 
 //' @export
 //[[Rcpp::export(rng=false)]]
-bool is_sparse(Rcpp::RObject parsed) {
+bool sparse(Rcpp::RObject parsed) {
     RatXPtr ptr(parsed);
     return ptr->sparse();
 }
@@ -460,7 +460,9 @@ Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, int num_threads) 
         }
     }();
 
+    std::vector<double> buffer(secondary);
     Rcpp::NumericVector output(primary);
+
     for (int i = 0; i < primary; ++i) {
         auto iptr = [&]() {
             if constexpr(oracle_) {
@@ -532,7 +534,10 @@ Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, int num_threads)
         }
     }();
 
+    std::vector<double> vbuffer(secondary);
+    std::vector<int> ibuffer(secondary);
     Rcpp::NumericVector output(primary);
+
     for (int i = 0; i < primary; ++i) {
         auto range = [&]() {
             if constexpr(oracle_) {

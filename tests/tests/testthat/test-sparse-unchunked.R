@@ -13,7 +13,7 @@ set.seed(100000)
         expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_true(raticate.tests::is_sparse(parsed))
+        expect_true(raticate.tests::sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
@@ -35,7 +35,7 @@ set.seed(100000)
         expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_true(raticate.tests::is_sparse(parsed))
+        expect_true(raticate.tests::sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
@@ -54,7 +54,7 @@ set.seed(100000)
         expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_true(raticate.tests::is_sparse(parsed))
+        expect_true(raticate.tests::sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 

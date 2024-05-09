@@ -24,8 +24,8 @@ prefer_rows <- function(parsed) {
 }
 
 #' @export
-is_sparse <- function(parsed) {
-    .Call('_raticate_tests_is_sparse', PACKAGE = 'raticate.tests', parsed)
+sparse <- function(parsed) {
+    .Call('_raticate_tests_sparse', PACKAGE = 'raticate.tests', parsed)
 }
 
 #' @export

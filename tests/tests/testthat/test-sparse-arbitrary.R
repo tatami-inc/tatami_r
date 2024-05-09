@@ -22,7 +22,7 @@ set.seed(200000)
         expect_true(is_sparse(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_true(raticate.tests::is_sparse(parsed))
+        expect_true(raticate.tests::sparse(parsed))
         expect_true(raticate.tests::prefer_rows(parsed))
     })
 
@@ -40,7 +40,7 @@ set.seed(200000)
         expect_true(is_sparse(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_true(raticate.tests::is_sparse(parsed))
+        expect_true(raticate.tests::sparse(parsed))
         expect_true(raticate.tests::prefer_rows(parsed))
     })
 

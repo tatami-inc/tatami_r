@@ -17,8 +17,6 @@ create_predictions <- function(iterdim, step, mode) {
     iseq <- seq(1, iterdim, by=step)
     if (mode == "reverse") {
         rev(iseq)
-    } else if (mode == "random") {
-        sample(iseq)
     } else {
         iseq
     }
@@ -66,7 +64,7 @@ full_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        mode = c("forward", "reverse", "random"),
+        mode = c("forward", "reverse"), 
         step = c(1, 5),
         stringsAsFactors=FALSE
     )
@@ -123,7 +121,7 @@ block_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        mode = c("forward", "reverse", "random"),
+        mode = c("forward", "reverse"), 
         step = c(1, 5),
         block = list(c(0, 0.3), c(0.2, 0.66), c(0.6, 0.37)),
         stringsAsFactors=FALSE
@@ -185,7 +183,7 @@ index_test_suite <- function(mat, cache.fraction) {
         cache = cache.fraction,
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        mode = c("forward", "reverse", "random"),
+        mode = c("forward", "reverse"), 
         step = c(1, 5),
         index = list(c(0, 3), c(0.33, 4), c(0.5, 5)),
         stringsAsFactors=FALSE
@@ -247,7 +245,7 @@ reuse_test_suite <- function(mat, cache.fraction) {
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
         step = c(1, 5),
-        mode = c("forward", "alternating", "random"),
+        mode = c("forward", "alternating"),
         stringsAsFactors=FALSE
     )
 
@@ -273,8 +271,6 @@ reuse_test_suite <- function(mat, cache.fraction) {
                     if (length(predictions) %% 2 == 1L) {
                         current <- rev(current)
                     }
-                } else if (mode == "random") {
-                    current <- sample(current)
                 }
                 predictions <- append(predictions, list(current))
                 i <- i + step

@@ -18,7 +18,7 @@ set.seed(150000)
         expect_identical(type(mat), "double")
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_false(raticate.tests::is_sparse(parsed))
+        expect_false(raticate.tests::sparse(parsed))
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
@@ -36,7 +36,7 @@ set.seed(150000)
         expect_identical(type(mat), "integer")
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
-        expect_false(raticate.tests::is_sparse(parsed))
+        expect_false(raticate.tests::sparse(parsed))
         expect_true(raticate.tests::prefer_rows(parsed))
     })
 
