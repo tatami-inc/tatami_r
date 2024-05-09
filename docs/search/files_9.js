@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['ranges_2ehpp_0',['ranges.hpp',['https://tatami-inc.github.io/tatami/ranges_8hpp.html',1,'']]]
+  ['options_2ehpp_0',['Options.hpp',['https://tatami-inc.github.io/tatami/Options_8hpp.html',1,'']]],
+  ['oracle_2ehpp_1',['Oracle.hpp',['https://tatami-inc.github.io/tatami/Oracle_8hpp.html',1,'']]]
 ];

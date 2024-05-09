@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['virtualdensematrix_0',['VirtualDenseMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1VirtualDenseMatrix.html',1,'tatami']]]
+  ['unknownmatrix_0',['UnknownMatrix',['../classtatami__r_1_1UnknownMatrix.html',1,'tatami_r']]]
 ];

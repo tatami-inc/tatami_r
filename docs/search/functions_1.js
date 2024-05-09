@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['back_0',['back',['https://tatami-inc.github.io/tatami/structtatami_1_1OracleStream.html#a3ce855b3a8ffa7887b20f489faf1a68e',1,'tatami::OracleStream']]],
-  ['begin_1',['begin',['https://tatami-inc.github.io/tatami/classtatami_1_1ArrayView.html#a476ff30f6f88958e34401d254a2ff77d',1,'tatami::ArrayView::begin()'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray.html#a5b7999f71425029d4b4de32c2025fdd9',1,'tatami::SomeNumericArray::begin()']]],
-  ['bind_5fintersection_2',['bind_intersection',['https://tatami-inc.github.io/tatami/namespacetatami.html#a87c52cf8a974ad0025550b002d391d39',1,'tatami']]]
+  ['begin_0',['begin',['https://tatami-inc.github.io/tatami/classtatami_1_1ArrayView.html#a476ff30f6f88958e34401d254a2ff77d',1,'tatami::ArrayView::begin()'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray.html#a5b7999f71425029d4b4de32c2025fdd9',1,'tatami::SomeNumericArray::begin()']]],
+  ['blocksparsifiedwrapper_1',['BlockSparsifiedWrapper',['https://tatami-inc.github.io/tatami/structtatami_1_1BlockSparsifiedWrapper.html#a29bf69f2b1440578c1f7ceaf16b68f29',1,'tatami::BlockSparsifiedWrapper']]]
 ];

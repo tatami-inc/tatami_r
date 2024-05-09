@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['cache_5ffor_5freuse_0',['cache_for_reuse',['https://tatami-inc.github.io/tatami/structtatami_1_1Options.html#a8eda7dd2e46293d3f3fee30bdbddb9c8',1,'tatami::Options']]]
+  ['maximum_5fcache_5fsize_0',['maximum_cache_size',['../structtatami__r_1_1Options.html#a2692a265df2ac6b8160b5b5c6b68dcdc',1,'tatami_r::Options']]]
 ];
