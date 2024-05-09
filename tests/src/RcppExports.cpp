@@ -11,310 +11,296 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // parse
-SEXP parse(Rcpp::RObject seed);
-RcppExport SEXP _raticate_tests_parse(SEXP seedSEXP) {
+SEXP parse(Rcpp::RObject seed, double cache_size, bool require_min);
+RcppExport SEXP _raticate_tests_parse(SEXP seedSEXP, SEXP cache_sizeSEXP, SEXP require_minSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(parse(seed));
+    Rcpp::traits::input_parameter< double >::type cache_size(cache_sizeSEXP);
+    Rcpp::traits::input_parameter< bool >::type require_min(require_minSEXP);
+    rcpp_result_gen = Rcpp::wrap(parse(seed, cache_size, require_min));
     return rcpp_result_gen;
 END_RCPP
 }
-// nrow
-int nrow(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_nrow(SEXP parsedSEXP) {
+// num_rows
+int num_rows(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_num_rows(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(nrow(parsed));
+    rcpp_result_gen = Rcpp::wrap(num_rows(parsed));
     return rcpp_result_gen;
 END_RCPP
 }
-// ncol
-int ncol(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_ncol(SEXP parsedSEXP) {
+// num_columns
+int num_columns(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_num_columns(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(ncol(parsed));
+    rcpp_result_gen = Rcpp::wrap(num_columns(parsed));
     return rcpp_result_gen;
 END_RCPP
 }
-// row
-Rcpp::NumericVector row(Rcpp::RObject parsed, int i);
-RcppExport SEXP _raticate_tests_row(SEXP parsedSEXP, SEXP iSEXP) {
+// prefer_rows
+bool prefer_rows(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_prefer_rows(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    rcpp_result_gen = Rcpp::wrap(row(parsed, i));
+    rcpp_result_gen = Rcpp::wrap(prefer_rows(parsed));
     return rcpp_result_gen;
 END_RCPP
 }
-// row_subset
-Rcpp::NumericVector row_subset(Rcpp::RObject parsed, int i, int first, int last);
-RcppExport SEXP _raticate_tests_row_subset(SEXP parsedSEXP, SEXP iSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+// sparse
+bool sparse(Rcpp::RObject parsed);
+RcppExport SEXP _raticate_tests_sparse(SEXP parsedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse(parsed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// myopic_dense_full
+Rcpp::List myopic_dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx);
+RcppExport SEXP _raticate_tests_myopic_dense_full(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_dense_full(parsed, row, idx));
+    return rcpp_result_gen;
+END_RCPP
+}
+// oracular_dense_full
+Rcpp::List oracular_dense_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx);
+RcppExport SEXP _raticate_tests_oracular_dense_full(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_dense_full(parsed, row, idx));
+    return rcpp_result_gen;
+END_RCPP
+}
+// myopic_dense_block
+Rcpp::List myopic_dense_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len);
+RcppExport SEXP _raticate_tests_myopic_dense_block(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP firstSEXP, SEXP lenSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
     Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(row_subset(parsed, i, first, last));
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_dense_block(parsed, row, idx, first, len));
     return rcpp_result_gen;
 END_RCPP
 }
-// column
-Rcpp::NumericVector column(Rcpp::RObject parsed, int i);
-RcppExport SEXP _raticate_tests_column(SEXP parsedSEXP, SEXP iSEXP) {
+// oracular_dense_block
+Rcpp::List oracular_dense_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len);
+RcppExport SEXP _raticate_tests_oracular_dense_block(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP firstSEXP, SEXP lenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    rcpp_result_gen = Rcpp::wrap(column(parsed, i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// column_subset
-Rcpp::NumericVector column_subset(Rcpp::RObject parsed, int i, int first, int last);
-RcppExport SEXP _raticate_tests_column_subset(SEXP parsedSEXP, SEXP iSEXP, SEXP firstSEXP, SEXP lastSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
     Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(column_subset(parsed, i, first, last));
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_dense_block(parsed, row, idx, first, len));
     return rcpp_result_gen;
 END_RCPP
 }
-// sparse_row
-Rcpp::List sparse_row(Rcpp::RObject parsed, int i);
-RcppExport SEXP _raticate_tests_sparse_row(SEXP parsedSEXP, SEXP iSEXP) {
+// myopic_dense_indexed
+Rcpp::List myopic_dense_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset);
+RcppExport SEXP _raticate_tests_myopic_dense_indexed(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP subsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_row(parsed, i));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset(subsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_dense_indexed(parsed, row, idx, subset));
     return rcpp_result_gen;
 END_RCPP
 }
-// sparse_row_subset
-Rcpp::List sparse_row_subset(Rcpp::RObject parsed, int i, int first, int last);
-RcppExport SEXP _raticate_tests_sparse_row_subset(SEXP parsedSEXP, SEXP iSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+// oracular_dense_indexed
+Rcpp::List oracular_dense_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset);
+RcppExport SEXP _raticate_tests_oracular_dense_indexed(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP subsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset(subsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_dense_indexed(parsed, row, idx, subset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// myopic_sparse_full
+Rcpp::List myopic_sparse_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, bool needs_value, bool needs_index);
+RcppExport SEXP _raticate_tests_myopic_sparse_full(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP needs_valueSEXP, SEXP needs_indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_value(needs_valueSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_index(needs_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_sparse_full(parsed, row, idx, needs_value, needs_index));
+    return rcpp_result_gen;
+END_RCPP
+}
+// oracular_sparse_full
+Rcpp::List oracular_sparse_full(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, bool needs_value, bool needs_index);
+RcppExport SEXP _raticate_tests_oracular_sparse_full(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP needs_valueSEXP, SEXP needs_indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_value(needs_valueSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_index(needs_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_sparse_full(parsed, row, idx, needs_value, needs_index));
+    return rcpp_result_gen;
+END_RCPP
+}
+// myopic_sparse_block
+Rcpp::List myopic_sparse_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len, bool needs_value, bool needs_index);
+RcppExport SEXP _raticate_tests_myopic_sparse_block(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP firstSEXP, SEXP lenSEXP, SEXP needs_valueSEXP, SEXP needs_indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
     Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_row_subset(parsed, i, first, last));
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_value(needs_valueSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_index(needs_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_sparse_block(parsed, row, idx, first, len, needs_value, needs_index));
     return rcpp_result_gen;
 END_RCPP
 }
-// sparse_column
-Rcpp::List sparse_column(Rcpp::RObject parsed, int i);
-RcppExport SEXP _raticate_tests_sparse_column(SEXP parsedSEXP, SEXP iSEXP) {
+// oracular_sparse_block
+Rcpp::List oracular_sparse_block(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, int first, int len, bool needs_value, bool needs_index);
+RcppExport SEXP _raticate_tests_oracular_sparse_block(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP firstSEXP, SEXP lenSEXP, SEXP needs_valueSEXP, SEXP needs_indexSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_column(parsed, i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sparse_column_subset
-Rcpp::List sparse_column_subset(Rcpp::RObject parsed, int i, int first, int last);
-RcppExport SEXP _raticate_tests_sparse_column_subset(SEXP parsedSEXP, SEXP iSEXP, SEXP firstSEXP, SEXP lastSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
     Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_column_subset(parsed, i, first, last));
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_value(needs_valueSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_index(needs_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_sparse_block(parsed, row, idx, first, len, needs_value, needs_index));
     return rcpp_result_gen;
 END_RCPP
 }
-// rows
-Rcpp::List rows(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_rows(SEXP parsedSEXP) {
+// myopic_sparse_indexed
+Rcpp::List myopic_sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset, bool needs_value, bool needs_index);
+RcppExport SEXP _raticate_tests_myopic_sparse_indexed(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP subsetSEXP, SEXP needs_valueSEXP, SEXP needs_indexSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(rows(parsed));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset(subsetSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_value(needs_valueSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_index(needs_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_sparse_indexed(parsed, row, idx, subset, needs_value, needs_index));
     return rcpp_result_gen;
 END_RCPP
 }
-// rows_subset
-Rcpp::List rows_subset(Rcpp::RObject parsed, int first, int last);
-RcppExport SEXP _raticate_tests_rows_subset(SEXP parsedSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+// oracular_sparse_indexed
+Rcpp::List oracular_sparse_indexed(Rcpp::RObject parsed, bool row, Rcpp::IntegerVector idx, Rcpp::IntegerVector subset, bool needs_value, bool needs_index);
+RcppExport SEXP _raticate_tests_oracular_sparse_indexed(SEXP parsedSEXP, SEXP rowSEXP, SEXP idxSEXP, SEXP subsetSEXP, SEXP needs_valueSEXP, SEXP needs_indexSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(rows_subset(parsed, first, last));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset(subsetSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_value(needs_valueSEXP);
+    Rcpp::traits::input_parameter< bool >::type needs_index(needs_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_sparse_indexed(parsed, row, idx, subset, needs_value, needs_index));
     return rcpp_result_gen;
 END_RCPP
 }
-// columns
-Rcpp::List columns(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_columns(SEXP parsedSEXP) {
+// myopic_dense_sums
+Rcpp::NumericVector myopic_dense_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_myopic_dense_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(columns(parsed));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_dense_sums(parsed, row, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
-// columns_subset
-Rcpp::List columns_subset(Rcpp::RObject parsed, int first, int last);
-RcppExport SEXP _raticate_tests_columns_subset(SEXP parsedSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+// oracular_dense_sums
+Rcpp::NumericVector oracular_dense_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_oracular_dense_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(columns_subset(parsed, first, last));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_dense_sums(parsed, row, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
-// sparse_rows
-Rcpp::List sparse_rows(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_sparse_rows(SEXP parsedSEXP) {
+// myopic_sparse_sums
+Rcpp::NumericVector myopic_sparse_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_myopic_sparse_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_rows(parsed));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(myopic_sparse_sums(parsed, row, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
-// sparse_rows_subset
-Rcpp::List sparse_rows_subset(Rcpp::RObject parsed, int first, int last);
-RcppExport SEXP _raticate_tests_sparse_rows_subset(SEXP parsedSEXP, SEXP firstSEXP, SEXP lastSEXP) {
+// oracular_sparse_sums
+Rcpp::NumericVector oracular_sparse_sums(Rcpp::RObject parsed, bool row, int num_threads);
+RcppExport SEXP _raticate_tests_oracular_sparse_sums(SEXP parsedSEXP, SEXP rowSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_rows_subset(parsed, first, last));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sparse_columns
-Rcpp::List sparse_columns(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_sparse_columns(SEXP parsedSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_columns(parsed));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sparse_columns_subset
-Rcpp::List sparse_columns_subset(Rcpp::RObject parsed, int first, int last);
-RcppExport SEXP _raticate_tests_sparse_columns_subset(SEXP parsedSEXP, SEXP firstSEXP, SEXP lastSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
-    Rcpp::traits::input_parameter< int >::type last(lastSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_columns_subset(parsed, first, last));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rowsums
-Rcpp::NumericVector rowsums(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_rowsums(SEXP parsedSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(rowsums(parsed));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rowsums_manual
-Rcpp::NumericVector rowsums_manual(Rcpp::RObject parsed);
-RcppExport SEXP _raticate_tests_rowsums_manual(SEXP parsedSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    rcpp_result_gen = Rcpp::wrap(rowsums_manual(parsed));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dense_rows_guided
-Rcpp::List dense_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
-RcppExport SEXP _raticate_tests_dense_rows_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
-    rcpp_result_gen = Rcpp::wrap(dense_rows_guided(parsed, targets));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dense_columns_guided
-Rcpp::List dense_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
-RcppExport SEXP _raticate_tests_dense_columns_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
-    rcpp_result_gen = Rcpp::wrap(dense_columns_guided(parsed, targets));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sparse_rows_guided
-Rcpp::List sparse_rows_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
-RcppExport SEXP _raticate_tests_sparse_rows_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_rows_guided(parsed, targets));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sparse_columns_guided
-Rcpp::List sparse_columns_guided(Rcpp::RObject parsed, Rcpp::IntegerVector targets);
-RcppExport SEXP _raticate_tests_sparse_columns_guided(SEXP parsedSEXP, SEXP targetsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type parsed(parsedSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type targets(targetsSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_columns_guided(parsed, targets));
+    Rcpp::traits::input_parameter< bool >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(oracular_sparse_sums(parsed, row, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 1},
-    {"_raticate_tests_nrow", (DL_FUNC) &_raticate_tests_nrow, 1},
-    {"_raticate_tests_ncol", (DL_FUNC) &_raticate_tests_ncol, 1},
-    {"_raticate_tests_row", (DL_FUNC) &_raticate_tests_row, 2},
-    {"_raticate_tests_row_subset", (DL_FUNC) &_raticate_tests_row_subset, 4},
-    {"_raticate_tests_column", (DL_FUNC) &_raticate_tests_column, 2},
-    {"_raticate_tests_column_subset", (DL_FUNC) &_raticate_tests_column_subset, 4},
-    {"_raticate_tests_sparse_row", (DL_FUNC) &_raticate_tests_sparse_row, 2},
-    {"_raticate_tests_sparse_row_subset", (DL_FUNC) &_raticate_tests_sparse_row_subset, 4},
-    {"_raticate_tests_sparse_column", (DL_FUNC) &_raticate_tests_sparse_column, 2},
-    {"_raticate_tests_sparse_column_subset", (DL_FUNC) &_raticate_tests_sparse_column_subset, 4},
-    {"_raticate_tests_rows", (DL_FUNC) &_raticate_tests_rows, 1},
-    {"_raticate_tests_rows_subset", (DL_FUNC) &_raticate_tests_rows_subset, 3},
-    {"_raticate_tests_columns", (DL_FUNC) &_raticate_tests_columns, 1},
-    {"_raticate_tests_columns_subset", (DL_FUNC) &_raticate_tests_columns_subset, 3},
-    {"_raticate_tests_sparse_rows", (DL_FUNC) &_raticate_tests_sparse_rows, 1},
-    {"_raticate_tests_sparse_rows_subset", (DL_FUNC) &_raticate_tests_sparse_rows_subset, 3},
-    {"_raticate_tests_sparse_columns", (DL_FUNC) &_raticate_tests_sparse_columns, 1},
-    {"_raticate_tests_sparse_columns_subset", (DL_FUNC) &_raticate_tests_sparse_columns_subset, 3},
-    {"_raticate_tests_rowsums", (DL_FUNC) &_raticate_tests_rowsums, 1},
-    {"_raticate_tests_rowsums_manual", (DL_FUNC) &_raticate_tests_rowsums_manual, 1},
-    {"_raticate_tests_dense_rows_guided", (DL_FUNC) &_raticate_tests_dense_rows_guided, 2},
-    {"_raticate_tests_dense_columns_guided", (DL_FUNC) &_raticate_tests_dense_columns_guided, 2},
-    {"_raticate_tests_sparse_rows_guided", (DL_FUNC) &_raticate_tests_sparse_rows_guided, 2},
-    {"_raticate_tests_sparse_columns_guided", (DL_FUNC) &_raticate_tests_sparse_columns_guided, 2},
+    {"_raticate_tests_parse", (DL_FUNC) &_raticate_tests_parse, 3},
+    {"_raticate_tests_num_rows", (DL_FUNC) &_raticate_tests_num_rows, 1},
+    {"_raticate_tests_num_columns", (DL_FUNC) &_raticate_tests_num_columns, 1},
+    {"_raticate_tests_prefer_rows", (DL_FUNC) &_raticate_tests_prefer_rows, 1},
+    {"_raticate_tests_sparse", (DL_FUNC) &_raticate_tests_sparse, 1},
+    {"_raticate_tests_myopic_dense_full", (DL_FUNC) &_raticate_tests_myopic_dense_full, 3},
+    {"_raticate_tests_oracular_dense_full", (DL_FUNC) &_raticate_tests_oracular_dense_full, 3},
+    {"_raticate_tests_myopic_dense_block", (DL_FUNC) &_raticate_tests_myopic_dense_block, 5},
+    {"_raticate_tests_oracular_dense_block", (DL_FUNC) &_raticate_tests_oracular_dense_block, 5},
+    {"_raticate_tests_myopic_dense_indexed", (DL_FUNC) &_raticate_tests_myopic_dense_indexed, 4},
+    {"_raticate_tests_oracular_dense_indexed", (DL_FUNC) &_raticate_tests_oracular_dense_indexed, 4},
+    {"_raticate_tests_myopic_sparse_full", (DL_FUNC) &_raticate_tests_myopic_sparse_full, 5},
+    {"_raticate_tests_oracular_sparse_full", (DL_FUNC) &_raticate_tests_oracular_sparse_full, 5},
+    {"_raticate_tests_myopic_sparse_block", (DL_FUNC) &_raticate_tests_myopic_sparse_block, 7},
+    {"_raticate_tests_oracular_sparse_block", (DL_FUNC) &_raticate_tests_oracular_sparse_block, 7},
+    {"_raticate_tests_myopic_sparse_indexed", (DL_FUNC) &_raticate_tests_myopic_sparse_indexed, 6},
+    {"_raticate_tests_oracular_sparse_indexed", (DL_FUNC) &_raticate_tests_oracular_sparse_indexed, 6},
+    {"_raticate_tests_myopic_dense_sums", (DL_FUNC) &_raticate_tests_myopic_dense_sums, 3},
+    {"_raticate_tests_oracular_dense_sums", (DL_FUNC) &_raticate_tests_oracular_dense_sums, 3},
+    {"_raticate_tests_myopic_sparse_sums", (DL_FUNC) &_raticate_tests_myopic_sparse_sums, 3},
+    {"_raticate_tests_oracular_sparse_sums", (DL_FUNC) &_raticate_tests_oracular_sparse_sums, 3},
     {NULL, NULL, 0}
 };
 

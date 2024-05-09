@@ -1,5 +1,6 @@
 PKG_CPPFLAGS=-I../../include \
     -I../../build/_deps/tatami-src/include/ \
+    -I../../build/_deps/tatami_chunked-src/include/ \
     -I../../build/_deps/manticore-src/include/ \
     -DTEST_CUSTOM_PARALLEL \
     -fstack-protector-strong \

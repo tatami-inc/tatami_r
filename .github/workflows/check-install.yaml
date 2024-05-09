@@ -23,6 +23,13 @@ jobs:
         cmake -S . -B build -DTATAMI_TESTS=OFF
         sudo cmake --install build
 
+    - name: Install tatami-chunked
+      run: |
+        git clone https://github.com/tatami-inc/tatami_chunked dep-tatami_chunked --depth=1
+        cd dep-tatami_chunked
+        cmake -S . -B build -DTATAMI_CHUNKED_TESTS=OFF
+        sudo cmake --install build
+
     - name: Install manticore
       run: |
         git clone https://github.com/tatami-inc/manticore dep-manticore --depth=1
