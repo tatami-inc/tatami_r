@@ -28,6 +28,36 @@ pretty_name <- function(prefix, params) {
     paste0(prefix, "[", paste(vapply(colnames(params), function(x) paste0(x, "=", deparse(params[,x][[1]])), ""), collapse=", "), "]")
 }
 
+create_expected_dense <- function(mat, row, iseq, keep) {
+    all.expected <- vector("list", length(iseq))
+    for (i in seq_along(iseq)) {
+        j <- iseq[i]
+        expected <- if (row) mat[j,] else mat[,j]
+        if (!is.null(keep)) {
+            expected <- expected[keep]
+        }
+        all.expected[[i]] <- as.double(expected)
+    }
+    all.expected
+}
+
+fill_sparse <- function(observed, otherdim, keep) {
+    for (i in seq_along(observed)) {
+        both <- observed[[i]]
+        if (!is.null(keep)) {
+            vec <- numeric(length(keep))
+            m <- match(both$index, keep)
+            stopifnot(all(!is.na(m)))
+            vec[m] <- both$value
+        } else {
+            vec <- numeric(otherdim)
+            vec[both$index] <- both$value
+        }
+        observed[[i]] <- vec
+    }
+    observed
+}
+
 full_test_suite <- function(mat, cache.fraction) {
     cache.size <- get_cache_size(mat, cache.fraction)
     ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
@@ -51,6 +81,7 @@ full_test_suite <- function(mat, cache.fraction) {
         iterdim <- if (row) nrow(mat) else ncol(mat) 
         otherdim <- if (row) ncol(mat) else nrow(mat)
         iseq <- create_predictions(iterdim, step, mode)
+        all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
         test_that(pretty_name("dense full ", scenarios[i,]), {
             if (oracle) {
@@ -58,12 +89,7 @@ full_test_suite <- function(mat, cache.fraction) {
             } else {
                 extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
             }
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,] else mat[,j]
-                expected <- as.double(expected)
-                expect_identical(extracted[[i]], expected)
-            }
+            expect_identical(extracted, all.expected)
         })
 
         test_that(pretty_name("sparse full ", scenarios[i,]), {
@@ -72,31 +98,18 @@ full_test_suite <- function(mat, cache.fraction) {
             } else {
                 FUN <- raticate.tests::myopic_sparse_full
             }
+
             extractor.b <- FUN(ptr, row, iseq, TRUE, TRUE)
+            expect_identical(all.expected, fill_sparse(extractor.b, otherdim, NULL))
             extractor.i <- FUN(ptr, row, iseq, FALSE, TRUE)
+            expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
             extractor.v <- FUN(ptr, row, iseq, TRUE, FALSE)
-            extractor.n <- FUN(ptr, row, iseq, FALSE, FALSE)
-
-            ncount <- 0L
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,] else mat[,j]
-                expected <- as.double(expected)
-
-                both <- extractor.b[[i]]
-                observed <- numeric(otherdim)
-                observed[both$index] <- both$value
-                expect_identical(observed, expected)
-
-                expect_identical(both$index, extractor.i[[i]])
-                expect_identical(both$value, extractor.v[[i]])
-                expect_identical(length(both$value), extractor.n[[i]])
-
-                ncount <- ncount + length(both$value)
-            }
+            expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
+            extractor.n <- unlist(FUN(ptr, row, iseq, FALSE, FALSE))
+            expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                expect_true(ncount < nrow(mat) * ncol(mat))
+                expect_true(sum(extractor.n) < nrow(mat) * ncol(mat))
             }
         })
     }
@@ -130,6 +143,7 @@ block_test_suite <- function(mat, cache.fraction) {
         bstart <- floor(block[[1]] * otherdim) + 1L
         blen <- floor(block[[2]] * otherdim)
         keep <- (bstart - 1L) + seq_len(blen)
+        all.expected <- create_expected_dense(mat, row, iseq, keep)
 
         test_that(pretty_name("dense block ", scenarios[i,]), {
             if (oracle) {
@@ -137,12 +151,7 @@ block_test_suite <- function(mat, cache.fraction) {
             } else {
                 extracted <- raticate.tests::myopic_dense_block(ptr, row, iseq, bstart, blen)
             }
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,keep] else mat[keep,j]
-                expected <- as.double(expected)
-                expect_identical(extracted[[i]], expected)
-            }
+            expect_identical(extracted, all.expected)
         })
 
         test_that(pretty_name("sparse block ", scenarios[i,]), {
@@ -151,31 +160,18 @@ block_test_suite <- function(mat, cache.fraction) {
             } else {
                 FUN <- raticate.tests::myopic_sparse_block
             }
+
             extractor.b <- FUN(ptr, row, iseq, bstart, blen, TRUE, TRUE)
+            expect_identical(all.expected, fill_sparse(extractor.b, otherdim, keep))
             extractor.i <- FUN(ptr, row, iseq, bstart, blen, FALSE, TRUE)
+            expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
             extractor.v <- FUN(ptr, row, iseq, bstart, blen, TRUE, FALSE)
-            extractor.n <- FUN(ptr, row, iseq, bstart, blen, FALSE, FALSE)
-
-            ncount <- 0L
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,keep] else mat[keep,j]
-                expected <- as.double(expected)
-
-                both <- extractor.b[[i]]
-                observed <- numeric(otherdim)
-                observed[both$index] <- both$value
-                expect_identical(observed[keep], expected)
-
-                expect_identical(both$index, extractor.i[[i]])
-                expect_identical(both$value, extractor.v[[i]])
-                expect_identical(length(both$value), extractor.n[[i]])
-
-                ncount <- ncount + length(both$value)
-            }
+            expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
+            extractor.n <- unlist(FUN(ptr, row, iseq, bstart, blen, FALSE, FALSE))
+            expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                expect_true(ncount < nrow(mat) * ncol(mat))
+                expect_true(sum(extractor.n) < nrow(mat) * ncol(mat))
             }
         })
     }
@@ -208,6 +204,7 @@ index_test_suite <- function(mat, cache.fraction) {
 
         istart <- floor(index_params[[1]] * otherdim) + 1L
         keep <- seq(istart, otherdim, by=index_params[[2]])
+        all.expected <- create_expected_dense(mat, row, iseq, keep)
 
         test_that(pretty_name("dense index ", scenarios[i,]), {
             if (oracle) {
@@ -215,12 +212,7 @@ index_test_suite <- function(mat, cache.fraction) {
             } else {
                 extracted <- raticate.tests::myopic_dense_indexed(ptr, row, iseq, keep)
             }
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,keep] else mat[keep,j]
-                expected <- as.double(expected)
-                expect_identical(extracted[[i]], expected)
-            }
+            expect_identical(all.expected, extracted)
         })
 
         test_that(pretty_name("sparse index ", scenarios[i,]), {
@@ -229,31 +221,18 @@ index_test_suite <- function(mat, cache.fraction) {
             } else {
                 FUN <- raticate.tests::myopic_sparse_indexed
             }
+
             extractor.b <- FUN(ptr, row, iseq, keep, TRUE, TRUE)
+            expect_identical(all.expected, fill_sparse(extractor.b, otherdim, keep))
             extractor.i <- FUN(ptr, row, iseq, keep, FALSE, TRUE)
+            expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
             extractor.v <- FUN(ptr, row, iseq, keep, TRUE, FALSE)
-            extractor.n <- FUN(ptr, row, iseq, keep, FALSE, FALSE)
-
-            ncount <- 0L
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,keep] else mat[keep,j]
-                expected <- as.double(expected)
-
-                both <- extractor.b[[i]]
-                observed <- numeric(otherdim)
-                observed[both$index] <- both$value
-                expect_identical(observed[keep], expected)
-
-                expect_identical(both$index, extractor.i[[i]])
-                expect_identical(both$value, extractor.v[[i]])
-                expect_identical(length(both$value), extractor.n[[i]])
-
-                ncount <- ncount + length(both$value)
-            }
+            expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
+            extractor.n <- unlist(FUN(ptr, row, iseq, keep, FALSE, FALSE))
+            expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                expect_true(ncount < nrow(mat) * ncol(mat))
+                expect_true(sum(extractor.n) < nrow(mat) * ncol(mat))
             }
         })
     }
@@ -342,12 +321,6 @@ reuse_test_suite <- function(mat, cache.fraction) {
                 expect_identical(both$index, extractor.i[[i]])
                 expect_identical(both$value, extractor.v[[i]])
                 expect_identical(length(both$value), extractor.n[[i]])
-
-                ncount <- ncount + length(both$value)
-            }
-
-            if (DelayedArray::is_sparse(mat)) {
-                expect_true(ncount < nrow(mat) * ncol(mat))
             }
         })
     }

@@ -423,6 +423,7 @@ Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, int num_threads) 
     int primary = (row ? ptr->nrow() : ptr->ncol());
     int secondary = (!row ? ptr->nrow() : ptr->ncol());
 
+#ifdef TEST_CUSTOM_PARALLEL
     std::vector<std::vector<double> > output(num_threads);
     tatami_r::parallelize([&](int w, int start, int len) {
         auto ext = [&]() {
@@ -450,6 +451,29 @@ Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, int num_threads) 
     }, primary, num_threads);
 
     return collapse_vector(output);
+#else
+    auto ext = [&]() {
+        if constexpr(oracle_) {
+            return tatami::new_extractor<false, oracle_>(ptr.get(), row, std::make_shared<tatami::ConsecutiveOracle<int> >(0, primary));
+        } else {
+            return tatami::new_extractor<false, oracle_>(ptr.get(), row, false);
+        }
+    }();
+
+    Rcpp::NumericVector output(primary);
+    for (int i = 0; i < primary; ++i) {
+        auto iptr = [&]() {
+            if constexpr(oracle_) {
+                return ext->fetch(buffer.data());
+            } else {
+                return ext->fetch(i + start, buffer.data());
+            }
+        }();
+        output[i] = std::accumulate(iptr, iptr + secondary, 0.0);
+    }
+
+    return output;
+#endif
 }
 
 //' @export
@@ -470,6 +494,7 @@ Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, int num_threads)
     int primary = (row ? ptr->nrow() : ptr->ncol());
     int secondary = (!row ? ptr->nrow() : ptr->ncol());
 
+#ifdef TEST_CUSTOM_PARALLEL
     std::vector<std::vector<double> > output(num_threads);
     tatami_r::parallelize([&](int w, int start, int len) {
         auto ext = [&]() {
@@ -498,6 +523,29 @@ Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, int num_threads)
     }, primary, num_threads);
 
     return collapse_vector(output);
+#else
+    auto ext = [&]() {
+        if constexpr(oracle_) {
+            return tatami::new_extractor<true, oracle_>(ptr.get(), row, std::make_shared<tatami::ConsecutiveOracle<int> >(0, primary));
+        } else {
+            return tatami::new_extractor<true, oracle_>(ptr.get(), row, false);
+        }
+    }();
+
+    Rcpp::NumericVector output(primary);
+    for (int i = 0; i < primary; ++i) {
+        auto range = [&]() {
+            if constexpr(oracle_) {
+                return ext->fetch(vbuffer.data(), ibuffer.data());
+            } else {
+                return ext->fetch(i, vbuffer.data(), ibuffer.data());
+            }
+        }();
+        output[i] = std::accumulate(range.value, range.value + range.number, 0.0);
+    }
+
+    return output;
+#endif
 }
 
 //' @export
