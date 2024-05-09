@@ -277,6 +277,7 @@ reuse_test_suite <- function(mat, cache.fraction) {
             }
             unlist(predictions)
         })()
+        all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
         test_that(pretty_name("dense full re-used ", scenarios[i,]), {
             if (oracle) {
@@ -284,12 +285,7 @@ reuse_test_suite <- function(mat, cache.fraction) {
             } else {
                 extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
             }
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,] else mat[,j]
-                expected <- as.double(expected)
-                expect_identical(extracted[[i]], expected)
-            }
+            expect_identical(all.expected, extracted)
         })
 
         test_that(pretty_name("sparse full re-used ", scenarios[i,]), {
@@ -299,25 +295,7 @@ reuse_test_suite <- function(mat, cache.fraction) {
                 FUN <- raticate.tests::myopic_sparse_full
             }
             extractor.b <- FUN(ptr, row, iseq, TRUE, TRUE)
-            extractor.i <- FUN(ptr, row, iseq, FALSE, TRUE)
-            extractor.v <- FUN(ptr, row, iseq, TRUE, FALSE)
-            extractor.n <- FUN(ptr, row, iseq, FALSE, FALSE)
-
-            ncount <- 0L
-            for (i in seq_along(iseq)) {
-                j <- iseq[i]
-                expected <- if (row) mat[j,] else mat[,j]
-                expected <- as.double(expected)
-
-                both <- extractor.b[[i]]
-                observed <- numeric(otherdim)
-                observed[both$index] <- both$value
-                expect_identical(observed, expected)
-
-                expect_identical(both$index, extractor.i[[i]])
-                expect_identical(both$value, extractor.v[[i]])
-                expect_identical(length(both$value), extractor.n[[i]])
-            }
+            expect_identical(all.expected, fill_sparse(extractor.b, otherdim, NULL))
         })
     }
 }
