@@ -81,14 +81,14 @@ full_test_suite <- function(mat, cache.fraction) {
         iseq <- create_predictions(iterdim, step, mode)
         all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
-        #test_that(pretty_name("dense full ", scenarios[i,]), {
-        #    if (oracle) {
-        #        extracted <- raticate.tests::oracular_dense_full(ptr, row, iseq)
-        #    } else {
-        #        extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
-        #    }
-        #    expect_identical(extracted, all.expected)
-        #})
+        test_that(pretty_name("dense full ", scenarios[i,]), {
+            if (oracle) {
+                extracted <- raticate.tests::oracular_dense_full(ptr, row, iseq)
+            } else {
+                extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
+            }
+            expect_identical(extracted, all.expected)
+        })
 
         test_that(pretty_name("sparse full ", scenarios[i,]), {
             if (oracle) {
