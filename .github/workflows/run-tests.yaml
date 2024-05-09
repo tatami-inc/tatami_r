@@ -53,12 +53,5 @@ jobs:
     - name: Run the tests
       shell: Rscript {0}
       run: |
-        setwd("tests/tests/testthat")
-        library(DelayedArray)
-        library(testthat)
-        source("setup.R")
-        for (x in list.files(pattern="test")) {
-            cat(x, "\n")
-            testthat::test_file(x)
-        }
-        #testthat::test_file("testthat.R", reporter=testthat::default_reporter(), stop_on_failure=TRUE)
+        setwd("tests/tests")
+        testthat::test_file("testthat.R", stop_on_failure=TRUE)
