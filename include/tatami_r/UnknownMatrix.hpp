@@ -3,7 +3,6 @@
 
 #include "Rcpp.h"
 #include "tatami/tatami.hpp"
-#include "tatami_chunked/tatami_chunked.hpp"
 #include "dense_extractor.hpp"
 #include "sparse_extractor.hpp"
 
@@ -17,9 +16,9 @@
 namespace tatami_r {
 
 /**
- * @brief Options for R matrix extraction.
+ * @brief Options for data extraction from an `UnknownMatrix`.
  */
-struct Options {
+struct UnknownMatrixOptions {
     /**
      * Size of the cache, in bytes.
      * If -1, this is determined from `DelayedArray::getAutoBlockSize()`.

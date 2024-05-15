@@ -7,26 +7,24 @@
 namespace tatami_r { 
 
 template<bool transpose_, typename InputValue_, class InputObject_,  typename CachedValue_>
-void parse_dense_matrix_internal(const InputObject_& y, std::vector<CachedValue_>& cache, size_t start_row, size_t start_col, size_t num_rows, size_t num_cols) {
-    cache.resize(num_rows * num_cols);
+void parse_dense_matrix_internal(const InputObject_& y, CachedValue_* cache, size_t start_row, size_t start_col, size_t num_rows, size_t num_cols) {
     auto input = static_cast<const InputValue_*>(y.begin()) + start_row + start_col * static_cast<size_t>(y.rows());
-    auto output = cache.data();
 
     if constexpr(transpose_) {
         // y is a column-major matrix, but transpose() expects a row-major
         // input, so we just conceptually transpose it.
-        tatami::transpose(input, num_cols, num_rows, y.rows(), output, num_cols);
+        tatami::transpose(input, num_cols, num_rows, y.rows(), cache, num_cols);
     } else {
         for (size_t c = 0; c < num_cols; ++c) {
-            std::copy_n(input, num_rows, output);
+            std::copy_n(input, num_rows, cache);
             input += y.rows();
-            output += num_rows;
+            cache += num_rows;
         }
     }
 }
 
 template<bool transpose_, typename CachedValue_>
-void parse_dense_matrix(const Rcpp::RObject& seed, std::vector<CachedValue_>& cache, size_t start_row, size_t start_col, size_t num_rows, size_t num_cols) {
+void parse_dense_matrix(const Rcpp::RObject& seed, CachedValue_* cache, size_t start_row, size_t start_col, size_t num_rows, size_t num_cols) {
     auto stype = seed.sexp_type();
     if (stype == REALSXP) {
         Rcpp::NumericMatrix y(seed);
