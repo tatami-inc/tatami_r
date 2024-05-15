@@ -24,6 +24,9 @@ void parse_sparse_matrix_internal(
     bool needs_value = !value_ptrs.empty();
     bool needs_index = !index_ptrs.empty();
 
+    // Note that non-empty value_ptrs and index_ptrs may be longer than the
+    // number of rows/columns in the SVT matrix, due to the reuse of slabs.
+
     for (int c = 0; c < NC; ++c) {
         Rcpp::RObject raw_inner(svt[c]);
         if (raw_inner == R_NilValue) {

@@ -52,7 +52,7 @@ public:
      * @param seed A matrix-like R object.
      * @param opt Extraction options.
      */
-    UnknownMatrix(Rcpp::RObject seed, const Options& opt) : 
+    UnknownMatrix(Rcpp::RObject seed, const UnknownMatrixOptions& opt) : 
         original_seed(seed), 
         delayed_env(Rcpp::Environment::namespace_env("DelayedArray")),
         sparse_env(Rcpp::Environment::namespace_env("SparseArray")),
@@ -296,9 +296,39 @@ private:
      *** Myopic dense ***
      ********************/
 private:
-    template<bool oracle_>
-    std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options&) const {
+    template<bool accrow_, bool solo_, bool oracle_, typename ... Args_>
+    void populate_dense_by_sparse(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, Args_&& ... args) {
+        if (!internal_sparse) {
+            output.reset(new UnknownMatrix_internal::DenseFull<accrow_, solo_, oracle_, Value_, Index_, CachedValue_>(std::forward<Args_>(args)...));
+        } else {
+            output.reset(new UnknownMatrix_internal::DensifiedSparseFull<accrow_, solo_, oracle_, Value_, Index_, CachedValue_, CachedIndex_>(std::forward<Args_>(args)...));
+        }
+    }
+
+    template<bool accrow_, bool oracle_, typename ... Args_>
+    void populate_dense_by_solo(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool solo, Args_&& ... args) {
+        if (solo) {
+            populate_dense_by_sparse<accrow_, true, oracle_>(output, std::forward<Args_>(args)...);
+        } else {
+            populate_dense_by_sparse<accrow_, false, oracle_>(output, std::forward<Args_>(args)...);
+        }
+    }
+
+    template<bool oracle_, typename ... Args_>
+    void populate_dense_by_accrow(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool row, bool solo, Args_&& ... args) {
+        if (row) {
+            populate_dense_by_solo<true, oracle_>(output, solo, std::forward<Args_>(args)...);
+        } else {
+            populate_dense_by_solo<false, oracle_>(output, solo, std::forward<Args_>(args)...);
+        }
+    }
+
+    template<bool oracle_, typename ... Args_>
+    std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense_internal(bool row, Index_ non_target_length, tatami::MaybeOracle<oracle_, Index_> ora, Args_&& ... args) const {
         std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
+
+        Index_ max_target_chunk_length = max_primary_chunk_length(row);
+        tatami_chunked::SlabCacheStats stats(max_target_chunk_length, non_target_length, cache_size_in_bytes, sizeof(CachedValue_), require_minimum_cache);
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         // This involves some Rcpp initializations, so we lock it just in case.
@@ -306,131 +336,43 @@ private:
         mexec.run([&]() -> void {
 #endif
 
-        if (!internal_sparse) {                    
-            output.reset(new UnknownMatrix_internal::DenseFull<oracle_, Value_, Index_, CachedValue_>(
-                original_seed,
-                dense_extractor,
-                std::move(ora),
-                secondary_dim(row),
-                !row,
-                max_primary_chunk_length(row), 
-                chunk_ticks(row),
-                chunk_map(row),
-                cache_size_in_bytes, 
-                require_minimum_cache
-            ));
-        } else {
-            output.reset(new UnknownMatrix_internal::DensifiedSparseFull<oracle_, Value_, Index_, CachedValue_, CachedIndex_>(
-                original_seed,
-                sparse_extractor,
-                std::move(ora),
-                secondary_dim(row),
-                !row,
-                max_primary_chunk_length(row), 
-                chunk_ticks(row),
-                chunk_map(row),
-                cache_size_in_bytes, 
-                require_minimum_cache
-            ));
-        }
+        populate_dense_by_accrow(
+            output, 
+            row, 
+            stats.max_slabs_in_cache == 0, 
+            // And now all the other arguments.
+            original_seed, 
+            dense_extractor, 
+            std::move(ora), 
+            std::forward<Args_>(args)..., 
+            max_target_chunk_length, 
+            chunk_ticks(row), 
+            chunk_map(row), 
+            stats
+        );
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         });
 #endif
 
         return output;
+    }
+
+    template<bool oracle_>
+    std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options&) const {
+        Index_ non_target_dim = secondary_dim(row);
+        return populate_dense_internal<oracle_>(row, non_target_dim, std::move(ora), non_target_dim);
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, Index_ block_start, Index_ block_length, const tatami::Options&) const {
-        std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        // This involves some Rcpp initializations, so we lock it just in case.
-        auto& mexec = executor();
-        mexec.run([&]() -> void {
-#endif
-
-        if (!internal_sparse) {                    
-            output.reset(new UnknownMatrix_internal::DenseBlock<oracle_, Value_, Index_, CachedValue_>(
-                original_seed,
-                dense_extractor,
-                std::move(ora),
-                block_start,
-                block_length,
-                !row,
-                max_primary_chunk_length(row), 
-                chunk_ticks(row),
-                chunk_map(row),
-                cache_size_in_bytes, 
-                require_minimum_cache
-            ));
-        } else {
-            output.reset(new UnknownMatrix_internal::DensifiedSparseBlock<oracle_, Value_, Index_, CachedValue_, CachedIndex_>(
-                original_seed,
-                sparse_extractor,
-                std::move(ora),
-                block_start,
-                block_length,
-                !row,
-                max_primary_chunk_length(row), 
-                chunk_ticks(row),
-                chunk_map(row),
-                cache_size_in_bytes, 
-                require_minimum_cache
-            ));
-        }
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        });
-#endif
-
-        return output;
+        return populate_dense_internal<oracle_>(row, block_length, std::move(ora), block_start, block_length);
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, tatami::VectorPtr<Index_> indices_ptr, const tatami::Options&) const {
-        std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        // This involves some Rcpp initializations, so we lock it just in case.
-        auto& mexec = executor();
-        mexec.run([&]() -> void {
-#endif
-
-        if (!internal_sparse) {                    
-            output.reset(new UnknownMatrix_internal::DenseIndexed<oracle_, Value_, Index_, CachedValue_>(
-                original_seed,
-                dense_extractor,
-                std::move(ora),
-                std::move(indices_ptr),
-                !row,
-                max_primary_chunk_length(row), 
-                chunk_ticks(row),
-                chunk_map(row),
-                cache_size_in_bytes, 
-                require_minimum_cache
-            ));
-        } else {
-            output.reset(new UnknownMatrix_internal::DensifiedSparseIndexed<oracle_, Value_, Index_, CachedValue_, CachedIndex_>(
-                original_seed,
-                sparse_extractor,
-                std::move(ora),
-                std::move(indices_ptr),
-                !row,
-                max_primary_chunk_length(row), 
-                chunk_ticks(row),
-                chunk_map(row),
-                cache_size_in_bytes, 
-                require_minimum_cache
-            ));
-        }
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        });
-#endif
-
-        return output;
+        Index_ nidx = indices_ptr->size();
+        return populate_dense_internal<oracle_>(row, nidx, std::move(ora), std::move(indices_ptr));
     }
 
 public:
@@ -466,9 +408,36 @@ public:
      *** Myopic sparse ***
      *********************/
 public:
-    template<bool oracle_>
-    std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options& opt) const {
+    template<bool accrow_, bool oracle_, typename ... Args_>
+    void populate_sparse_by_solo(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool solo, Args_&& ... args) {
+        if (solo) {
+            output.reset(new UnknownMatrix_internal::SparseFull<accrow_, oracle_, true, Value_, Index_, CachedValue_, CachedIndex_>(std::forward<Args_>(args)...));
+        } else {
+            output.reset(new UnknownMatrix_internal::SparseFull<accrow_, oracle_, false, Value_, Index_, CachedValue_, CachedIndex_>(std::forward<Args_>(args)...));
+        }
+    }
+
+    template<bool oracle_, typename ... Args_>
+    void populate_sparse_by_accrow(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool row, bool solo, Args_&& ... args) {
+        if (row) {
+            populate_sparse_by_solo<true, oracle_>(output, solo, std::forward<Args_>(args)...);
+        } else {
+            populate_sparse_by_solo<false, oracle_>(output, solo, std::forward<Args_>(args)...);
+        }
+    }
+
+    template<bool oracle_, typename ... Args_>
+    std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options& opt, Args_&& ... args) const {
         std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > output;
+
+        Index_ max_target_chunk_length = max_primary_chunk_length(row);
+        tatami_chunked::SlabCacheStats stats(
+            max_target_chunk_length,
+            non_target_length, 
+            cache_size_in_bytes, 
+            (opt.sparse_extract_index ? sizeof(CachedIndex_) : 0) + (opt.sparse_extract_value ? sizeof(CachedValue_) : 0),
+            require_minimum_cache
+        );
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         // This involves some Rcpp initializations, so we lock it just in case.
@@ -476,16 +445,19 @@ public:
         mexec.run([&]() -> void {
 #endif
 
-        output.reset(new UnknownMatrix_internal::SparseFull<oracle_, Value_, Index_, CachedValue_, CachedIndex_>(
+        populate_sparse_by_accrow(
+            output, 
+            row, 
+            stats.max_slabs_in_cache == 0, 
+            // And now the rest of the arguments.
             original_seed,
             sparse_extractor,
             std::move(ora),
-            secondary_dim(row),
-            !row,
+            std::forward<Args_>(args)...,
             max_primary_chunk_length(row), 
             chunk_ticks(row),
             chunk_map(row),
-            cache_size_in_bytes, 
+            stats,
             require_minimum_cache,
             opt.sparse_extract_value,
             opt.sparse_extract_index
@@ -496,71 +468,23 @@ public:
 #endif
 
         return output;
+    }
+
+    template<bool oracle_>
+    std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options& opt) const {
+        Index_ non_target_dim = secondary_dim(row);
+        return populate_sparse_internal<oracle_>(row, non_target_dim, std::move(ora), opt, non_target_dim); 
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, Index_ block_start, Index_ block_length, const tatami::Options& opt) const {
-        std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > output;
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        // This involves some Rcpp initializations, so we lock it just in case.
-        auto& mexec = executor();
-        mexec.run([&]() -> void {
-#endif
-
-        output.reset(new UnknownMatrix_internal::SparseBlock<oracle_, Value_, Index_, CachedValue_, CachedIndex_>(
-            original_seed,
-            sparse_extractor,
-            std::move(ora),
-            block_start,
-            block_length,
-            !row,
-            max_primary_chunk_length(row), 
-            chunk_ticks(row),
-            chunk_map(row),
-            cache_size_in_bytes, 
-            require_minimum_cache,
-            opt.sparse_extract_value,
-            opt.sparse_extract_index
-        ));
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        });
-#endif
-
-        return output;
+        return populate_sparse_internal<oracle_>(row, block_length, std::move(ora), block_start, block_length, opt);
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, tatami::VectorPtr<Index_> indices_ptr, const tatami::Options& opt) const {
-        std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > output;
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        // This involves some Rcpp initializations, so we lock it just in case.
-        auto& mexec = executor();
-        mexec.run([&]() -> void {
-#endif
-
-        output.reset(new UnknownMatrix_internal::SparseIndexed<oracle_, Value_, Index_, CachedValue_, CachedIndex_>(
-            original_seed,
-            sparse_extractor,
-            std::move(ora),
-            std::move(indices_ptr),
-            !row,
-            max_primary_chunk_length(row), 
-            chunk_ticks(row),
-            chunk_map(row),
-            cache_size_in_bytes, 
-            require_minimum_cache,
-            opt.sparse_extract_value,
-            opt.sparse_extract_index
-        ));
-
-#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
-        });
-#endif
-
-        return output;
+        Index_ nidx = indices_ptr->size();
+        return populate_sparse_internal<oracle_>(row, nidx, std::move(ora), std::move(indices_ptr), opt);
     }
 
 public:
