@@ -12,7 +12,7 @@ void parse_sparse_matrix_internal(
     Rcpp::RObject seed, 
     std::vector<CachedValue_*>& value_ptrs, 
     std::vector<CachedIndex_*>& index_ptrs, 
-    std::vector<Index_>& counts)
+    Index_* counts)
 {
     Rcpp::RObject raw_svt = seed.slot("SVT");
     if (raw_svt == R_NilValue) {
@@ -90,7 +90,7 @@ void parse_sparse_matrix(
     Rcpp::RObject seed,
     std::vector<CachedValue_*>& value_ptrs, 
     std::vector<CachedIndex_*>& index_ptrs, 
-    std::vector<Index_>& counts)
+    Index_* counts)
 {
     auto ctype = get_class_name(seed);
     if (ctype != "SVT_SparseMatrix") {

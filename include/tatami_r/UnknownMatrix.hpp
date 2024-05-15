@@ -212,7 +212,7 @@ public:
      *
      * @param seed A matrix-like R object.
      */
-    UnknownMatrix(Rcpp::RObject seed) : UnknownMatrix(std::move(seed), Options()) {}
+    UnknownMatrix(Rcpp::RObject seed) : UnknownMatrix(std::move(seed), UnknownMatrixOptions()) {}
 
 private:
     Index_ internal_nrow, internal_ncol;
@@ -247,11 +247,11 @@ public:
         return internal_ncol;
     }
 
-    bool sparse() const {
+    bool is_sparse() const {
         return internal_sparse;
     }
 
-    double sparse_proportion() const {
+    double is_sparse_proportion() const {
         return static_cast<double>(internal_sparse);
     }
 
@@ -296,39 +296,21 @@ private:
      *** Myopic dense ***
      ********************/
 private:
-    template<bool accrow_, bool solo_, bool oracle_, typename ... Args_>
-    void populate_dense_by_sparse(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, Args_&& ... args) {
-        if (!internal_sparse) {
-            output.reset(new UnknownMatrix_internal::DenseFull<accrow_, solo_, oracle_, Value_, Index_, CachedValue_>(std::forward<Args_>(args)...));
-        } else {
-            output.reset(new UnknownMatrix_internal::DensifiedSparseFull<accrow_, solo_, oracle_, Value_, Index_, CachedValue_, CachedIndex_>(std::forward<Args_>(args)...));
-        }
-    }
-
-    template<bool accrow_, bool oracle_, typename ... Args_>
-    void populate_dense_by_solo(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool solo, Args_&& ... args) {
-        if (solo) {
-            populate_dense_by_sparse<accrow_, true, oracle_>(output, std::forward<Args_>(args)...);
-        } else {
-            populate_dense_by_sparse<accrow_, false, oracle_>(output, std::forward<Args_>(args)...);
-        }
-    }
-
-    template<bool oracle_, typename ... Args_>
-    void populate_dense_by_accrow(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool row, bool solo, Args_&& ... args) {
-        if (row) {
-            populate_dense_by_solo<true, oracle_>(output, solo, std::forward<Args_>(args)...);
-        } else {
-            populate_dense_by_solo<false, oracle_>(output, solo, std::forward<Args_>(args)...);
-        }
-    }
-
-    template<bool oracle_, typename ... Args_>
+    template<
+        bool oracle_, 
+        template <bool, bool, bool, typename, typename, typename> class FromDense_,
+        template <bool, bool, bool, typename, typename, typename, typename> class FromSparse_,
+        typename ... Args_
+    >
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense_internal(bool row, Index_ non_target_length, tatami::MaybeOracle<oracle_, Index_> ora, Args_&& ... args) const {
         std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
         tatami_chunked::SlabCacheStats stats(max_target_chunk_length, non_target_length, cache_size_in_bytes, sizeof(CachedValue_), require_minimum_cache);
+
+        const auto& map = chunk_map(row);
+        const auto& ticks = chunk_ticks(row);
+        bool solo = stats.max_slabs_in_cache == 0;
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         // This involves some Rcpp initializations, so we lock it just in case.
@@ -336,20 +318,44 @@ private:
         mexec.run([&]() -> void {
 #endif
 
-        populate_dense_by_accrow(
-            output, 
-            row, 
-            stats.max_slabs_in_cache == 0, 
-            // And now all the other arguments.
-            original_seed, 
-            dense_extractor, 
-            std::move(ora), 
-            std::forward<Args_>(args)..., 
-            max_target_chunk_length, 
-            chunk_ticks(row), 
-            chunk_map(row), 
-            stats
-        );
+        if (internal_sparse) {
+            if (row) {
+                if (solo) {
+                    typedef FromDense_<true, true, oracle_, Value_, Index_, CachedValue_> ShortDense;
+                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
+                } else {
+                    typedef FromDense_<true, false, oracle_, Value_, Index_, CachedValue_> ShortDense;
+                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
+                }
+            } else {
+                if (solo) {
+                    typedef FromDense_<false, true, oracle_, Value_, Index_, CachedValue_> ShortDense;
+                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
+                } else {
+                    typedef FromDense_<false, false, oracle_, Value_, Index_, CachedValue_> ShortDense;
+                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
+                }
+            }
+
+        } else {
+            if (row) {
+                if (solo) {
+                    typedef FromSparse_<true, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
+                } else {
+                    typedef FromSparse_<true, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
+                }
+            } else {
+                if (solo) {
+                    typedef FromSparse_<false, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
+                } else {
+                    typedef FromSparse_<false, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
+                }
+            }
+        }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         });
@@ -361,18 +367,18 @@ private:
     template<bool oracle_>
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options&) const {
         Index_ non_target_dim = secondary_dim(row);
-        return populate_dense_internal<oracle_>(row, non_target_dim, std::move(ora), non_target_dim);
+        return populate_dense_internal<oracle_, UnknownMatrix_internal::DenseFull, UnknownMatrix_internal::DensifiedSparseFull>(row, non_target_dim, std::move(ora), non_target_dim);
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, Index_ block_start, Index_ block_length, const tatami::Options&) const {
-        return populate_dense_internal<oracle_>(row, block_length, std::move(ora), block_start, block_length);
+        return populate_dense_internal<oracle_, UnknownMatrix_internal::DenseBlock, UnknownMatrix_internal::DensifiedSparseBlock>(row, block_length, std::move(ora), block_start, block_length);
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense(bool row, tatami::MaybeOracle<oracle_, Index_> ora, tatami::VectorPtr<Index_> indices_ptr, const tatami::Options&) const {
         Index_ nidx = indices_ptr->size();
-        return populate_dense_internal<oracle_>(row, nidx, std::move(ora), std::move(indices_ptr));
+        return populate_dense_internal<oracle_, UnknownMatrix_internal::DenseIndexed, UnknownMatrix_internal::DensifiedSparseIndexed>(row, nidx, std::move(ora), std::move(indices_ptr));
     }
 
 public:
@@ -408,26 +414,18 @@ public:
      *** Myopic sparse ***
      *********************/
 public:
-    template<bool accrow_, bool oracle_, typename ... Args_>
-    void populate_sparse_by_solo(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool solo, Args_&& ... args) {
-        if (solo) {
-            output.reset(new UnknownMatrix_internal::SparseFull<accrow_, oracle_, true, Value_, Index_, CachedValue_, CachedIndex_>(std::forward<Args_>(args)...));
-        } else {
-            output.reset(new UnknownMatrix_internal::SparseFull<accrow_, oracle_, false, Value_, Index_, CachedValue_, CachedIndex_>(std::forward<Args_>(args)...));
-        }
-    }
-
-    template<bool oracle_, typename ... Args_>
-    void populate_sparse_by_accrow(std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> >& output, bool row, bool solo, Args_&& ... args) {
-        if (row) {
-            populate_sparse_by_solo<true, oracle_>(output, solo, std::forward<Args_>(args)...);
-        } else {
-            populate_sparse_by_solo<false, oracle_>(output, solo, std::forward<Args_>(args)...);
-        }
-    }
-
-    template<bool oracle_, typename ... Args_>
-    std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options& opt, Args_&& ... args) const {
+    template<
+        bool oracle_, 
+        template<bool, bool, bool, typename, typename, typename, typename> class FromSparse_,
+        typename ... Args_
+    >
+    std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse_internal(
+        bool row,
+        Index_ non_target_length, 
+        tatami::MaybeOracle<oracle_, Index_> ora, 
+        const tatami::Options& opt, 
+        Args_&& ... args) 
+    const {
         std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > output;
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
@@ -439,29 +437,35 @@ public:
             require_minimum_cache
         );
 
+        const auto& map = chunk_map(row);
+        const auto& ticks = chunk_ticks(row);
+        bool needs_value = opt.sparse_extract_value;
+        bool needs_index = opt.sparse_extract_index;
+        bool solo = stats.max_slabs_in_cache == 0;
+
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         // This involves some Rcpp initializations, so we lock it just in case.
         auto& mexec = executor();
         mexec.run([&]() -> void {
 #endif
 
-        populate_sparse_by_accrow(
-            output, 
-            row, 
-            stats.max_slabs_in_cache == 0, 
-            // And now the rest of the arguments.
-            original_seed,
-            sparse_extractor,
-            std::move(ora),
-            std::forward<Args_>(args)...,
-            max_primary_chunk_length(row), 
-            chunk_ticks(row),
-            chunk_map(row),
-            stats,
-            require_minimum_cache,
-            opt.sparse_extract_value,
-            opt.sparse_extract_index
-        ));
+        if (row) {
+            if (solo) {
+                typedef FromSparse_<true, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
+            } else {
+                typedef FromSparse_<true, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
+            }
+        } else {
+            if (solo) {
+                typedef FromSparse_<false, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
+            } else {
+                typedef FromSparse_<false, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
+            }
+        }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         });
@@ -473,18 +477,18 @@ public:
     template<bool oracle_>
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, const tatami::Options& opt) const {
         Index_ non_target_dim = secondary_dim(row);
-        return populate_sparse_internal<oracle_>(row, non_target_dim, std::move(ora), opt, non_target_dim); 
+        return populate_sparse_internal<oracle_, UnknownMatrix_internal::SparseFull>(row, non_target_dim, std::move(ora), opt, non_target_dim); 
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, Index_ block_start, Index_ block_length, const tatami::Options& opt) const {
-        return populate_sparse_internal<oracle_>(row, block_length, std::move(ora), block_start, block_length, opt);
+        return populate_sparse_internal<oracle_, UnknownMatrix_internal::SparseBlock>(row, block_length, std::move(ora), opt, block_start, block_length);
     }
 
     template<bool oracle_>
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse(bool row, tatami::MaybeOracle<oracle_, Index_> ora, tatami::VectorPtr<Index_> indices_ptr, const tatami::Options& opt) const {
         Index_ nidx = indices_ptr->size();
-        return populate_sparse_internal<oracle_>(row, nidx, std::move(ora), std::move(indices_ptr), opt);
+        return populate_sparse_internal<oracle_, UnknownMatrix_internal::SparseIndexed>(row, nidx, std::move(ora), opt, std::move(indices_ptr));
     }
 
 public:

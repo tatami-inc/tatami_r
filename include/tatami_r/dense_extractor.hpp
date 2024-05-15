@@ -20,7 +20,7 @@ namespace UnknownMatrix_internal {
 
 template<bool accrow_, bool oracle_, typename Index_> 
 struct SoloDenseCore {
-    SoloDenseBase(
+    SoloDenseCore(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& dense_extractor,
         tatami::MaybeOracle<oracle_, Index_> ora,
@@ -30,7 +30,9 @@ struct SoloDenseCore {
         [[maybe_unused]] const tatami_chunked::SlabCacheStats& stats) :
         mat(mat),
         dense_extractor(dense_extractor),
-        extract_args(2)
+        extract_args(2),
+        non_target_length(non_target_extract.size()),
+        oracle(std::move(ora))
     {
         extract_args[static_cast<int>(accrow_)] = non_target_extract;
     }
@@ -40,11 +42,16 @@ private:
     const Rcpp::Function& dense_extractor;
     Rcpp::List extract_args;
 
+    size_t non_target_length;
+
+    tatami::MaybeOracle<oracle_, Index_> oracle;
+    size_t counter = 0;
+
 public:
     template<typename Value_>
     void fetch_raw(Index_ i, Value_* buffer) {
         if constexpr(oracle_) {
-            i = cache.cache.next();
+            i = oracle->get(counter++);
         }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
@@ -65,10 +72,10 @@ public:
 
 template<bool accrow_, typename Index_, typename CachedValue_>
 struct MyopicDenseCore {
-    MyopicDenseBase(
+    MyopicDenseCore(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& dense_extractor,
-        [[maybe_unused]] tatami::MaybeOracle<oracle_, Index_> ora, // provided here for compatibility with the other Dense*Core classes.
+        [[maybe_unused]] tatami::MaybeOracle<false, Index_> ora, // provided here for compatibility with the other Dense*Core classes.
         Rcpp::IntegerVector non_target_extract, 
         const std::vector<Index_>& ticks,
         const std::vector<Index_>& map,
@@ -80,7 +87,7 @@ struct MyopicDenseCore {
         chunk_map(map),
         non_target_length(non_target_extract.size()),
         factory(stats),
-        cache(max_slabs)
+        cache(stats.max_slabs_in_cache)
     {
         extract_args[static_cast<int>(accrow_)] = non_target_extract;
     }
@@ -95,7 +102,7 @@ private:
     size_t non_target_length;
 
     tatami_chunked::DenseSlabFactory<CachedValue_> factory;
-    typedef typename decltype(factory)::Slab;
+    typedef typename decltype(factory)::Slab Slab;
     tatami_chunked::LruSlabCache<Index_, Slab> cache;
 
 public:
@@ -136,10 +143,10 @@ public:
 
 template<bool accrow_, typename Index_, typename CachedValue_>
 struct OracularDenseCore {
-    OracularDenseBase(
+    OracularDenseCore(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& dense_extractor,
-        tatami::MaybeOracle<oracle_, Index_> ora,
+        tatami::MaybeOracle<true, Index_> ora,
         Rcpp::IntegerVector non_target_extract, 
         const std::vector<Index_>& ticks,
         const std::vector<Index_>& map,
@@ -151,7 +158,7 @@ struct OracularDenseCore {
         chunk_map(map),
         non_target_length(non_target_extract.size()),
         factory(stats),
-        cache(std::move(ora), max_slabs)
+        cache(std::move(ora), stats.max_slabs_in_cache)
     {
         extract_args[static_cast<int>(accrow_)] = non_target_extract;
     }
@@ -166,13 +173,13 @@ private:
     size_t non_target_length;
 
     tatami_chunked::DenseSlabFactory<CachedValue_> factory;
-    typedef typename decltype(factory)::Slab;
+    typedef typename decltype(factory)::Slab Slab;
     tatami_chunked::OracularSlabCache<Index_, Index_, Slab> cache;
 
-public
+public:
     template<typename Value_>
     void fetch_raw(Index_, Value_* buffer) {
-        auto res = cache.cache.next(
+        auto res = cache.next(
             [&](Index_ i) -> std::pair<Index_, Index_> {
                 auto chosen = chunk_map[i];
                 return std::make_pair(chosen, static_cast<Index_>(i - chunk_ticks[chosen]));
@@ -272,7 +279,7 @@ private:
 
 public:
     const Value_* fetch(Index_ i, Value_* buffer) {
-        core->fetch_raw(i, buffer);
+        core.fetch_raw(i, buffer);
         return buffer;
     }
 };
@@ -308,12 +315,12 @@ private:
 
 public:
     const Value_* fetch(Index_ i, Value_* buffer) {
-        core->fetch_raw(i, buffer);
+        core.fetch_raw(i, buffer);
         return buffer;
     }
 };
 
-template<bool accrow_, bool oracle_, typename Value_, typename Index_, typename CachedValue_>
+template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_>
 struct DenseIndexed : public tatami::DenseExtractor<oracle_, Value_, Index_> {
     DenseIndexed(
         const Rcpp::RObject& mat, 
@@ -345,7 +352,7 @@ private:
 
 public:
     const Value_* fetch(Index_ i, Value_* buffer) {
-        core->fetch_raw(i, buffer);
+        core.fetch_raw(i, buffer);
         return buffer;
     }
 };

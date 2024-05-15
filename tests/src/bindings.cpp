@@ -19,7 +19,7 @@ typedef Rcpp::XPtr<tatami::Matrix<double, int> > RatXPtr;
 //[[Rcpp::export(rng=false)]]
 SEXP parse(Rcpp::RObject seed, double cache_size, bool require_min) {
     if (cache_size < 0) {
-        tatami_r::Options opt;
+        tatami_r::UnknownMatrixOptions opt;
         opt.maximum_cache_size = cache_size;
         opt.require_minimum_cache = require_min;
         return RatXPtr(new tatami_r::UnknownMatrix<double, int>(seed, opt));
