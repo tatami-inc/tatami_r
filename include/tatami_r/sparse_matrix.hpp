@@ -7,12 +7,13 @@
 
 namespace tatami_r { 
 
-template<bool transpose_, class InputObject_, SEXPTYPE desired_sexp_, typename InputValue_, typename CachedValue_, typename CachedIndex_, typename Index_>
+template<class InputObject_, SEXPTYPE desired_sexp_, typename InputValue_, typename CachedValue_, typename CachedIndex_, typename Index_>
 void parse_sparse_matrix_internal(
     Rcpp::RObject seed, 
+    bool row,
     std::vector<CachedValue_*>& value_ptrs, 
     std::vector<CachedIndex_*>& index_ptrs, 
-    std::vector<Index_>& counts)
+    Index_* counts)
 {
     Rcpp::RObject raw_svt = seed.slot("SVT");
     if (raw_svt == R_NilValue) {
@@ -23,6 +24,9 @@ void parse_sparse_matrix_internal(
     int NC = svt.size();
     bool needs_value = !value_ptrs.empty();
     bool needs_index = !index_ptrs.empty();
+
+    // Note that non-empty value_ptrs and index_ptrs may be longer than the
+    // number of rows/columns in the SVT matrix, due to the reuse of slabs.
 
     for (int c = 0; c < NC; ++c) {
         Rcpp::RObject raw_inner(svt[c]);
@@ -57,17 +61,21 @@ void parse_sparse_matrix_internal(
             throw std::runtime_error("both vectors of an element of the 'SVT' slot in a " + ctype + " object should have the same length");
         }
 
-        if constexpr(transpose_) {
+        if (row) {
+            if (needs_value) {
+                for (size_t i = 0; i < nnz; ++i) {
+                    auto ix = curindices[i];
+                    value_ptrs[ix][counts[ix]] = curvalues[i];
+                }
+            }
+            if (needs_index) {
+                for (size_t i = 0; i < nnz; ++i) {
+                    auto ix = curindices[i];
+                    index_ptrs[ix][counts[ix]] = c;
+                }
+            }
             for (size_t i = 0; i < nnz; ++i) {
-                auto ix = curindices[i];
-                auto& shift = counts[ix];
-                if (needs_value) {
-                    value_ptrs[ix][shift] = curvalues[i];
-                }
-                if (needs_index) {
-                    index_ptrs[ix][shift] = c;
-                }
-                ++shift;
+                ++(counts[curindices[i]]);
             }
 
         } else {
@@ -82,12 +90,13 @@ void parse_sparse_matrix_internal(
     }
 }
 
-template<bool transpose_, typename CachedValue_, typename CachedIndex_, typename Index_>
+template<typename CachedValue_, typename CachedIndex_, typename Index_>
 void parse_sparse_matrix(
     Rcpp::RObject seed,
+    bool row,
     std::vector<CachedValue_*>& value_ptrs, 
     std::vector<CachedIndex_*>& index_ptrs, 
-    std::vector<Index_>& counts)
+    Index_* counts)
 {
     auto ctype = get_class_name(seed);
     if (ctype != "SVT_SparseMatrix") {
@@ -101,11 +110,11 @@ void parse_sparse_matrix(
 
     std::string type = Rcpp::as<std::string>(seed.slot("type"));
     if (type == "double") {
-        parse_sparse_matrix_internal<transpose_, Rcpp::NumericVector, REALSXP, double>(seed, value_ptrs, index_ptrs, counts);
+        parse_sparse_matrix_internal<Rcpp::NumericVector, REALSXP, double>(seed, row, value_ptrs, index_ptrs, counts);
     } else if (type == "integer") {
-        parse_sparse_matrix_internal<transpose_, Rcpp::IntegerVector, INTSXP, int>(seed, value_ptrs, index_ptrs, counts);
+        parse_sparse_matrix_internal<Rcpp::IntegerVector, INTSXP, int>(seed, row, value_ptrs, index_ptrs, counts);
     } else if (type == "logical") {
-        parse_sparse_matrix_internal<transpose_, Rcpp::LogicalVector, LGLSXP, int>(seed, value_ptrs, index_ptrs, counts);
+        parse_sparse_matrix_internal<Rcpp::LogicalVector, LGLSXP, int>(seed, row, value_ptrs, index_ptrs, counts);
     } else {
         throw std::runtime_error("unsupported type '" + type + "' for a " + ctype);
     }
