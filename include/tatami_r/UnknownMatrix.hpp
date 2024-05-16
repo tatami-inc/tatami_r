@@ -298,8 +298,8 @@ private:
 private:
     template<
         bool oracle_, 
-        template <bool, bool, bool, typename, typename, typename> class FromDense_,
-        template <bool, bool, bool, typename, typename, typename, typename> class FromSparse_,
+        template <bool, bool, typename, typename, typename> class FromDense_,
+        template <bool, bool, typename, typename, typename, typename> class FromSparse_,
         typename ... Args_
     >
     std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense_internal(bool row, Index_ non_target_length, tatami::MaybeOracle<oracle_, Index_> ora, Args_&& ... args) const {
@@ -319,41 +319,20 @@ private:
 #endif
 
         if (!internal_sparse) {
-            if (row) {
-                if (solo) {
-                    typedef FromDense_<true, true, oracle_, Value_, Index_, CachedValue_> ShortDense;
-                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
-                } else {
-                    typedef FromDense_<true, false, oracle_, Value_, Index_, CachedValue_> ShortDense;
-                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
-                }
+            if (solo) {
+                typedef FromDense_<true, oracle_, Value_, Index_, CachedValue_> ShortDense;
+                output.reset(new ShortDense(original_seed, dense_extractor, row, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
             } else {
-                if (solo) {
-                    typedef FromDense_<false, true, oracle_, Value_, Index_, CachedValue_> ShortDense;
-                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
-                } else {
-                    typedef FromDense_<false, false, oracle_, Value_, Index_, CachedValue_> ShortDense;
-                    output.reset(new ShortDense(original_seed, dense_extractor, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
-                }
+                typedef FromDense_<false, oracle_, Value_, Index_, CachedValue_> ShortDense;
+                output.reset(new ShortDense(original_seed, dense_extractor, row, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
             }
-
         } else {
-            if (row) {
-                if (solo) {
-                    typedef FromSparse_<true, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
-                } else {
-                    typedef FromSparse_<true, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
-                }
+            if (solo) {
+                typedef FromSparse_<true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
             } else {
-                if (solo) {
-                    typedef FromSparse_<false, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
-                } else {
-                    typedef FromSparse_<false, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                    output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
-                }
+                typedef FromSparse_<false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+                output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
             }
         }
 
@@ -416,7 +395,7 @@ public:
 public:
     template<
         bool oracle_, 
-        template<bool, bool, bool, typename, typename, typename, typename> class FromSparse_,
+        template<bool, bool, typename, typename, typename, typename> class FromSparse_,
         typename ... Args_
     >
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse_internal(
@@ -449,22 +428,12 @@ public:
         mexec.run([&]() -> void {
 #endif
 
-        if (row) {
-            if (solo) {
-                typedef FromSparse_<true, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
-            } else {
-                typedef FromSparse_<true, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
-            }
+        if (solo) {
+            typedef FromSparse_<true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+            output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
         } else {
-            if (solo) {
-                typedef FromSparse_<false, true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
-            } else {
-                typedef FromSparse_<false, false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                output.reset(new ShortSparse(original_seed, sparse_extractor, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
-            }
+            typedef FromSparse_<false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
+            output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
         }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 

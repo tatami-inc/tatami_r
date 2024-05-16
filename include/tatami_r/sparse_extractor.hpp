@@ -17,11 +17,12 @@ namespace UnknownMatrix_internal {
  *** Core classes ***
  ********************/
 
-template<bool accrow_, bool oracle_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool oracle_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct SoloSparseCore {
     SoloSparseCore(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Rcpp::IntegerVector non_target_extract, 
         [[maybe_unused]] Index_ max_target_chunk_length, // provided here for compatibility with the other Sparse*Core classes.
@@ -33,17 +34,20 @@ struct SoloSparseCore {
         mat(mat),
         sparse_extractor(sparse_extractor),
         extract_args(2),
+        row(row),
         factory(1, non_target_extract.size(), 1, needs_value, needs_index),
         solo(factory.create()),
         oracle(std::move(ora))
     {
-        extract_args[static_cast<int>(accrow_)] = non_target_extract;
+        extract_args[static_cast<int>(row)] = non_target_extract;
     }
 
 private:
     const Rcpp::RObject& mat;
     const Rcpp::Function& sparse_extractor;
     Rcpp::List extract_args;
+
+    bool row;
 
     tatami_chunked::SparseSlabFactory<CachedValue_, CachedIndex_> factory;
     typedef typename decltype(factory)::Slab Slab;
@@ -65,9 +69,9 @@ public:
         mexec.run([&]() -> void {
 #endif
 
-        extract_args[static_cast<int>(!accrow_)] = Rcpp::IntegerVector::create(i + 1);
+        extract_args[static_cast<int>(!row)] = Rcpp::IntegerVector::create(i + 1);
         auto obj = sparse_extractor(mat, extract_args);
-        parse_sparse_matrix<accrow_>(obj, solo.values, solo.indices, solo.number);
+        parse_sparse_matrix(obj, row, solo.values, solo.indices, solo.number);
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         });
@@ -77,11 +81,12 @@ public:
     }
 };
 
-template<bool accrow_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<typename Index_, typename CachedValue_, typename CachedIndex_>
 struct MyopicSparseCore {
     MyopicSparseCore(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         [[maybe_unused]] tatami::MaybeOracle<false, Index_> ora, // provided here for compatibility with the other Sparse*Core classes.
         Rcpp::IntegerVector non_target_extract, 
         Index_ max_target_chunk_length, 
@@ -93,18 +98,21 @@ struct MyopicSparseCore {
         mat(mat),
         sparse_extractor(sparse_extractor),
         extract_args(2),
+        row(row),
         chunk_ticks(ticks),
         chunk_map(map),
         factory(max_target_chunk_length, non_target_extract.size(), stats, needs_value, needs_index),
         cache(stats.max_slabs_in_cache)
     {
-        extract_args[static_cast<int>(accrow_)] = non_target_extract;
+        extract_args[static_cast<int>(row)] = non_target_extract;
     }
 
 private:
     const Rcpp::RObject& mat;
     const Rcpp::Function& sparse_extractor;
     Rcpp::List extract_args;
+
+    bool row;
 
     const std::vector<Index_>& chunk_ticks;
     const std::vector<Index_>& chunk_map;
@@ -135,9 +143,9 @@ public:
 
                 Rcpp::IntegerVector primary_extract(chunk_len);
                 std::iota(primary_extract.begin(), primary_extract.end(), chunk_start + 1);
-                extract_args[static_cast<int>(!accrow_)] = primary_extract;
+                extract_args[static_cast<int>(!row)] = primary_extract;
                 auto obj = sparse_extractor(mat, extract_args);
-                parse_sparse_matrix<accrow_>(obj, cache.values, cache.indices, cache.number);
+                parse_sparse_matrix(obj, row, cache.values, cache.indices, cache.number);
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
                 });
@@ -150,11 +158,12 @@ public:
     }
 };
 
-template<bool accrow_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<typename Index_, typename CachedValue_, typename CachedIndex_>
 struct OracularSparseCore {
     OracularSparseCore(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<true, Index_> ora,
         Rcpp::IntegerVector non_target_extract, 
         Index_ max_target_chunk_length, 
@@ -166,6 +175,7 @@ struct OracularSparseCore {
         mat(mat),
         sparse_extractor(sparse_extractor),
         extract_args(2),
+        row(row),
         chunk_ticks(ticks),
         chunk_map(map),
         factory(max_target_chunk_length, non_target_extract.size(), stats, needs_value, needs_index),
@@ -173,13 +183,15 @@ struct OracularSparseCore {
         needs_value(needs_value),
         needs_index(needs_index)
     {
-        extract_args[static_cast<int>(accrow_)] = non_target_extract;
+        extract_args[static_cast<int>(row)] = non_target_extract;
     }
 
 private:
     const Rcpp::RObject& mat;
     const Rcpp::Function& sparse_extractor;
     Rcpp::List extract_args;
+
+    bool row;
 
     const std::vector<Index_>& chunk_ticks;
     const std::vector<Index_>& chunk_map;
@@ -251,9 +263,9 @@ public:
                     current += chunk_len;
                 }
 
-                extract_args[static_cast<int>(!accrow_)] = primary_extract;
+                extract_args[static_cast<int>(!row)] = primary_extract;
                 auto obj = sparse_extractor(mat, extract_args);
-                parse_sparse_matrix<accrow_>(obj, chunk_value_ptrs, chunk_index_ptrs, chunk_numbers.data());
+                parse_sparse_matrix(obj, row, chunk_value_ptrs, chunk_index_ptrs, chunk_numbers.data());
 
                 current = 0;
                 for (const auto& p : to_populate) {
@@ -270,12 +282,12 @@ public:
     }
 };
 
-template<bool accrow_, bool solo_, bool oracle_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Index_, typename CachedValue_, typename CachedIndex_>
 using SparseCore = typename std::conditional<solo_,
-    SoloSparseCore<accrow_, oracle_, Index_, CachedValue_, CachedIndex_>,
+    SoloSparseCore<oracle_, Index_, CachedValue_, CachedIndex_>,
     typename std::conditional<oracle_,
-        OracularSparseCore<accrow_, Index_, CachedValue_, CachedIndex_>,
-        MyopicSparseCore<accrow_, Index_, CachedValue_, CachedIndex_>
+        OracularSparseCore<Index_, CachedValue_, CachedIndex_>,
+        MyopicSparseCore<Index_, CachedValue_, CachedIndex_>
     >::type
 >::type;
 
@@ -283,11 +295,12 @@ using SparseCore = typename std::conditional<solo_,
  *** Pure sparse extractors ***
  ******************************/
 
-template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct SparseFull : public tatami::SparseExtractor<oracle_, Value_, Index_> {
     SparseFull(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Index_ non_target_dim,
         Index_ max_target_chunk_length, 
@@ -299,6 +312,7 @@ struct SparseFull : public tatami::SparseExtractor<oracle_, Value_, Index_> {
         core(
             mat,
             sparse_extractor,
+            row,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(non_target_dim);
@@ -318,7 +332,7 @@ struct SparseFull : public tatami::SparseExtractor<oracle_, Value_, Index_> {
     {}
 
 private:
-    SparseCore<accrow_, solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
+    SparseCore<solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
     Index_ non_target_dim;
     bool needs_value, needs_index;
 
@@ -343,11 +357,12 @@ public:
     }
 };
 
-template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct SparseBlock : public tatami::SparseExtractor<oracle_, Value_, Index_> {
     SparseBlock(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Index_ block_start,
         Index_ block_length,
@@ -360,6 +375,7 @@ struct SparseBlock : public tatami::SparseExtractor<oracle_, Value_, Index_> {
         core(
             mat,
             sparse_extractor,
+            row,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(block_length);
@@ -379,7 +395,7 @@ struct SparseBlock : public tatami::SparseExtractor<oracle_, Value_, Index_> {
     {}
 
 private:
-    SparseCore<accrow_, solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
+    SparseCore<solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
     Index_ block_start; 
     bool needs_value, needs_index;
 
@@ -407,11 +423,12 @@ public:
     }
 };
 
-template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct SparseIndexed : public tatami::SparseExtractor<oracle_, Value_, Index_> {
     SparseIndexed(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         tatami::VectorPtr<Index_> idx_ptr,
         Index_ max_target_chunk_length, 
@@ -423,6 +440,7 @@ struct SparseIndexed : public tatami::SparseExtractor<oracle_, Value_, Index_> {
         core(
             mat,
             sparse_extractor,
+            row,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(idx_ptr->begin(), idx_ptr->end());
@@ -444,7 +462,7 @@ struct SparseIndexed : public tatami::SparseExtractor<oracle_, Value_, Index_> {
     {}
 
 private:
-    SparseCore<accrow_, solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
+    SparseCore<solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
     tatami::VectorPtr<Index_> indices_ptr;
     bool needs_value, needs_index;
 
@@ -488,11 +506,12 @@ const Value_* densify(const Slab_& slab, Index_ offset, size_t non_target_length
     return buffer;
 }
 
-template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct DensifiedSparseFull : public tatami::DenseExtractor<oracle_, Value_, Index_> {
     DensifiedSparseFull(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Index_ non_target_dim,
         Index_ max_target_chunk_length, 
@@ -502,6 +521,7 @@ struct DensifiedSparseFull : public tatami::DenseExtractor<oracle_, Value_, Inde
         core(
             mat,
             sparse_extractor,
+            row,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(non_target_dim);
@@ -519,7 +539,7 @@ struct DensifiedSparseFull : public tatami::DenseExtractor<oracle_, Value_, Inde
     {}
 
 private:
-    SparseCore<accrow_, solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
+    SparseCore<solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
     size_t non_target_dim;
 
 public:
@@ -529,11 +549,12 @@ public:
     }
 };
 
-template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct DensifiedSparseBlock : public tatami::DenseExtractor<oracle_, Value_, Index_> {
     DensifiedSparseBlock(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         Index_ block_start,
         Index_ block_length,
@@ -544,6 +565,7 @@ struct DensifiedSparseBlock : public tatami::DenseExtractor<oracle_, Value_, Ind
         core(
             mat,
             sparse_extractor,
+            row,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(block_length);
@@ -561,7 +583,7 @@ struct DensifiedSparseBlock : public tatami::DenseExtractor<oracle_, Value_, Ind
     {}
 
 private:
-    SparseCore<accrow_, solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
+    SparseCore<solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
     size_t block_length;
 
 public:
@@ -571,11 +593,12 @@ public:
     }
 };
 
-template<bool accrow_, bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
+template<bool solo_, bool oracle_, typename Value_, typename Index_, typename CachedValue_, typename CachedIndex_>
 struct DensifiedSparseIndexed : public tatami::DenseExtractor<oracle_, Value_, Index_> {
     DensifiedSparseIndexed(
         const Rcpp::RObject& mat, 
         const Rcpp::Function& sparse_extractor,
+        bool row,
         tatami::MaybeOracle<oracle_, Index_> ora,
         tatami::VectorPtr<Index_> idx_ptr,
         Index_ max_target_chunk_length, 
@@ -585,6 +608,7 @@ struct DensifiedSparseIndexed : public tatami::DenseExtractor<oracle_, Value_, I
         core( 
             mat,
             sparse_extractor,
+            row,
             std::move(ora),
             [&]() {
                 Rcpp::IntegerVector output(idx_ptr->begin(), idx_ptr->end());
@@ -604,7 +628,7 @@ struct DensifiedSparseIndexed : public tatami::DenseExtractor<oracle_, Value_, I
     {}
 
 private:
-    SparseCore<accrow_, solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
+    SparseCore<solo_, oracle_, Index_, CachedValue_, CachedIndex_> core;
     size_t num_indices;
 
 public:
