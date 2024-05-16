@@ -15,7 +15,7 @@ var searchData=
   ['operator_3e_12',['operator&gt;',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#a4296f53f8ed91bb3324e9a681b2d3c35',1,'tatami::SomeNumericArray::Iterator']]],
   ['operator_3e_3d_13',['operator&gt;=',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#a82077d04886a5a0088372b03707d2fca',1,'tatami::SomeNumericArray::Iterator']]],
   ['operator_5b_5d_14',['operator[]',['https://tatami-inc.github.io/tatami/classtatami_1_1ArrayView.html#a329bcfebf2ebc7ca73d559836170722c',1,'tatami::ArrayView::operator[]()'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#a220df2018efe0af029200950bf8f2656',1,'tatami::SomeNumericArray::Iterator::operator[]()'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray.html#ac40db52de47708abb156ad33f24619a4',1,'tatami::SomeNumericArray::operator[]()']]],
-  ['options_15',['Options',['https://tatami-inc.github.io/tatami/structtatami_1_1Options.html',1,'tatami::Options'],['../structtatami__r_1_1Options.html',1,'tatami_r::Options']]],
+  ['options_15',['Options',['https://tatami-inc.github.io/tatami/structtatami_1_1Options.html',1,'tatami']]],
   ['options_2ehpp_16',['Options.hpp',['https://tatami-inc.github.io/tatami/Options_8hpp.html',1,'']]],
   ['oracle_17',['Oracle',['https://tatami-inc.github.io/tatami/structtatami_1_1Oracle.html',1,'tatami']]],
   ['oracle_2ehpp_18',['Oracle.hpp',['https://tatami-inc.github.io/tatami/Oracle_8hpp.html',1,'']]],

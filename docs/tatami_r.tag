@@ -13,24 +13,6 @@
     <includes id="parallelize_8hpp" name="parallelize.hpp" local="yes" import="no" module="no" objc="no">parallelize.hpp</includes>
     <namespace>tatami_r</namespace>
   </compound>
-  <compound kind="struct">
-    <name>tatami_r::Options</name>
-    <filename>structtatami__r_1_1Options.html</filename>
-    <member kind="variable">
-      <type>size_t</type>
-      <name>maximum_cache_size</name>
-      <anchorfile>structtatami__r_1_1Options.html</anchorfile>
-      <anchor>a2692a265df2ac6b8160b5b5c6b68dcdc</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="variable">
-      <type>bool</type>
-      <name>require_minimum_cache</name>
-      <anchorfile>structtatami__r_1_1Options.html</anchorfile>
-      <anchor>a5756e5c98133bfbeab0437024c13f1d4</anchor>
-      <arglist></arglist>
-    </member>
-  </compound>
   <compound kind="class">
     <name>tatami_r::UnknownMatrix</name>
     <filename>classtatami__r_1_1UnknownMatrix.html</filename>
@@ -43,8 +25,8 @@
       <type></type>
       <name>UnknownMatrix</name>
       <anchorfile>classtatami__r_1_1UnknownMatrix.html</anchorfile>
-      <anchor>afb1de78326505497706b5278a66a1224</anchor>
-      <arglist>(Rcpp::RObject seed, const Options &amp;opt)</arglist>
+      <anchor>a27b22842bfe04b6d5bf9a78fb4977102</anchor>
+      <arglist>(Rcpp::RObject seed, const UnknownMatrixOptions &amp;opt)</arglist>
     </member>
     <member kind="function">
       <type></type>
@@ -54,11 +36,29 @@
       <arglist>(Rcpp::RObject seed)</arglist>
     </member>
   </compound>
+  <compound kind="struct">
+    <name>tatami_r::UnknownMatrixOptions</name>
+    <filename>structtatami__r_1_1UnknownMatrixOptions.html</filename>
+    <member kind="variable">
+      <type>size_t</type>
+      <name>maximum_cache_size</name>
+      <anchorfile>structtatami__r_1_1UnknownMatrixOptions.html</anchorfile>
+      <anchor>a988e54f7832165f55353f413025abf7d</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>require_minimum_cache</name>
+      <anchorfile>structtatami__r_1_1UnknownMatrixOptions.html</anchorfile>
+      <anchor>a789336083111a71a161a58a1ad383c52</anchor>
+      <arglist></arglist>
+    </member>
+  </compound>
   <compound kind="namespace">
     <name>tatami_r</name>
     <filename>namespacetatami__r.html</filename>
-    <class kind="struct">tatami_r::Options</class>
     <class kind="class">tatami_r::UnknownMatrix</class>
+    <class kind="struct">tatami_r::UnknownMatrixOptions</class>
     <member kind="function">
       <type>manticore::Executor &amp;</type>
       <name>executor</name>

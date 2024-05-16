@@ -49,5 +49,7 @@ var searchData=
   ['delayedunaryadvancedmockhelper_46',['DelayedUnaryAdvancedMockHelper',['https://tatami-inc.github.io/tatami/structtatami_1_1DelayedUnaryAdvancedMockHelper.html',1,'tatami']]],
   ['delayedunarybasicmockhelper_47',['DelayedUnaryBasicMockHelper',['https://tatami-inc.github.io/tatami/structtatami_1_1DelayedUnaryBasicMockHelper.html',1,'tatami']]],
   ['delayedunaryisometricop_48',['DelayedUnaryIsometricOp',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricOp.html',1,'tatami']]],
-  ['densematrix_49',['DenseMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1DenseMatrix.html',1,'tatami']]]
+  ['densecolumnmatrix_49',['DenseColumnMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1DenseColumnMatrix.html',1,'tatami']]],
+  ['densematrix_50',['DenseMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1DenseMatrix.html',1,'tatami']]],
+  ['denserowmatrix_51',['DenseRowMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1DenseRowMatrix.html',1,'tatami']]]
 ];
