@@ -10,7 +10,7 @@ Usage is as simple as:
 #include "tatami_r/tatami_r.hpp"
 
 SEXP some_typical_rcpp_function(Rcpp::RObject x) {
-    auto ptr = tatami_r::UnknownMatrix(x);
+    auto ptr = std::make_shared<tatami_r::UnknownMatrix<double, int> >(x);
 
     // Do stuff with the tatami::Matrix.
     ptr->nrow();
@@ -24,15 +24,15 @@ If you want more details, you can check out the [reference documentation](https:
 
 ## Implementation
 
-**tatami_r** assumes that the hosting R instance has installed the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package.
+**tatami_r** assumes that the hosting R instance has loaded the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package.
 The `UnknownMatrix` getters will then use the `extract_array()` and `extract_sparse_array()` R functions to retrieve data from the abstract R matrix.
 Note that this involves calling into R from C++, so high performance should not be expected here.
-Rather, the purpose of **tatami_r** is to keep **tatami**-based functions working when a native representation cannot be found for a particular matrix-like object.
+Rather, the purpose of **tatami_r** is to ensure that **tatami**-based functions keep working when a native representation cannot be found for a particular matrix-like object.
 
 It is worth mentioning that the `UnknownMatrix` will always call the `extract_*_array()` functions, even when a native representation exists in **tatami** or one of its extension libraries.
-R package developers should instead use the `initializeCpp()` function from the [**beachmat**](https://bioconductor.org/packages/beachmat) package to map an arbitrary matrix to its appropriate representation.
+R package developers should use the `initializeCpp()` function from the [**beachmat**](https://bioconductor.org/packages/beachmat) package to map an arbitrary matrix to its appropriate representation.
 When such mappings exist, this allows the C++ code to operate without calling back into R for maximum efficiency.
-Nonetheless, if no mapping is known, **beachmat** will gracefully fall back to an `UnknownMatrix` to keep things running.
+If no mapping is known, **beachmat** will gracefully fall back to an `UnknownMatrix` to keep things running.
 
 # Enabling parallelization
 
@@ -68,11 +68,11 @@ Check out the [comments about safe parallelization](docs/parallel.md) for more g
 
 ## Deployment
 
-**tatami_r** is intended to be compiled with other relevant C++ code inside an R package.
+**tatami_r** is intended to be compiled with other relevant C++ code inside an R package using [**Rcpp**](https://www.rcpp.org/).
 This is most easily done by modifying the package `DESCRIPTION` with:
 
 ```
-LinkingTo: beachmat
+LinkingTo: beachmat, Rcpp
 ```
 
 which will automatically use the vendored copies of **tatami_r** (and **tatami**) inside the [**beachmat**](http://bioconductor.org/packages/beachmat) package.
