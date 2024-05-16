@@ -310,7 +310,7 @@ private:
 
         const auto& map = chunk_map(row);
         const auto& ticks = chunk_ticks(row);
-        bool solo = stats.max_slabs_in_cache == 0;
+        bool solo = (stats.max_slabs_in_cache == 0);
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         // This involves some Rcpp initializations, so we lock it just in case.
@@ -318,7 +318,7 @@ private:
         mexec.run([&]() -> void {
 #endif
 
-        if (internal_sparse) {
+        if (!internal_sparse) {
             if (row) {
                 if (solo) {
                     typedef FromDense_<true, true, oracle_, Value_, Index_, CachedValue_> ShortDense;

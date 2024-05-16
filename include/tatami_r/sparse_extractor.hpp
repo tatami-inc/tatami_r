@@ -223,10 +223,12 @@ public:
                     Index_ chunk_len = chunk_ticks[p.first + 1] - chunk_ticks[p.first];
                     total_len += chunk_len;
                     if (needs_value) {
-                        chunk_value_ptrs.insert(chunk_value_ptrs.end(), p.second->values.begin(), p.second->values.end());
+                        auto vIt = p.second->values.begin();
+                        chunk_value_ptrs.insert(chunk_value_ptrs.end(), vIt, vIt + chunk_len);
                     }
                     if (needs_index) {
-                        chunk_index_ptrs.insert(chunk_index_ptrs.end(), p.second->indices.begin(), p.second->indices.end());
+                        auto iIt = p.second->indices.begin();
+                        chunk_index_ptrs.insert(chunk_index_ptrs.end(), iIt, iIt + chunk_len);
                     }
                 }
 
@@ -436,7 +438,9 @@ struct SparseIndexed : public tatami::SparseExtractor<oracle_, Value_, Index_> {
             needs_value,
             needs_index
         ),
-        indices_ptr(std::move(idx_ptr))
+        indices_ptr(std::move(idx_ptr)),
+        needs_value(needs_value),
+        needs_index(needs_index)
     {}
 
 private:
@@ -459,7 +463,7 @@ public:
         if (needs_index) {
             auto iptr = slab.indices[offset];
             const auto& indices = *indices_ptr;
-            for (CachedIndex_ i = 0; i < output.number; ++i) {
+            for (Index_ i = 0; i < output.number; ++i) {
                 ibuffer[i] = indices[iptr[i]];
             }
             output.index = ibuffer;

@@ -62,7 +62,11 @@ public:
 
         extract_args[static_cast<int>(!accrow_)] = Rcpp::IntegerVector::create(i + 1);
         auto obj = dense_extractor(mat, extract_args);
-        parse_dense_matrix<accrow_>(obj, buffer, 0, 0, non_target_length, 1);
+        if constexpr(accrow_) {
+            parse_dense_matrix<true>(obj, buffer, 0, 0, 1, non_target_length);
+        } else {
+            parse_dense_matrix<false>(obj, buffer, 0, 0, non_target_length, 1);
+        }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
         });
@@ -127,8 +131,14 @@ public:
                 Rcpp::IntegerVector primary_extract(chunk_len);
                 std::iota(primary_extract.begin(), primary_extract.end(), chunk_start + 1);
                 extract_args[static_cast<int>(!accrow_)] = primary_extract;
+
                 auto obj = dense_extractor(mat, extract_args);
-                parse_dense_matrix<accrow_>(obj, cache.data, 0, 0, non_target_length, chunk_len);
+                if constexpr(accrow_) {
+                    parse_dense_matrix<true>(obj, cache.data, 0, 0, chunk_len, non_target_length);
+                } else {
+                    parse_dense_matrix<false>(obj, cache.data, 0, 0, non_target_length, chunk_len);
+
+                }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
                 });
@@ -221,7 +231,11 @@ public:
                 for (const auto& p : to_populate) {
                     auto chunk_start = chunk_ticks[p.first];
                     Index_ chunk_len = chunk_ticks[p.first + 1] - chunk_start;
-                    parse_dense_matrix<accrow_>(obj, p.second->data, 0, current, non_target_length, chunk_len);
+                    if constexpr(accrow_) {
+                        parse_dense_matrix<true>(obj, p.second->data, current, 0, chunk_len, non_target_length);
+                    } else {
+                        parse_dense_matrix<false>(obj, p.second->data, 0, current, non_target_length, chunk_len);
+                    }
                     current += chunk_len;
                 }
 
