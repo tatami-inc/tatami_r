@@ -53,11 +53,11 @@ public:
      * @param opt Extraction options.
      */
     UnknownMatrix(Rcpp::RObject seed, const UnknownMatrixOptions& opt) : 
-        original_seed(seed), 
-        delayed_env(Rcpp::Environment::namespace_env("DelayedArray")),
-        sparse_env(Rcpp::Environment::namespace_env("SparseArray")),
-        dense_extractor(delayed_env["extract_array"]),
-        sparse_extractor(sparse_env["extract_sparse_array"])
+        my_original_seed(seed), 
+        my_delayed_env(Rcpp::Environment::namespace_env("DelayedArray")),
+        my_sparse_env(Rcpp::Environment::namespace_env("SparseArray")),
+        my_dense_extractor(my_delayed_env["extract_array"]),
+        my_sparse_extractor(my_sparse_env["extract_sparse_array"])
     {
         // We assume the constructor only occurs on the main thread, so we
         // won't bother locking things up. I'm also not sure that the
@@ -68,50 +68,50 @@ public:
             Rcpp::Function fun = base["dim"];
             Rcpp::RObject output = fun(seed);
             if (output.sexp_type() != INTSXP) {
-                auto ctype = get_class_name(original_seed);
+                auto ctype = get_class_name(my_original_seed);
                 throw std::runtime_error("'dim(<" + ctype + ">)' should return an integer vector");
             }
             Rcpp::IntegerVector dims(output);
             if (dims.size() != 2 || dims[0] < 0 || dims[1] < 0) {
-                auto ctype = get_class_name(original_seed);
+                auto ctype = get_class_name(my_original_seed);
                 throw std::runtime_error("'dim(<" + ctype + ">)' should contain two non-negative integers");
             }
 
-            internal_nrow = dims[0];
-            internal_ncol = dims[1];
+            my_nrow = dims[0];
+            my_ncol = dims[1];
         }
 
         {
-            Rcpp::Function fun = delayed_env["is_sparse"];
+            Rcpp::Function fun = my_delayed_env["is_sparse"];
             Rcpp::LogicalVector is_sparse = fun(seed);
             if (is_sparse.size() != 1) {
-                auto ctype = get_class_name(original_seed);
+                auto ctype = get_class_name(my_original_seed);
                 throw std::runtime_error("'is_sparse(<" + ctype + ">)' should return a logical vector of length 1");
             }
-            internal_sparse = (is_sparse[0] != 0);
+            my_sparse = (is_sparse[0] != 0);
         }
 
         {
-            row_chunk_map.resize(internal_nrow);
-            col_chunk_map.resize(internal_ncol);
+            my_row_chunk_map.resize(my_nrow);
+            my_col_chunk_map.resize(my_ncol);
 
-            Rcpp::Function fun = delayed_env["chunkGrid"];
+            Rcpp::Function fun = my_delayed_env["chunkGrid"];
             Rcpp::RObject grid = fun(seed);
 
             if (grid == R_NilValue) {
-                row_max_chunk_size = 1;
-                col_max_chunk_size = 1;
-                std::iota(row_chunk_map.begin(), row_chunk_map.end(), static_cast<Index_>(0));
-                std::iota(col_chunk_map.begin(), col_chunk_map.end(), static_cast<Index_>(0));
-                row_chunk_ticks.resize(internal_nrow + 1);
-                std::iota(row_chunk_ticks.begin(), row_chunk_ticks.end(), static_cast<Index_>(0));
-                col_chunk_ticks.resize(internal_ncol + 1);
-                std::iota(col_chunk_ticks.begin(), col_chunk_ticks.end(), static_cast<Index_>(0));
+                my_row_max_chunk_size = 1;
+                my_col_max_chunk_size = 1;
+                std::iota(my_row_chunk_map.begin(), my_row_chunk_map.end(), static_cast<Index_>(0));
+                std::iota(my_col_chunk_map.begin(), my_col_chunk_map.end(), static_cast<Index_>(0));
+                my_row_chunk_ticks.resize(my_nrow + 1);
+                std::iota(my_row_chunk_ticks.begin(), my_row_chunk_ticks.end(), static_cast<Index_>(0));
+                my_col_chunk_ticks.resize(my_ncol + 1);
+                std::iota(my_col_chunk_ticks.begin(), my_col_chunk_ticks.end(), static_cast<Index_>(0));
 
                 // Both dense and sparse inputs are implicitly column-major, so
                 // if there isn't chunking information to the contrary, we'll
                 // favor extraction of the columns.
-                internal_prefer_rows = false;
+                my_prefer_rows = false;
 
             } else {
                 auto grid_cls = get_class_name(grid);
@@ -139,10 +139,10 @@ public:
                         }
                     };
 
-                    row_max_chunk_size = spacings[0];
-                    populate(internal_nrow, row_max_chunk_size, row_chunk_map, row_chunk_ticks);
-                    col_max_chunk_size = spacings[1];
-                    populate(internal_ncol, col_max_chunk_size, col_chunk_map, col_chunk_ticks);
+                    my_row_max_chunk_size = spacings[0];
+                    populate(my_nrow, my_row_max_chunk_size, my_row_chunk_map, my_row_chunk_ticks);
+                    my_col_max_chunk_size = spacings[1];
+                    populate(my_ncol, my_col_max_chunk_size, my_col_chunk_map, my_col_chunk_ticks);
 
                 } else if (grid_cls == "ArbitraryArrayGrid") {
                     Rcpp::List ticks(Rcpp::RObject(grid.slot("tickmarks")));
@@ -178,9 +178,9 @@ public:
                     };
 
                     Rcpp::IntegerVector first(ticks[0]);
-                    populate(internal_nrow, first, row_chunk_map, row_chunk_ticks, row_max_chunk_size);
+                    populate(my_nrow, first, my_row_chunk_map, my_row_chunk_ticks, my_row_max_chunk_size);
                     Rcpp::IntegerVector second(ticks[1]);
-                    populate(internal_ncol, second, col_chunk_map, col_chunk_ticks, col_max_chunk_size);
+                    populate(my_ncol, second, my_col_chunk_map, my_col_chunk_ticks, my_col_max_chunk_size);
 
                 } else {
                     auto ctype = get_class_name(seed);
@@ -188,21 +188,21 @@ public:
                 }
 
                 // Choose the dimension that requires pulling out fewer chunks.
-                auto chunks_per_row = col_chunk_ticks.size() - 1;
-                auto chunks_per_col = row_chunk_ticks.size() - 1;
-                internal_prefer_rows = chunks_per_row <= chunks_per_col;
+                auto chunks_per_row = my_col_chunk_ticks.size() - 1;
+                auto chunks_per_col = my_row_chunk_ticks.size() - 1;
+                my_prefer_rows = chunks_per_row <= chunks_per_col;
             }
         }
 
-        cache_size_in_bytes = opt.maximum_cache_size;
-        require_minimum_cache = opt.require_minimum_cache;
-        if (cache_size_in_bytes == static_cast<size_t>(-1)) {
-            Rcpp::Function fun = delayed_env["getAutoBlockSize"];
+        my_cache_size_in_bytes = opt.maximum_cache_size;
+        my_require_minimum_cache = opt.require_minimum_cache;
+        if (my_cache_size_in_bytes == static_cast<size_t>(-1)) {
+            Rcpp::Function fun = my_delayed_env["getAutoBlockSize"];
             Rcpp::NumericVector bsize = fun();
             if (bsize.size() != 1 || bsize[0] < 0) {
                 throw std::runtime_error("'getAutoBlockSize()' should return a non-negative number of bytes");
             }
-            cache_size_in_bytes = bsize[0];
+            my_cache_size_in_bytes = bsize[0];
         }
     }
 
@@ -215,11 +215,11 @@ public:
     UnknownMatrix(Rcpp::RObject seed) : UnknownMatrix(std::move(seed), UnknownMatrixOptions()) {}
 
 private:
-    Index_ internal_nrow, internal_ncol;
-    bool internal_sparse, internal_prefer_rows;
+    Index_ my_nrow, my_ncol;
+    bool my_sparse, my_prefer_rows;
 
-    std::vector<Index_> row_chunk_map, col_chunk_map;
-    std::vector<Index_> row_chunk_ticks, col_chunk_ticks;
+    std::vector<Index_> my_row_chunk_map, my_col_chunk_map;
+    std::vector<Index_> my_row_chunk_ticks, my_col_chunk_ticks;
 
     // To decide how many chunks to store in the cache, we pretend the largest
     // chunk is a good representative. This is a bit suboptimal for irregular
@@ -229,38 +229,38 @@ private:
     // reused, or (ii) require lots of allocations, if slabs are not reused, or
     // (iii) require manual defragmentation, if slabs are reused in a manner
     // that avoids inflation to the maximum allocation.
-    Index_ row_max_chunk_size, col_max_chunk_size;
+    Index_ my_row_max_chunk_size, my_col_max_chunk_size;
 
-    size_t cache_size_in_bytes;
-    bool require_minimum_cache;
+    size_t my_cache_size_in_bytes;
+    bool my_require_minimum_cache;
 
-    Rcpp::RObject original_seed;
-    Rcpp::Environment delayed_env, sparse_env;
-    Rcpp::Function dense_extractor, sparse_extractor;
+    Rcpp::RObject my_original_seed;
+    Rcpp::Environment my_delayed_env, my_sparse_env;
+    Rcpp::Function my_dense_extractor, my_sparse_extractor;
 
 public:
     Index_ nrow() const {
-        return internal_nrow;
+        return my_nrow;
     }
 
     Index_ ncol() const {
-        return internal_ncol;
+        return my_ncol;
     }
 
     bool is_sparse() const {
-        return internal_sparse;
+        return my_sparse;
     }
 
     double is_sparse_proportion() const {
-        return static_cast<double>(internal_sparse);
+        return static_cast<double>(my_sparse);
     }
 
     bool prefer_rows() const {
-        return internal_prefer_rows;
+        return my_prefer_rows;
     }
 
     double prefer_rows_proportion() const {
-        return static_cast<double>(internal_prefer_rows);
+        return static_cast<double>(my_prefer_rows);
     }
 
     bool uses_oracle(bool) const {
@@ -269,26 +269,26 @@ public:
 
 private:
     Index_ max_primary_chunk_length(bool row) const {
-        return (row ? row_max_chunk_size : col_max_chunk_size);
+        return (row ? my_row_max_chunk_size : my_col_max_chunk_size);
     }
 
     Index_ secondary_dim(bool row) const {
-        return (row ? internal_ncol : internal_nrow);
+        return (row ? my_ncol : my_nrow);
     }
 
     const std::vector<Index_>& chunk_ticks(bool row) const {
         if (row) {
-            return row_chunk_ticks;
+            return my_row_chunk_ticks;
         } else {
-            return col_chunk_ticks;
+            return my_col_chunk_ticks;
         }
     }
 
     const std::vector<Index_>& chunk_map(bool row) const {
         if (row) {
-            return row_chunk_map;
+            return my_row_chunk_map;
         } else {
-            return col_chunk_map;
+            return my_col_chunk_map;
         }
     }
 
@@ -302,11 +302,11 @@ private:
         template <bool, bool, typename, typename, typename, typename> class FromSparse_,
         typename ... Args_
     >
-    std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense_internal(bool row, Index_ non_target_length, tatami::MaybeOracle<oracle_, Index_> ora, Args_&& ... args) const {
+    std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > populate_dense_internal(bool row, Index_ non_target_length, tatami::MaybeOracle<oracle_, Index_> oracle, Args_&& ... args) const {
         std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
-        tatami_chunked::SlabCacheStats stats(max_target_chunk_length, non_target_length, cache_size_in_bytes, sizeof(CachedValue_), require_minimum_cache);
+        tatami_chunked::SlabCacheStats stats(max_target_chunk_length, non_target_length, my_cache_size_in_bytes, sizeof(CachedValue_), my_require_minimum_cache);
 
         const auto& map = chunk_map(row);
         const auto& ticks = chunk_ticks(row);
@@ -318,21 +318,21 @@ private:
         mexec.run([&]() -> void {
 #endif
 
-        if (!internal_sparse) {
+        if (!my_sparse) {
             if (solo) {
                 typedef FromDense_<true, oracle_, Value_, Index_, CachedValue_> ShortDense;
-                output.reset(new ShortDense(original_seed, dense_extractor, row, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
+                output.reset(new ShortDense(my_original_seed, my_dense_extractor, row, std::move(oracle), std::forward<Args_>(args)..., ticks, map, stats));
             } else {
                 typedef FromDense_<false, oracle_, Value_, Index_, CachedValue_> ShortDense;
-                output.reset(new ShortDense(original_seed, dense_extractor, row, std::move(ora), std::forward<Args_>(args)..., ticks, map, stats));
+                output.reset(new ShortDense(my_original_seed, my_dense_extractor, row, std::move(oracle), std::forward<Args_>(args)..., ticks, map, stats));
             }
         } else {
             if (solo) {
                 typedef FromSparse_<true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
+                output.reset(new ShortSparse(my_original_seed, my_sparse_extractor, row, std::move(oracle), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
             } else {
                 typedef FromSparse_<false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-                output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
+                output.reset(new ShortSparse(my_original_seed, my_sparse_extractor, row, std::move(oracle), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats));
             }
         }
 
@@ -401,7 +401,7 @@ public:
     std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > populate_sparse_internal(
         bool row,
         Index_ non_target_length, 
-        tatami::MaybeOracle<oracle_, Index_> ora, 
+        tatami::MaybeOracle<oracle_, Index_> oracle, 
         const tatami::Options& opt, 
         Args_&& ... args) 
     const {
@@ -411,9 +411,9 @@ public:
         tatami_chunked::SlabCacheStats stats(
             max_target_chunk_length,
             non_target_length, 
-            cache_size_in_bytes, 
+            my_cache_size_in_bytes, 
             (opt.sparse_extract_index ? sizeof(CachedIndex_) : 0) + (opt.sparse_extract_value ? sizeof(CachedValue_) : 0),
-            require_minimum_cache
+            my_require_minimum_cache
         );
 
         const auto& map = chunk_map(row);
@@ -430,10 +430,10 @@ public:
 
         if (solo) {
             typedef FromSparse_<true, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-            output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
+            output.reset(new ShortSparse(my_original_seed, my_sparse_extractor, row, std::move(oracle), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
         } else {
             typedef FromSparse_<false, oracle_, Value_, Index_, CachedValue_, CachedIndex_> ShortSparse;
-            output.reset(new ShortSparse(original_seed, sparse_extractor, row, std::move(ora), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
+            output.reset(new ShortSparse(my_original_seed, my_sparse_extractor, row, std::move(oracle), std::forward<Args_>(args)..., max_target_chunk_length, ticks, map, stats, needs_value, needs_index));
         }
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
@@ -462,7 +462,7 @@ public:
 
 public:
     std::unique_ptr<tatami::MyopicSparseExtractor<Value_, Index_> > sparse(bool row, const tatami::Options& opt) const {
-        if (!internal_sparse) {
+        if (!my_sparse) {
             return std::make_unique<tatami::FullSparsifiedWrapper<false, Value_, Index_> >(dense(row, opt), secondary_dim(row), opt);
         } else {
             return populate_sparse<false>(row, false, opt); 
@@ -470,7 +470,7 @@ public:
     }
 
     std::unique_ptr<tatami::MyopicSparseExtractor<Value_, Index_> > sparse(bool row, Index_ block_start, Index_ block_length, const tatami::Options& opt) const {
-        if (!internal_sparse) {
+        if (!my_sparse) {
             return std::make_unique<tatami::BlockSparsifiedWrapper<false, Value_, Index_> >(dense(row, block_start, block_length, opt), block_start, block_length, opt);
         } else {
             return populate_sparse<false>(row, false, block_start, block_length, opt); 
@@ -478,7 +478,7 @@ public:
     }
 
     std::unique_ptr<tatami::MyopicSparseExtractor<Value_, Index_> > sparse(bool row, tatami::VectorPtr<Index_> indices_ptr, const tatami::Options& opt) const {
-        if (!internal_sparse) {
+        if (!my_sparse) {
             auto index_copy = indices_ptr;
             return std::make_unique<tatami::IndexSparsifiedWrapper<false, Value_, Index_> >(dense(row, std::move(indices_ptr), opt), std::move(index_copy), opt);
         } else {
@@ -491,7 +491,7 @@ public:
      **********************/
 public:
     std::unique_ptr<tatami::OracularSparseExtractor<Value_, Index_> > sparse(bool row, std::shared_ptr<const tatami::Oracle<Index_> > ora, const tatami::Options& opt) const {
-        if (!internal_sparse) {
+        if (!my_sparse) {
             return std::make_unique<tatami::FullSparsifiedWrapper<true, Value_, Index_> >(dense(row, std::move(ora), opt), secondary_dim(row), opt);
         } else {
             return populate_sparse<true>(row, std::move(ora), opt); 
@@ -499,7 +499,7 @@ public:
     }
 
     std::unique_ptr<tatami::OracularSparseExtractor<Value_, Index_> > sparse(bool row, std::shared_ptr<const tatami::Oracle<Index_> > ora, Index_ block_start, Index_ block_length, const tatami::Options& opt) const {
-        if (!internal_sparse) {
+        if (!my_sparse) {
             return std::make_unique<tatami::BlockSparsifiedWrapper<true, Value_, Index_> >(dense(row, std::move(ora), block_start, block_length, opt), block_start, block_length, opt);
         } else {
             return populate_sparse<true>(row, std::move(ora), block_start, block_length, opt); 
@@ -507,7 +507,7 @@ public:
     }
 
     std::unique_ptr<tatami::OracularSparseExtractor<Value_, Index_> > sparse(bool row, std::shared_ptr<const tatami::Oracle<Index_> > ora, tatami::VectorPtr<Index_> indices_ptr, const tatami::Options& opt) const {
-        if (!internal_sparse) {
+        if (!my_sparse) {
             auto index_copy = indices_ptr;
             return std::make_unique<tatami::IndexSparsifiedWrapper<true, Value_, Index_> >(dense(row, std::move(ora), std::move(indices_ptr), opt), std::move(index_copy), opt);
         } else {
