@@ -20,6 +20,14 @@ void parse_sparse_matrix_internal(
         return;
     }
 
+    Rcpp::IntegerVector svt_version(seed.slot(".svt_version"));
+    if (svt_version.size() != 1) {
+        throw std::runtime_error("'.svt_version' should be an integer scalar");
+    }
+    int version = svt_version[0];
+    int index_x = (version == 0 ? 0 : 1);
+    int value_x = (version == 0 ? 1 : 0);
+
     Rcpp::List svt(raw_svt);
     int NC = svt.size();
     bool needs_value = !value_ptrs.empty();
@@ -41,20 +49,26 @@ void parse_sparse_matrix_internal(
         }
 
         // Verify type to ensure that we're not making a view on a temporary array.
-        Rcpp::RObject first = inner[0];
-        if (first.sexp_type() != INTSXP) {
+        Rcpp::RObject raw_indices = inner[index_x];
+        if (raw_indices.sexp_type() != INTSXP) {
             auto ctype = get_class_name(seed);
-            throw std::runtime_error("first entry of each element of the 'SVT' slot in a " + ctype + " object should be an integer vector");
+            throw std::runtime_error("indices of each element of the 'SVT' slot in a " + ctype + " object should be an integer vector");
         }
-        Rcpp::IntegerVector curindices(first);
+        Rcpp::IntegerVector curindices(raw_indices);
 
-        // Check for index contents is done inside the fragmented constructor.
-        Rcpp::RObject second(inner[1]);
-        if (second.sexp_type() != desired_sexp_) {
-            auto ctype = get_class_name(seed);
-            throw std::runtime_error("second entry of an element of the 'SVT' slot in a " + ctype + " object has an unexpected type");
+        InputObject_ curvalues;
+        Rcpp::RObject raw_values(inner[value_x]);
+        if (raw_values != R_NilValue) {
+            if (raw_values.sexp_type() != desired_sexp_) {
+                auto ctype = get_class_name(seed);
+                throw std::runtime_error("value vector of an element of the 'SVT' slot in a " + ctype + " object has an unexpected type");
+            }
+            curvalues = InputObject_(raw_values);
+        } else {
+            curvalues = InputObject_(curindices.size());
+            std::fill(curvalues.begin(), curvalues.end(), 1);
         }
-        InputObject_ curvalues(second);
+
         size_t nnz = curvalues.size();
         if (nnz != static_cast<size_t>(curindices.size())) {
             auto ctype = get_class_name(seed);
