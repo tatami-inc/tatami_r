@@ -41,7 +41,9 @@ struct UnknownMatrixOptions {
  *
  * Pull data out of an unknown matrix-like object by calling methods from the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package via **Rcpp**.
  * This effectively extends **tatami** to work with any abstract numeric matrix that might be consumed by an R function.
- * Note that this class should only be constructed in a serial context, and some additional effort is required to deal with parallelization of its methods; see `executor()` for more details.
+ * 
+ * Instances of class should only be constructed and destroyed in a serial context, specifically on the same thread running R itself. 
+ * Calls to its methods may be parallelized but some additional effort is required to serialize calls to the R API; see `executor()` for more details.
  */
 template<typename Value_, typename Index_, typename CachedValue_ = Value_, typename CachedIndex_ = Index_>
 class UnknownMatrix : public tatami::Matrix<Value_, Index_> {
