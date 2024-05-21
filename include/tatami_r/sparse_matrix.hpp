@@ -55,31 +55,36 @@ void parse_sparse_matrix_internal(
             throw std::runtime_error("indices of each element of the 'SVT' slot in a " + ctype + " object should be an integer vector");
         }
         Rcpp::IntegerVector curindices(raw_indices);
+        size_t nnz = curindices.size();
 
         InputObject_ curvalues;
         Rcpp::RObject raw_values(inner[value_x]);
-        if (raw_values != R_NilValue) {
+        bool has_values = raw_values != R_NilValue;
+        if (has_values) {
             if (raw_values.sexp_type() != desired_sexp_) {
                 auto ctype = get_class_name(seed);
                 throw std::runtime_error("value vector of an element of the 'SVT' slot in a " + ctype + " object has an unexpected type");
             }
             curvalues = InputObject_(raw_values);
-        } else {
-            curvalues = InputObject_(curindices.size());
-            std::fill(curvalues.begin(), curvalues.end(), 1);
-        }
 
-        size_t nnz = curvalues.size();
-        if (nnz != static_cast<size_t>(curindices.size())) {
-            auto ctype = get_class_name(seed);
-            throw std::runtime_error("both vectors of an element of the 'SVT' slot in a " + ctype + " object should have the same length");
+            if (nnz != static_cast<size_t>(curvalues.size())) {
+                auto ctype = get_class_name(seed);
+                throw std::runtime_error("both vectors of an element of the 'SVT' slot in a " + ctype + " object should have the same length");
+            }
         }
 
         if (row) {
             if (needs_value) {
-                for (size_t i = 0; i < nnz; ++i) {
-                    auto ix = curindices[i];
-                    value_ptrs[ix][counts[ix]] = curvalues[i];
+                if (has_values) {
+                    for (size_t i = 0; i < nnz; ++i) {
+                        auto ix = curindices[i];
+                        value_ptrs[ix][counts[ix]] = curvalues[i];
+                    }
+                } else {
+                    for (size_t i = 0; i < nnz; ++i) {
+                        auto ix = curindices[i];
+                        value_ptrs[ix][counts[ix]] = 1;
+                    }
                 }
             }
             if (needs_index) {
@@ -94,7 +99,11 @@ void parse_sparse_matrix_internal(
 
         } else {
             if (needs_value) {
-                std::copy(curvalues.begin(), curvalues.end(), value_ptrs[c]);
+                if (has_values) {
+                    std::copy(curvalues.begin(), curvalues.end(), value_ptrs[c]);
+                } else {
+                    std::fill_n(value_ptrs[c], nnz, 1);
+                }
             }
             if (needs_index) {
                 std::copy(curindices.begin(), curindices.end(), index_ptrs[c]);
