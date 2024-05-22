@@ -908,6 +908,7 @@ WARN_LOGFILE           =
 
 INPUT                  = ../include/tatami_r/tatami_r.hpp \
                          ../include/tatami_r/parallelize.hpp \
+                         ../include/tatami_r/sparse_matrix.hpp \
                          ../include/tatami_r/UnknownMatrix.hpp \
                          ../README.md parallel.md
 
