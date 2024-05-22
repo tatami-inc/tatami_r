@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(tatami_r
-    VERSION 1.0.0
+    VERSION 2.0.0
     DESCRIPTION "tatami bindings for abstract R matrices"
     LANGUAGES CXX)
 
@@ -14,8 +14,9 @@ option(TATAMI_R_FETCH_EXTERN "Automatically fetch tatami_r's external dependenci
 if(TATAMI_R_FETCH_EXTERN)
     add_subdirectory(extern)
 else()
-    find_package(tatami_tatami CONFIG REQUIRED)
-    find_package(tatami_manticore CONFIG REQUIRED)
+    find_package(tatami_tatami 3.0.0 CONFIG REQUIRED)
+    find_package(tatami_tatami_chunked 2.0.0 CONFIG REQUIRED)
+    find_package(tatami_manticore 1.0.0 CONFIG REQUIRED)
 endif()
 
 target_link_libraries(tatami_r INTERFACE tatami::tatami tatami::tatami_chunked tatami::manticore)
@@ -47,5 +48,10 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/tatami_tatami_rConfig.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tatami_tatami_r)
 
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/tatami_tatami_rConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion)
+
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/tatami_tatami_rConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/tatami_tatami_rConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tatami_tatami_r)
