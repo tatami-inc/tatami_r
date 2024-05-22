@@ -23,7 +23,7 @@ var searchData=
   ['delayedunaryisometricasinh_20',['DelayedUnaryIsometricAsinh',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricAsinh.html',1,'tatami']]],
   ['delayedunaryisometricatan_21',['DelayedUnaryIsometricAtan',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricAtan.html',1,'tatami']]],
   ['delayedunaryisometricatanh_22',['DelayedUnaryIsometricAtanh',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricAtanh.html',1,'tatami']]],
-  ['delayedunaryisometricbooleannotoperation_23',['DelayedUnaryIsometricBooleanNotOperation',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricBooleanNotOperation.html',1,'tatami']]],
+  ['delayedunaryisometricbooleannot_23',['DelayedUnaryIsometricBooleanNot',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricBooleanNot.html',1,'tatami']]],
   ['delayedunaryisometricbooleanscalar_24',['DelayedUnaryIsometricBooleanScalar',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricBooleanScalar.html',1,'tatami']]],
   ['delayedunaryisometricbooleanvector_25',['DelayedUnaryIsometricBooleanVector',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricBooleanVector.html',1,'tatami']]],
   ['delayedunaryisometricceiling_26',['DelayedUnaryIsometricCeiling',['https://tatami-inc.github.io/tatami/classtatami_1_1DelayedUnaryIsometricCeiling.html',1,'tatami']]],
