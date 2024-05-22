@@ -7,6 +7,12 @@
     <namespace>tatami_r</namespace>
   </compound>
   <compound kind="file">
+    <name>sparse_matrix.hpp</name>
+    <path>/github/workspace/include/tatami_r/</path>
+    <filename>sparse__matrix_8hpp.html</filename>
+    <namespace>tatami_r</namespace>
+  </compound>
+  <compound kind="file">
     <name>tatami_r.hpp</name>
     <path>/github/workspace/include/tatami_r/</path>
     <filename>tatami__r_8hpp.html</filename>
@@ -72,6 +78,13 @@
       <anchorfile>namespacetatami__r.html</anchorfile>
       <anchor>aea54ff1c1c6a412b7c32f15814c0109e</anchor>
       <arglist>(Function_ fun, size_t njobs, size_t nthreads)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>parse_SVT_SparseMatrix</name>
+      <anchorfile>namespacetatami__r.html</anchorfile>
+      <anchor>aae221ab80206d8ece556562f89c77089</anchor>
+      <arglist>(Rcpp::RObject matrix, Function_ fun)</arglist>
     </member>
   </compound>
   <compound kind="page">

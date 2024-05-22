@@ -112,6 +112,9 @@ Functions</h2></td></tr>
 <tr class="memitem:aea54ff1c1c6a412b7c32f15814c0109e" id="r_aea54ff1c1c6a412b7c32f15814c0109e"><td class="memTemplParams" colspan="2">template&lt;class Function_ &gt; </td></tr>
 <tr class="memitem:aea54ff1c1c6a412b7c32f15814c0109e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#aea54ff1c1c6a412b7c32f15814c0109e">parallelize</a> (Function_ fun, size_t njobs, size_t nthreads)</td></tr>
 <tr class="separator:aea54ff1c1c6a412b7c32f15814c0109e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae221ab80206d8ece556562f89c77089" id="r_aae221ab80206d8ece556562f89c77089"><td class="memTemplParams" colspan="2">template&lt;class Function_ &gt; </td></tr>
+<tr class="memitem:aae221ab80206d8ece556562f89c77089"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#aae221ab80206d8ece556562f89c77089">parse_SVT_SparseMatrix</a> (Rcpp::RObject matrix, Function_ fun)</td></tr>
+<tr class="separator:aae221ab80206d8ece556562f89c77089"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><b>tatami</b> bindings for arbitrary R matrices. </p>
@@ -189,6 +192,49 @@ template&lt;class Function_ &gt; </div>
 </dl>
 <p>The series of integers from 0 to <code>njobs - 1</code> is split into <code>nthreads</code> contiguous ranges. Each range is used as input to <code>fun</code> within the corresponding thread. It is assumed that the execution of any given job is independent of the next.</p>
 <p>This function is only available if <code>TATAMI_R_PARALLELIZE_UNKNOWN</code> is defined. </p>
+
+</div>
+</div>
+<a id="aae221ab80206d8ece556562f89c77089" name="aae221ab80206d8ece556562f89c77089"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae221ab80206d8ece556562f89c77089">&#9670;&#160;</a></span>parse_SVT_SparseMatrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Function_ &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void tatami_r::parse_SVT_SparseMatrix </td>
+          <td>(</td>
+          <td class="paramtype">Rcpp::RObject</td>          <td class="paramname"><span class="paramname"><em>matrix</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Function_</td>          <td class="paramname"><span class="paramname"><em>fun</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Parse the contents of a <code>SVT_SparseMatrix</code> from the <b>DelayedArray</b> package. This accounts for different versions of the class definition, different types of the values, and the presence of lacunar leaf nodes.</p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Function_</td><td>Function to be applied at each leaf node.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">matrix</td><td>The <code>SVT_SparseMatrix</code> object. </td></tr>
+    <tr><td class="paramname">fun</td><td>Function to apply to each leaf node, accepting four arguments:<ol type="1">
+<li><code>c</code>, an integer specifying the index of the leaf node, i.e., the column index.</li>
+<li><code>indices</code>, an <code>Rcpp::IntegerVector</code> containing the sorted, zero-based indices of the structural non-zero elements in this node (i.e., column).</li>
+<li><code>all_ones</code>, a boolean indicating whether all values in this node/column are equal to 1.</li>
+<li><code>values</code>, an <code>Rcpp::IntegerVector</code>, <code>Rcpp::LogicalVector</code> or <code>Rcpp::NumericVector</code> containing the values of the structural non-zeros. This should be of the same length as <code>indices</code>. It should be ignored if <code>all_ones = true</code>.</li>
+</ol>
+The return value of this function is ignored. Note that <code>fun</code> may not be called for all <code>c</code> - if leaf nodes do not contain any data, they will be skipped. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
