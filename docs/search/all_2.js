@@ -15,12 +15,15 @@ var searchData=
   ['consecutive_5fextractor_2ehpp_12',['consecutive_extractor.hpp',['https://tatami-inc.github.io/tatami/consecutive__extractor_8hpp.html',1,'']]],
   ['consecutiveoracle_13',['ConsecutiveOracle',['https://tatami-inc.github.io/tatami/classtatami_1_1ConsecutiveOracle.html',1,'tatami::ConsecutiveOracle&lt; typename Index_ &gt;'],['https://tatami-inc.github.io/tatami/classtatami_1_1ConsecutiveOracle.html#ab6d9e6d767d2c9705d927be501abfe9d',1,'tatami::ConsecutiveOracle::ConsecutiveOracle()']]],
   ['consecutiveoracle_2ehpp_14',['ConsecutiveOracle.hpp',['https://tatami-inc.github.io/tatami/ConsecutiveOracle_8hpp.html',1,'']]],
-  ['convert_5fto_5fcompressed_5fsparse_15',['convert_to_compressed_sparse',['https://tatami-inc.github.io/tatami/namespacetatami.html#a55a5de2537fc815c895528fea8a717f6',1,'tatami']]],
-  ['convert_5fto_5fcompressed_5fsparse_2ehpp_16',['convert_to_compressed_sparse.hpp',['https://tatami-inc.github.io/tatami/convert__to__compressed__sparse_8hpp.html',1,'']]],
-  ['convert_5fto_5fdense_17',['convert_to_dense',['https://tatami-inc.github.io/tatami/namespacetatami.html#aab32e148c90b65402f17c7d835649a4b',1,'tatami::convert_to_dense(const Matrix&lt; InputValue_, InputIndex_ &gt; *matrix, bool row_major, StoredValue_ *store, int threads=1)'],['https://tatami-inc.github.io/tatami/namespacetatami.html#a085f9235a7b8b95611c0e9f6de860c5a',1,'tatami::convert_to_dense(const Matrix&lt; InputValue_, InputIndex_ &gt; *matrix, bool row_major, int threads=1)']]],
-  ['convert_5fto_5fdense_2ehpp_18',['convert_to_dense.hpp',['https://tatami-inc.github.io/tatami/convert__to__dense_8hpp.html',1,'']]],
-  ['convert_5fto_5ffragmented_5fsparse_19',['convert_to_fragmented_sparse',['https://tatami-inc.github.io/tatami/namespacetatami.html#a2a4c4e213ecc4225882b3cf8b21600e0',1,'tatami']]],
-  ['convert_5fto_5ffragmented_5fsparse_2ehpp_20',['convert_to_fragmented_sparse.hpp',['https://tatami-inc.github.io/tatami/convert__to__fragmented__sparse_8hpp.html',1,'']]],
-  ['copy_2ehpp_21',['copy.hpp',['https://tatami-inc.github.io/tatami/copy_8hpp.html',1,'']]],
-  ['copy_5fn_22',['copy_n',['https://tatami-inc.github.io/tatami/namespacetatami.html#ab52a806e3f13a68741a9e1f77dccab14',1,'tatami']]]
+  ['constantmatrix_15',['ConstantMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1ConstantMatrix.html',1,'tatami::ConstantMatrix&lt; typename Value_, typename Index_ &gt;'],['https://tatami-inc.github.io/tatami/classtatami_1_1ConstantMatrix.html#ac51afe22e54a204c0b2b8a80abde30cc',1,'tatami::ConstantMatrix::ConstantMatrix()']]],
+  ['constantmatrix_2ehpp_16',['ConstantMatrix.hpp',['https://tatami-inc.github.io/tatami/ConstantMatrix_8hpp.html',1,'']]],
+  ['convert_5fto_5fcompressed_5fsparse_17',['convert_to_compressed_sparse',['https://tatami-inc.github.io/tatami/namespacetatami.html#a55a5de2537fc815c895528fea8a717f6',1,'tatami']]],
+  ['convert_5fto_5fcompressed_5fsparse_2ehpp_18',['convert_to_compressed_sparse.hpp',['https://tatami-inc.github.io/tatami/convert__to__compressed__sparse_8hpp.html',1,'']]],
+  ['convert_5fto_5fdense_19',['convert_to_dense',['https://tatami-inc.github.io/tatami/namespacetatami.html#aab32e148c90b65402f17c7d835649a4b',1,'tatami::convert_to_dense(const Matrix&lt; InputValue_, InputIndex_ &gt; *matrix, bool row_major, StoredValue_ *store, int threads=1)'],['https://tatami-inc.github.io/tatami/namespacetatami.html#a085f9235a7b8b95611c0e9f6de860c5a',1,'tatami::convert_to_dense(const Matrix&lt; InputValue_, InputIndex_ &gt; *matrix, bool row_major, int threads=1)']]],
+  ['convert_5fto_5fdense_2ehpp_20',['convert_to_dense.hpp',['https://tatami-inc.github.io/tatami/convert__to__dense_8hpp.html',1,'']]],
+  ['convert_5fto_5ffragmented_5fsparse_21',['convert_to_fragmented_sparse',['https://tatami-inc.github.io/tatami/namespacetatami.html#a2a4c4e213ecc4225882b3cf8b21600e0',1,'tatami']]],
+  ['convert_5fto_5ffragmented_5fsparse_2ehpp_22',['convert_to_fragmented_sparse.hpp',['https://tatami-inc.github.io/tatami/convert__to__fragmented__sparse_8hpp.html',1,'']]],
+  ['copy_2ehpp_23',['copy.hpp',['https://tatami-inc.github.io/tatami/copy_8hpp.html',1,'']]],
+  ['copy_5fn_24',['copy_n',['https://tatami-inc.github.io/tatami/namespacetatami.html#ab52a806e3f13a68741a9e1f77dccab14',1,'tatami']]],
+  ['count_5fcompressed_5fsparse_5fnon_5fzeros_25',['count_compressed_sparse_non_zeros',['https://tatami-inc.github.io/tatami/namespacetatami.html#aedacbafb3041d3f5cafb2e87dacc1b7c',1,'tatami']]]
 ];

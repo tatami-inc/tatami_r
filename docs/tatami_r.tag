@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
-<tagfile doxygen_version="1.11.0">
+<tagfile doxygen_version="1.12.0">
   <compound kind="file">
     <name>parallelize.hpp</name>
     <path>/github/workspace/include/tatami_r/</path>
@@ -76,8 +76,8 @@
       <type>void</type>
       <name>parallelize</name>
       <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>aea54ff1c1c6a412b7c32f15814c0109e</anchor>
-      <arglist>(Function_ fun, size_t njobs, size_t nthreads)</arglist>
+      <anchor>a568468e7f0930d3abe1493cd0164b0aa</anchor>
+      <arglist>(Function_ fun, Index_ njobs, int nthreads)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
