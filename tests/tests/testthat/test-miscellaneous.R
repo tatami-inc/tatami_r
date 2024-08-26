@@ -9,6 +9,19 @@ test_that("works correctly with the default cache size", {
     expect_identical(raticate.tests::num_columns(z), 20L)
 })
 
+# parallelization handles edge cases correctly
+{
+    library(Matrix)
+    y <- Matrix(runif(1), 1, 1) # only one job in either dimension.
+    parallel_test_suite(y, 0.1)
+
+    y <- Matrix(runif(0), 0, 0) # no jobs in either dimension.
+    parallel_test_suite(y, 0.1)
+
+    y <- Matrix(runif(4), 2, 2) # fewer jobs than threads (for workers = 3).
+    parallel_test_suite(y, 0.1)
+}
+
 test_that("Behaves correctly with R-side errors", {
     setClass("MyFailMatrix", contains="dgeMatrix")
     setMethod("extract_array", "MyFailMatrix", function(x, index) stop("HEY!"))

@@ -40,57 +40,63 @@ inline manticore::Executor& executor() {
 
 /**
  * @tparam Function_ Function to be executed.
+ * @tparam Index_ Integer type for the job indices.
  *
- * @param njobs Number of jobs to be executed.
  * @param fun Function to run in each thread.
  * This is a lambda that should accept three arguments:
- * - Integer containing the thread ID
+ * - Integer containing the thread ID.
  * - Integer specifying the index of the first job to be executed in a thread.
  * - Integer specifying the number of jobs to be executed in a thread.
+ * @param njobs Number of jobs to be executed.
  * @param nthreads Number of threads to parallelize over.
  *
+ * This function is a drop-in replacement for `tatami::parallelize()`.
  * The series of integers from 0 to `njobs - 1` is split into `nthreads` contiguous ranges.
  * Each range is used as input to `fun` within the corresponding thread.
  * It is assumed that the execution of any given job is independent of the next.
  *
  * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
  */ 
-template<class Function_>
-void parallelize(Function_ fun, size_t njobs, size_t nthreads) {
-    if (nthreads == 1 || njobs == 1) {
+template<class Function_, class Index_>
+void parallelize(Function_ fun, Index_ njobs, int nthreads) {
+    if (njobs == 0) {
+        return;
+    }
+
+    if (nthreads <= 1 || njobs == 1) {
         fun(0, 0, njobs);
         return;
+    }
+
+    Index_ jobs_per_worker = njobs / nthreads;
+    int remainder = njobs % nthreads;
+    if (jobs_per_worker == 0) {
+        jobs_per_worker = 1; 
+        remainder = 0;
+        nthreads = njobs;
     }
 
     auto& mexec = executor();
     mexec.initialize(nthreads, "failed to execute R command");
 
-    size_t jobs_per_worker = (njobs / nthreads) + (njobs % nthreads > 0);
-    size_t start = 0;
-
     std::vector<std::thread> runners;
     runners.reserve(nthreads);
-    std::vector<std::string> errors(nthreads);
+    std::vector<std::exception_ptr> errors(nthreads);
 
-    for (size_t w = 0; w < nthreads; ++w) {
-        if (start == njobs) {
-            mexec.finish_thread(false);
-            continue;
-        }
-        size_t end = start + std::min(njobs - start, jobs_per_worker);
+    Index_ start = 0;
+    for (int w = 0; w < nthreads; ++w) {
+        Index_ length = jobs_per_worker + (w < remainder);
 
-        runners.emplace_back([&](size_t id, size_t s, size_t l) -> void {
+        runners.emplace_back([&](int id, Index_ s, Index_ l) {
             try {
                 fun(id, s, l);
-            } catch (std::exception& x) {
-                // No throw here, we need to make sure we mark the
-                // thread as being completed so that the main loop can quit.
-                errors[id] = x.what();
+            } catch (...) {
+                errors[id] = std::current_exception();
             }
             mexec.finish_thread();
-        }, w, start, end - start);
+        }, w, start, length);
 
-        start = end;
+        start += length;
     }
 
     mexec.listen();
@@ -98,9 +104,9 @@ void parallelize(Function_ fun, size_t njobs, size_t nthreads) {
         x.join();
     }
 
-    for (auto err : errors) {
-        if (!err.empty()) {
-            throw std::runtime_error(err);
+    for (const auto& err : errors) {
+        if (err) {
+            std::rethrow_exception(err);
         }
     }
 }
