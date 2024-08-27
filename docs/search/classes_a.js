@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['somenumericarray_0',['SomeNumericArray',['https://tatami-inc.github.io/tatami/classtatami_1_1SomeNumericArray.html',1,'tatami']]],
-  ['sparserange_1',['SparseRange',['https://tatami-inc.github.io/tatami/structtatami_1_1SparseRange.html',1,'tatami']]]
+  ['pseudooraculardenseextractor_0',['PseudoOracularDenseExtractor',['https://tatami-inc.github.io/tatami/structtatami_1_1PseudoOracularDenseExtractor.html',1,'tatami']]],
+  ['pseudooracularsparseextractor_1',['PseudoOracularSparseExtractor',['https://tatami-inc.github.io/tatami/structtatami_1_1PseudoOracularSparseExtractor.html',1,'tatami']]]
 ];

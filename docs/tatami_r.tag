@@ -76,8 +76,8 @@
       <type>void</type>
       <name>parallelize</name>
       <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>a568468e7f0930d3abe1493cd0164b0aa</anchor>
-      <arglist>(Function_ fun, Index_ njobs, int nthreads)</arglist>
+      <anchor>a7be9ffc5361622fa789ac269e92aa2f6</anchor>
+      <arglist>(Function_ fun, Index_ ntasks, int nthreads)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
