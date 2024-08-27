@@ -67,7 +67,7 @@ this is all handled by `tatami_r::parallelize()` itself, so only `run()` needs t
 ```cpp
 auto& mexec = tatami_r::executor();
 
-tatami_r::parallelize([&](size_t thread_id, int start, int len) -> void {
+tatami_r::parallelize([&](int thread_id, int start, int len) -> void {
     mexec.run([&]() -> void {
         // Do something that touches the R API.
     });
@@ -118,6 +118,10 @@ Check out the implementation of `tatami_r::parallelize()` for more details.
 
 ## Further comments
 
-Note that construction of the `UnknownMatrix` must always be performed on the main thread.
+Construction of the `UnknownMatrix` must always be performed on the main thread.
 This is because construction of the unknown fallback involves some calls into the R runtime; these are currently not protected from execution in worker contexts.
 Similarly, any **Rcpp**-based allocations - even default construction of classes like `Rcpp::NumericVector` - should be done in the main thread, just in case.
+
+`manticore::Executor::run()` is only required if the code can only be executed on the main thread.
+For code that must be serial but does not need to be on the main thread, we can just use a standard synchronization primitives (e.g., `<mutex>`) inside `tatami_r::parallelize()` calls.
+This works correctly as `tatami_r::parallelize()` uses `<thread>` under the hood.

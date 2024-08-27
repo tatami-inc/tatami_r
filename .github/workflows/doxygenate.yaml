@@ -21,6 +21,11 @@ jobs:
       with:
         args: -O docs/tatami.tag https://tatami-inc.github.io/tatami/tatami.tag
 
+    - name: Get the manticore tagfile
+      uses: wei/wget@v1
+      with:
+        args: -O docs/manticore.tag https://tatami-inc.github.io/manticore/manticore.tag
+
     - name: Doxygen Action
       uses: mattnotmitt/doxygen-action@v1.1.0
       with:
