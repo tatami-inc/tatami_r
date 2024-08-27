@@ -1,5 +1,8 @@
 # Read R objects via tatami 
 
+![Unit tests](https://github.com/tatami-inc/tatami_r/actions/workflows/run-tests.yaml/badge.svg)
+![Documentation](https://github.com/tatami-inc/tatami_r/actions/workflows/doxygenate.yaml/badge.svg)
+
 ## Overview
 
 **tatami_r** is an header-only library for reading abstract R matrices in [**tatami**](https://github.com/tatami-inc/tatami).
@@ -72,13 +75,14 @@ Check out the [comments about safe parallelization](docs/parallel.md) for more g
 This is most easily done by modifying the package `DESCRIPTION` with:
 
 ```
-LinkingTo: beachmat, Rcpp
+LinkingTo: beachmat, assorthead, Rcpp
 ```
 
-which will automatically use the vendored copies of **tatami_r** (and **tatami**) inside the [**beachmat**](http://bioconductor.org/packages/beachmat) package.
+which will automatically use the vendored copies of **tatami_r** (and **tatami**) inside the [**assorthead**](http://bioconductor.org/packages/assorthead) package,
+along with some of pre-configured macro definitions for safe parallelization in [**beachmat**](https://bioconductor.org/packages/beachmat)'s `Rtatami.h` header.
 Note that C++17 is required.
 
-If **beachmat** cannot be used, then the R package developer will need to copy the **tatami_r** and **tatami** `include/` directories into the package's `inst/include`,
+If **assorthead** or **beachmat** cannot be used, the R package developer will need to copy the **tatami_r** and **tatami** `include/` directories into the package's `inst/include`,
 and then add a `Makevars` file like:
 
 ```
