@@ -90,6 +90,7 @@ $(function(){ initResizable(false); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md__2github_2workspace_2README"></a></p>
+<p><img src="https://github.com/tatami-inc/tatami_r/actions/workflows/run-tests.yaml/badge.svg" alt="Unit tests" style="pointer-events: none;" class="inline"/> <img src="https://github.com/tatami-inc/tatami_r/actions/workflows/doxygenate.yaml/badge.svg" alt="Documentation" style="pointer-events: none;" class="inline"/></p>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Overview</h1>
 <p><b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> is an header-only library for reading abstract R matrices in <a href="https://github.com/tatami-inc/tatami"><b>tatami</b></a>. This allows <b>tatami</b>-based C++ functions to accept and operate on any matrix-like R object containing numeric data. Usage is as simple as:</p>
@@ -135,9 +136,9 @@ Enabling parallelization</h1>
 <h2><a class="anchor" id="autotoc_md4"></a>
 Deployment</h2>
 <p><b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> is intended to be compiled with other relevant C++ code inside an R package using <a href="https://www.rcpp.org/"><b>Rcpp</b></a>. This is most easily done by modifying the package <code>DESCRIPTION</code> with:</p>
-<div class="fragment"><div class="line">LinkingTo: beachmat, Rcpp</div>
-</div><!-- fragment --><p>which will automatically use the vendored copies of <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> (and <b>tatami</b>) inside the <a href="http://bioconductor.org/packages/beachmat"><b>beachmat</b></a> package. Note that C++17 is required.</p>
-<p>If <b>beachmat</b> cannot be used, then the R package developer will need to copy the <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> and <b>tatami</b> <code>include/</code> directories into the package's <code>inst/include</code>, and then add a <code>Makevars</code> file like:</p>
+<div class="fragment"><div class="line">LinkingTo: beachmat, assorthead, Rcpp</div>
+</div><!-- fragment --><p>which will automatically use the vendored copies of <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> (and <b>tatami</b>) inside the <a href="http://bioconductor.org/packages/assorthead"><b>assorthead</b></a> package, along with some of pre-configured macro definitions for safe parallelization in <a href="https://bioconductor.org/packages/beachmat"><b>beachmat</b></a>'s <code>Rtatami.h</code> header. Note that C++17 is required.</p>
+<p>If <b>assorthead</b> or <b>beachmat</b> cannot be used, the R package developer will need to copy the <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> and <b>tatami</b> <code>include/</code> directories into the package's <code>inst/include</code>, and then add a <code>Makevars</code> file like:</p>
 <div class="fragment"><div class="line">PKG_CPPFLAGS = -I../inst/include</div>
 </div><!-- fragment --> </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>

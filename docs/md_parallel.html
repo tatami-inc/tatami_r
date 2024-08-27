@@ -129,7 +129,7 @@ Using the main thread executor</h1>
 <p>We can perform our own calls to the R API inside each worker by wrapping it in the <b>manticore</b> executor. This will execute the user-provided function on the main thread before returning control to the worker. Developers do not have to do the usual <b>manticore</b> dance of <code>initialize()</code>, <code>listen()</code>, <code>finish_thread()</code>, and so on; this is all handled by <code><a class="el" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize()</a></code> itself, so only <code>run()</code> needs to be specified.</p>
 <div class="fragment"><div class="line"><span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a>();</div>
 <div class="line"> </div>
-<div class="line"><a class="code hl_function" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize</a>([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line"><a class="code hl_function" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize</a>([&amp;](<span class="keywordtype">int</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line">    mexec.run([&amp;]() -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line">        <span class="comment">// Do something that touches the R API.</span></div>
 <div class="line">    });</div>
@@ -169,7 +169,8 @@ Under the hood</h1>
 </div><!-- fragment --><p>Check out the implementation of <code><a class="el" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize()</a></code> for more details.</p>
 <h1><a class="anchor" id="autotoc_md10"></a>
 Further comments</h1>
-<p>Note that construction of the <code>UnknownMatrix</code> must always be performed on the main thread. This is because construction of the unknown fallback involves some calls into the R runtime; these are currently not protected from execution in worker contexts. Similarly, any <b>Rcpp</b>-based allocations - even default construction of classes like <code>Rcpp::NumericVector</code> - should be done in the main thread, just in case. </p>
+<p>Construction of the <code>UnknownMatrix</code> must always be performed on the main thread. This is because construction of the unknown fallback involves some calls into the R runtime; these are currently not protected from execution in worker contexts. Similarly, any <b>Rcpp</b>-based allocations - even default construction of classes like <code>Rcpp::NumericVector</code> - should be done in the main thread, just in case.</p>
+<p><code><a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html#a3bc19ec43cefc2e0b77f413a47c0e090">manticore::Executor::run()</a></code> is only required if the code can only be executed on the main thread. For code that must be serial but does not need to be on the main thread, we can just use a standard synchronization primitives (e.g., <code>&lt;mutex&gt;</code>) inside <code><a class="el" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize()</a></code> calls. This works correctly as <code><a class="el" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize()</a></code> uses <code>&lt;thread&gt;</code> under the hood. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- start footer part -->
