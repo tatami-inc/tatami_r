@@ -159,7 +159,6 @@ void parse_sparse_matrix(
                         value_ptrs[ix][counts[ix]] = 1;
                     }
                 } else {
-                    const cvptr = 
                     SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
                         auto ix = curindices[i];
