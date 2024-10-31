@@ -372,6 +372,7 @@ public:
             std::move(oracle),
             [&]() {
                 Rcpp::IntegerVector output(indices_ptr->begin(), indices_ptr->end());
+                SUBPAR_VECTORIZABLE
                 for (auto& i : output) {
                     ++i;
                 }

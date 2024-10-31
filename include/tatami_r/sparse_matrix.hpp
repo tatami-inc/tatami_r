@@ -3,6 +3,7 @@
 
 #include "utils.hpp"
 #include "tatami/tatami.hpp"
+#include "subpar/subpar.hpp"
 #include <type_traits>
 
 /**
@@ -152,23 +153,29 @@ void parse_sparse_matrix(
         if (row) {
             if (needs_value) {
                 if (all_ones) {
+                    SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
                         auto ix = curindices[i];
                         value_ptrs[ix][counts[ix]] = 1;
                     }
                 } else {
+                    SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
                         auto ix = curindices[i];
                         value_ptrs[ix][counts[ix]] = curvalues[i];
                     }
                 }
             }
+
             if (needs_index) {
+                SUBPAR_VECTORIZABLE
                 for (size_t i = 0; i < nnz; ++i) {
                     auto ix = curindices[i];
                     index_ptrs[ix][counts[ix]] = c;
                 }
             }
+
+            SUBPAR_VECTORIZABLE
             for (size_t i = 0; i < nnz; ++i) {
                 ++(counts[curindices[i]]);
             }
