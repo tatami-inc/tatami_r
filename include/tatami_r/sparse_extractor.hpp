@@ -452,10 +452,13 @@ public:
             row,
             std::move(oracle),
             [&]() {
-                Rcpp::IntegerVector output(indices_ptr->begin(), indices_ptr->end());
+                const auto& indices = *indices_ptr;
+                size_t n = indices.size();
+                Rcpp::IntegerVector output(n);
+                auto optr = static_cast<int*>(output.begin());
                 SUBPAR_VECTORIZABLE
-                for (auto& i : output) {
-                    ++i;
+                for (size_t i = 0; i < n; ++i) {
+                    optr[i] = indices[i] + 1;
                 }
                 return output;
             }(),
@@ -626,10 +629,13 @@ public:
             row,
             std::move(oracle),
             [&]() {
-                Rcpp::IntegerVector output(idx_ptr->begin(), idx_ptr->end());
+                const auto& indices = *idx_ptr;
+                size_t n = indices.size();
+                Rcpp::IntegerVector output(n);
+                auto optr = static_cast<int*>(output.begin());
                 SUBPAR_VECTORIZABLE
-                for (auto& i : output) {
-                    ++i;
+                for (size_t i = 0; i < n; ++i) {
+                    optr[i] = indices[i] + 1;
                 }
                 return output;
             }(),
