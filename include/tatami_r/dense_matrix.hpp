@@ -2,6 +2,7 @@
 #define TATAMI_R_DENSE_MATRIX_HPP
 
 #include "tatami/tatami.hpp"
+#include "subpar/subpar.hpp"
 #include <algorithm>
 
 namespace tatami_r { 
@@ -16,13 +17,11 @@ void parse_dense_matrix_internal(const InputObject_& data, size_t data_start_row
         // input, so we just conceptually transpose it.
         tatami::transpose(input, cache_num_cols, cache_num_rows, data_num_rows, cache, cache_num_cols);
     } else {
-        // Use an offset so that we don't accidentally create a pointer past
+        // Use offsets so that we don't accidentally create a pointer past
         // the end of the array at the final loop iteration (which is UB).
-        size_t in_offset = 0;
+        SUBPAR_VECTORIZABLE
         for (size_t c = 0; c < cache_num_cols; ++c) {
-            std::copy_n(input + in_offset, cache_num_rows, cache);
-            in_offset += data_num_rows;
-            cache += cache_num_rows;
+            std::copy_n(input + c * data_num_rows, cache_num_rows, cache + c * cache_num_rows);
         }
     }
 }

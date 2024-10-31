@@ -4,6 +4,8 @@
 #include "Rcpp.h"
 #include "tatami/tatami.hpp"
 #include "tatami_chunked/tatami_chunked.hpp"
+#include "subpar/subpar.hpp"
+
 #include "sparse_matrix.hpp"
 
 #include <vector>
@@ -418,6 +420,7 @@ public:
 
         if (my_needs_index) {
             auto iptr = slab.indices[offset];
+            SUBPAR_VECTORIZABLE
             for (Index_ i = 0; i < output.number; ++i) {
                 index_buffer[i] = static_cast<Index_>(iptr[i]) + my_block_start;
             }
@@ -450,6 +453,7 @@ public:
             std::move(oracle),
             [&]() {
                 Rcpp::IntegerVector output(indices_ptr->begin(), indices_ptr->end());
+                SUBPAR_VECTORIZABLE
                 for (auto& i : output) {
                     ++i;
                 }
@@ -487,6 +491,7 @@ public:
         if (my_needs_index) {
             auto iptr = slab.indices[offset];
             const auto& indices = *my_indices_ptr;
+            SUBPAR_VECTORIZABLE
             for (Index_ i = 0; i < output.number; ++i) {
                 index_buffer[i] = indices[iptr[i]];
             }
@@ -506,8 +511,9 @@ const Value_* densify(const Slab_& slab, Index_ offset, size_t non_target_length
     auto vptr = slab.values[offset];
     auto iptr = slab.indices[offset];
     std::fill_n(buffer, non_target_length, 0);
-    for (Index_ i = 0, end = slab.number[offset]; i < end; ++i, ++vptr, ++iptr) {
-        buffer[*iptr] = *vptr;
+    SUBPAR_VECTORIZABLE
+    for (Index_ i = 0, end = slab.number[offset]; i < end; ++i) {
+        buffer[iptr[i]] = vptr[i];
     }
     return buffer;
 }
@@ -621,6 +627,7 @@ public:
             std::move(oracle),
             [&]() {
                 Rcpp::IntegerVector output(idx_ptr->begin(), idx_ptr->end());
+                SUBPAR_VECTORIZABLE
                 for (auto& i : output) {
                     ++i;
                 }
