@@ -151,23 +151,23 @@ void parse_sparse_matrix(
         // Note that non-empty value_ptrs and index_ptrs may be longer than the
         // number of rows/columns in the SVT matrix, due to the reuse of slabs.
         if (row) {
-            const int* ciptr = static_cast<const int*>(curindices.begin());
-
             if (needs_value) {
                 if (all_ones) {
                     SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
-                        auto ix = ciptr[i];
+                        auto ix = curindices[i];
                         value_ptrs[ix][counts[ix]] = 1;
                     }
                 } else {
+                    const cvptr = 
                     SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
-                        auto ix = ciptr[i];
+                        auto ix = curindices[i];
                         value_ptrs[ix][counts[ix]] = curvalues[i];
                     }
                 }
             }
+
             if (needs_index) {
                 SUBPAR_VECTORIZABLE
                 for (size_t i = 0; i < nnz; ++i) {
@@ -175,6 +175,7 @@ void parse_sparse_matrix(
                     index_ptrs[ix][counts[ix]] = c;
                 }
             }
+
             SUBPAR_VECTORIZABLE
             for (size_t i = 0; i < nnz; ++i) {
                 ++(counts[curindices[i]]);
