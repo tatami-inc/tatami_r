@@ -151,18 +151,23 @@ void parse_sparse_matrix(
         // Note that non-empty value_ptrs and index_ptrs may be longer than the
         // number of rows/columns in the SVT matrix, due to the reuse of slabs.
         if (row) {
+            const int* ciptr = static_cast<const int*>(curindices.begin()); // Casting to pointer; don't let Rcpp get involved inside the vectorized loop.
+
             if (needs_value) {
                 if (all_ones) {
                     SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
-                        auto ix = curindices[i];
+                        auto ix = ciptr[i];
                         value_ptrs[ix][counts[ix]] = 1;
                     }
                 } else {
+                    typedef decltype(&curvalues[0]) Vptr;
+                    Vptr cvptr = static_cast<Vptr>(curvalues.begin()); // again, don't let Rcpp get involved inside the loop here.
+
                     SUBPAR_VECTORIZABLE
                     for (size_t i = 0; i < nnz; ++i) {
-                        auto ix = curindices[i];
-                        value_ptrs[ix][counts[ix]] = curvalues[i];
+                        auto ix = ciptr[i];
+                        value_ptrs[ix][counts[ix]] = cvptr[i];
                     }
                 }
             }
@@ -170,14 +175,14 @@ void parse_sparse_matrix(
             if (needs_index) {
                 SUBPAR_VECTORIZABLE
                 for (size_t i = 0; i < nnz; ++i) {
-                    auto ix = curindices[i];
+                    auto ix = ciptr[i];
                     index_ptrs[ix][counts[ix]] = c;
                 }
             }
 
             SUBPAR_VECTORIZABLE
             for (size_t i = 0; i < nnz; ++i) {
-                ++(counts[curindices[i]]);
+                ++(counts[ciptr[i]]);
             }
 
         } else {
