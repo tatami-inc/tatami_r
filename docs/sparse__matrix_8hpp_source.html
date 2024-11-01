@@ -221,53 +221,58 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        <span class="comment">// Note that non-empty value_ptrs and index_ptrs may be longer than the</span></div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        <span class="comment">// number of rows/columns in the SVT matrix, due to the reuse of slabs.</span></div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>        <span class="keywordflow">if</span> (row) {</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>            <span class="keywordflow">if</span> (needs_value) {</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>                <span class="keywordflow">if</span> (all_ones) {</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>                    SUBPAR_VECTORIZABLE</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>                        <span class="keyword">auto</span> ix = curindices[i];</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>                        value_ptrs[ix][counts[ix]] = 1;</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>                    }</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>                } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                    SUBPAR_VECTORIZABLE</div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>                    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>                        <span class="keyword">auto</span> ix = curindices[i];</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>                        value_ptrs[ix][counts[ix]] = curvalues[i];</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>                    }</div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>                }</div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>            }</div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>            <span class="keywordflow">if</span> (needs_index) {</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>                SUBPAR_VECTORIZABLE</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>                    <span class="keyword">auto</span> ix = curindices[i];</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>                    index_ptrs[ix][counts[ix]] = c;</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>                }</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>            }</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>            SUBPAR_VECTORIZABLE</div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>                ++(counts[curindices[i]]);</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>            <span class="keyword">const</span> <span class="keywordtype">int</span>* ciptr = <span class="keyword">static_cast&lt;</span><span class="keyword">const </span><span class="keywordtype">int</span>*<span class="keyword">&gt;</span>(curindices.begin()); <span class="comment">// Casting to pointer; don&#39;t let Rcpp get involved inside the vectorized loop.</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>            <span class="keywordflow">if</span> (needs_value) {</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                <span class="keywordflow">if</span> (all_ones) {</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>                    SUBPAR_VECTORIZABLE</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>                    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>                        <span class="keyword">auto</span> ix = ciptr[i];</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>                        value_ptrs[ix][counts[ix]] = 1;</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                    }</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>                } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>                    <span class="keyword">typedef</span> <span class="keyword">decltype</span>(&amp;curvalues[0]) Vptr;</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>                    Vptr cvptr = <span class="keyword">static_cast&lt;</span>Vptr<span class="keyword">&gt;</span>(curvalues.begin()); <span class="comment">// again, don&#39;t let Rcpp get involved inside the loop here.</span></div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>                    SUBPAR_VECTORIZABLE</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>                    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>                        <span class="keyword">auto</span> ix = ciptr[i];</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>                        value_ptrs[ix][counts[ix]] = cvptr[i];</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>                    }</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>                }</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>            }</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>            <span class="keywordflow">if</span> (needs_index) {</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>                SUBPAR_VECTORIZABLE</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>                    <span class="keyword">auto</span> ix = ciptr[i];</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>                    index_ptrs[ix][counts[ix]] = c;</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>                }</div>
 <div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>            }</div>
 <div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span> </div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>            <span class="keywordflow">if</span> (needs_value) {</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>                <span class="keywordflow">if</span> (all_ones) {</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>                    std::fill_n(value_ptrs[c], nnz, 1);</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>                } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>                    std::copy(curvalues.begin(), curvalues.end(), value_ptrs[c]);</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>                }</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>            }</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>            <span class="keywordflow">if</span> (needs_index) {</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>                std::copy(curindices.begin(), curindices.end(), index_ptrs[c]);</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>            }</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>            counts[c] = nnz;</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>        }</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    });</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>}</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>            SUBPAR_VECTORIZABLE</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>                ++(counts[ciptr[i]]);</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>            }</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>            <span class="keywordflow">if</span> (needs_value) {</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>                <span class="keywordflow">if</span> (all_ones) {</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>                    std::fill_n(value_ptrs[c], nnz, 1);</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>                } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>                    std::copy(curvalues.begin(), curvalues.end(), value_ptrs[c]);</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>                }</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>            }</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>            <span class="keywordflow">if</span> (needs_index) {</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>                std::copy(curindices.begin(), curindices.end(), index_ptrs[c]);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>            }</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>            counts[c] = nnz;</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>        }</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    });</div>
 <div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>}</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>}</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span> </div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="anamespacetatami__r_html"><div class="ttname"><a href="namespacetatami__r.html">tatami_r</a></div><div class="ttdoc">tatami bindings for arbitrary R matrices.</div></div>
 <div class="ttc" id="anamespacetatami__r_html_aae221ab80206d8ece556562f89c77089"><div class="ttname"><a href="namespacetatami__r.html#aae221ab80206d8ece556562f89c77089">tatami_r::parse_SVT_SparseMatrix</a></div><div class="ttdeci">void parse_SVT_SparseMatrix(Rcpp::RObject matrix, Function_ fun)</div><div class="ttdef"><b>Definition</b> sparse_matrix.hpp:36</div></div>
 <div class="ttc" id="atatami_8hpp_html"><div class="ttname"><a href="https://tatami-inc.github.io/tatami/tatami_8hpp.html">tatami.hpp</a></div></div>
