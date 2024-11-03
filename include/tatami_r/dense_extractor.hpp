@@ -4,6 +4,8 @@
 #include "Rcpp.h"
 #include "tatami/tatami.hpp"
 #include "tatami_chunked/tatami_chunked.hpp"
+
+#include "utils.hpp"
 #include "dense_matrix.hpp"
 
 #include <vector>
@@ -370,13 +372,7 @@ public:
             dense_extractor,
             row,
             std::move(oracle),
-            [&]() {
-                Rcpp::IntegerVector output(indices_ptr->begin(), indices_ptr->end());
-                for (auto& i : output) {
-                    ++i;
-                }
-                return output;
-            }(),
+            increment_indices(*indices_ptr),
             ticks,
             map,
             stats
