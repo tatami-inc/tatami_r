@@ -134,7 +134,7 @@ public:
             [&]() -> Slab {
                 return my_factory.create();
             },
-            [&](Index_ id, Slab& cache) {
+            [&](Index_ id, Slab& cache) -> void {
                 auto chunk_start = my_chunk_ticks[id], chunk_end = my_chunk_ticks[id + 1];
                 size_t chunk_len = chunk_end - chunk_start;
                 std::fill_n(cache.number, chunk_len, 0);
@@ -222,10 +222,13 @@ public:
             [&]() -> Slab {
                 return my_factory.create();
             },
-            [&](std::vector<std::pair<Index_, Slab*> >& to_populate) {
+            [&](std::vector<std::pair<Index_, Slab*> >& to_populate) -> void {
                 // Sorting them so that the indices are in order.
-                if (!std::is_sorted(to_populate.begin(), to_populate.end(), [&](const std::pair<Index_, Slab*>& left, const std::pair<Index_, Slab*> right) { return left.first < right.first; })) {
-                    std::sort(to_populate.begin(), to_populate.end(), [&](const std::pair<Index_, Slab*>& left, const std::pair<Index_, Slab*> right) { return left.first < right.first; });
+                auto cmp = [](const std::pair<Index_, Slab*>& left, const std::pair<Index_, Slab*> right) -> bool {
+                    return left.first < right.first; 
+                };
+                if (!std::is_sorted(to_populate.begin(), to_populate.end(), cmp)) {
+                    std::sort(to_populate.begin(), to_populate.end(), cmp);
                 }
 
                 if (my_needs_value) {
@@ -320,7 +323,7 @@ public:
             sparse_extractor,
             row,
             std::move(oracle),
-            [&]() {
+            [&]{
                 Rcpp::IntegerVector output(non_target_dim);
                 std::iota(output.begin(), output.end(), 1);
                 return output;
@@ -384,7 +387,7 @@ public:
             sparse_extractor,
             row,
             std::move(oracle),
-            [&]() {
+            [&]{
                 Rcpp::IntegerVector output(block_length);
                 std::iota(output.begin(), output.end(), block_start + 1);
                 return output;
@@ -526,7 +529,7 @@ public:
             sparse_extractor,
             row,
             std::move(oracle),
-            [&]() {
+            [&]{
                 Rcpp::IntegerVector output(non_target_dim);
                 std::iota(output.begin(), output.end(), 1);
                 return output;
@@ -571,7 +574,7 @@ public:
             sparse_extractor,
             row,
             std::move(oracle),
-            [&]() {
+            [&]{
                 Rcpp::IntegerVector output(block_length);
                 std::iota(output.begin(), output.end(), block_start + 1);
                 return output;

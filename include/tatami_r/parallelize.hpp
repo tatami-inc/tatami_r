@@ -87,14 +87,19 @@ void parallelize(Function_ fun, Index_ ntasks, int nthreads) {
     for (int w = 0; w < nthreads; ++w) {
         Index_ length = tasks_per_worker + (w < remainder);
 
-        runners.emplace_back([&](int id, Index_ s, Index_ l) {
-            try {
-                fun(id, s, l);
-            } catch (...) {
-                errors[id] = std::current_exception();
-            }
-            mexec.finish_thread();
-        }, w, start, length);
+        runners.emplace_back(
+            [&](int id, Index_ s, Index_ l) -> void {
+                try {
+                    fun(id, s, l);
+                } catch (...) {
+                    errors[id] = std::current_exception();
+                }
+                mexec.finish_thread();
+            },
+            w,
+            start,
+            length
+        );
 
         start += length;
     }
