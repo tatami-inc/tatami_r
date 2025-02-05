@@ -3,7 +3,7 @@ var searchData=
   ['objects_20via_20tatami_0',['Read R objects via tatami',['../index.html',1,'']]],
   ['operator_21_3d_1',['operator!=',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#aceaacc0688f277a597e180db6763402f',1,'tatami::SomeNumericArray::Iterator']]],
   ['operator_2a_2',['operator*',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#a0e050c233fb9f338c44326cda7efd2f9',1,'tatami::SomeNumericArray::Iterator']]],
-  ['operator_2b_3',['operator+',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#af0d534fb6c5fd6e9121ae2c4c61e5848',1,'tatami::SomeNumericArray::Iterator::operator+(size_t n) const'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#af891cdee3c447bfccb98be31584ab4a8',1,'tatami::SomeNumericArray::Iterator::operator+']]],
+  ['operator_2b_3',['operator+',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#af0d534fb6c5fd6e9121ae2c4c61e5848',1,'tatami::SomeNumericArray::Iterator::operator+(size_t n) const'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#af891cdee3c447bfccb98be31584ab4a8',1,'tatami::SomeNumericArray::Iterator::operator+(size_t n, const Iterator &amp;it)']]],
   ['operator_2b_2b_4',['operator++',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#ab4cf9637585ffcd96cc7a189762745e5',1,'tatami::SomeNumericArray::Iterator::operator++()'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#aaccfd440a98d175bf0b7862d527aba14',1,'tatami::SomeNumericArray::Iterator::operator++(int)']]],
   ['operator_2b_3d_5',['operator+=',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#aa275bd0c414ca54a8cc2464229a21fbd',1,'tatami::SomeNumericArray::Iterator']]],
   ['operator_2d_6',['operator-',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#ae100fbb36753c9b666d7e1f70aea8b44',1,'tatami::SomeNumericArray::Iterator::operator-(size_t n) const'],['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#a452e72594e8314d7e0c3dbe027ec5df5',1,'tatami::SomeNumericArray::Iterator::operator-(const Iterator &amp;right) const']]],
@@ -19,7 +19,10 @@ var searchData=
   ['options_2ehpp_16',['Options.hpp',['https://tatami-inc.github.io/tatami/Options_8hpp.html',1,'']]],
   ['oracle_17',['Oracle',['https://tatami-inc.github.io/tatami/classtatami_1_1Oracle.html',1,'tatami']]],
   ['oracle_2ehpp_18',['Oracle.hpp',['https://tatami-inc.github.io/tatami/Oracle_8hpp.html',1,'']]],
-  ['oraculardenseextractor_19',['OracularDenseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1OracularDenseExtractor.html',1,'tatami']]],
-  ['oracularsparseextractor_20',['OracularSparseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1OracularSparseExtractor.html',1,'tatami']]],
-  ['overview_21',['Overview',['../index.html#autotoc_md1',1,'Overview'],['../md_parallel.html#autotoc_md6',1,'Overview']]]
+  ['oracle_3c_20index_5f_20_3e_19',['Oracle&lt; Index_ &gt;',['https://tatami-inc.github.io/tatami/classtatami_1_1Oracle.html',1,'tatami']]],
+  ['oraculardenseextractor_20',['OracularDenseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1OracularDenseExtractor.html',1,'tatami']]],
+  ['oraculardenseextractor_3c_20value_5f_2c_20index_5f_20_3e_21',['OracularDenseExtractor&lt; Value_, Index_ &gt;',['https://tatami-inc.github.io/tatami/classtatami_1_1OracularDenseExtractor.html',1,'tatami']]],
+  ['oracularsparseextractor_22',['OracularSparseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1OracularSparseExtractor.html',1,'tatami']]],
+  ['oracularsparseextractor_3c_20value_5f_2c_20index_5f_20_3e_23',['OracularSparseExtractor&lt; Value_, Index_ &gt;',['https://tatami-inc.github.io/tatami/classtatami_1_1OracularSparseExtractor.html',1,'tatami']]],
+  ['overview_24',['Overview',['../index.html#autotoc_md1',1,'Overview'],['../md_parallel.html#autotoc_md6',1,'Overview']]]
 ];
