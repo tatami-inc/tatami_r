@@ -1,7 +1,7 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(tatami_tatami 3.0.0 CONFIG REQUIRED)
+find_dependency(tatami_tatami 4.0.0 CONFIG REQUIRED)
 find_dependency(tatami_tatami_chunked 2.0.0 CONFIG REQUIRED)
 find_dependency(tatami_manticore 1.0.0 CONFIG REQUIRED)
 

@@ -14,7 +14,7 @@ option(TATAMI_R_FETCH_EXTERN "Automatically fetch tatami_r's external dependenci
 if(TATAMI_R_FETCH_EXTERN)
     add_subdirectory(extern)
 else()
-    find_package(tatami_tatami 3.0.0 CONFIG REQUIRED)
+    find_package(tatami_tatami 4.0.0 CONFIG REQUIRED)
     find_package(tatami_tatami_chunked 2.0.0 CONFIG REQUIRED)
     find_package(tatami_manticore 1.0.0 CONFIG REQUIRED)
 endif()
