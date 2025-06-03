@@ -165,6 +165,14 @@ Under the hood</h1>
 <div class="line">}</div>
 </div><!-- fragment --><p>Check out the implementation of <code>tatami_r::parallelize()</code> for more details.</p>
 <h1><a class="anchor" id="autotoc_md10"></a>
+Dynamically loaded libraries</h1>
+<p>When working with multiple dynamically loaded libraries (e.g., in separate R packages), it is possible for <code>tatami_r::executor()</code> to return references to different instances. (See <a href="https://www.reddit.com/r/cpp_questions/comments/a5nhnm/why_is_a_static_function_variable_shared_between/">here</a> for a discussion on the relevant differences between Clang and GCC.) This can be problematic if, e.g., a <code><a class="elRef" href="https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html">tatami::Matrix</a></code> object is created in one library and then used in a parallel section in the other.</p>
+<p>In such cases, we can force both libraries to use the same <code><a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html">manticore::Executor</a></code> instance. We first obtain the address of the instance in one of the libraries, usually the one that is more upstream in the dependency chain:</p>
+<div class="fragment"><div class="line"><span class="keyword">auto</span> ptr = &amp;(tatami::executor());</div>
+</div><!-- fragment --><p>We then pass this address to the other library, using it to set that library's global instance. This only needs to be done once, usually at library load time.</p>
+<div class="fragment"><div class="line">tatami_r::set_executor(ptr);</div>
+</div><!-- fragment --><p>After this is done, calls to <code>tatami_r::executor()</code> in the second library will use the instance of the first library. This ensures that we maintain thread-safe calls to R across both libraries.</p>
+<h1><a class="anchor" id="autotoc_md11"></a>
 Further comments</h1>
 <p>Construction of the <code>UnknownMatrix</code> must always be performed on the main thread. This is because construction of the unknown fallback involves some calls into the R runtime; these are currently not protected from execution in worker contexts. Similarly, any <b>Rcpp</b>-based allocations - even default construction of classes like <code>Rcpp::NumericVector</code> - should be done in the main thread, just in case.</p>
 <p><code><a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html#a3bc19ec43cefc2e0b77f413a47c0e090">manticore::Executor::run()</a></code> is only required if the code can only be executed on the main thread. For code that must be serial but does not need to be on the main thread, we can just use a standard synchronization primitives (e.g., <code>&lt;mutex&gt;</code>) inside <code>tatami_r::parallelize()</code> calls. This works correctly as <code>tatami_r::parallelize()</code> uses <code>&lt;thread&gt;</code> under the hood. </p>

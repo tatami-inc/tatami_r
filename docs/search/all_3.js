@@ -145,5 +145,6 @@ var searchData=
   ['denserowmatrix_142',['DenseRowMatrix',['https://tatami-inc.github.io/tatami/classtatami_1_1DenseRowMatrix.html',1,'tatami::DenseRowMatrix&lt; typename Value_, typename Index_, class Storage_ &gt;'],['https://tatami-inc.github.io/tatami/classtatami_1_1DenseRowMatrix.html#a249316f41906d670e13221bb12e8c8fb',1,'tatami::DenseRowMatrix::DenseRowMatrix()']]],
   ['deployment_143',['Deployment',['../index.html#autotoc_md4',1,'']]],
   ['difference_5ftype_144',['difference_type',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#aefb9a8cadab1f35ebe83a01e76c2520f',1,'tatami::SomeNumericArray::Iterator']]],
-  ['dimensionselectiontype_145',['DimensionSelectionType',['https://tatami-inc.github.io/tatami/namespacetatami.html#a0a2ecaf58e2b69bb4a808e814aeb16a1',1,'tatami']]]
+  ['dimensionselectiontype_145',['DimensionSelectionType',['https://tatami-inc.github.io/tatami/namespacetatami.html#a0a2ecaf58e2b69bb4a808e814aeb16a1',1,'tatami']]],
+  ['dynamically_20loaded_20libraries_146',['Dynamically loaded libraries',['../md_parallel.html#autotoc_md10',1,'']]]
 ];
