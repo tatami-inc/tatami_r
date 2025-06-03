@@ -48,3 +48,7 @@ test_that("Behaves correctly with R-side errors", {
     expect_error(raticate.tests::oracular_dense_sums(z, TRUE, 1)) # error message changes depending on TEST_CUSTOM_PARALLEL, so don't worry about it.
     expect_error(raticate.tests::oracular_sparse_sums(z, TRUE, 3))
 })
+
+test_that("executor setting works as expected", {
+    expect_true(raticate.tests::test_set_executor())
+})

@@ -29,6 +29,11 @@ sparse <- function(parsed) {
 }
 
 #' @export
+test_set_executor <- function() {
+    .Call('_raticate_tests_test_set_executor', PACKAGE = 'raticate.tests')
+}
+
+#' @export
 myopic_dense_full <- function(parsed, row, idx) {
     .Call('_raticate_tests_myopic_dense_full', PACKAGE = 'raticate.tests', parsed, row, idx)
 }

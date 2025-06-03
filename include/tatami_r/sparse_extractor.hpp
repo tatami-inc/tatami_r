@@ -6,6 +6,7 @@
 #include "tatami_chunked/tatami_chunked.hpp"
 
 #include "utils.hpp"
+#include "parallelize.hpp"
 #include "sparse_matrix.hpp"
 
 #include <vector>

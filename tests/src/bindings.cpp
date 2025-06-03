@@ -56,6 +56,23 @@ bool sparse(Rcpp::RObject parsed) {
     return ptr->sparse();
 }
 
+//' @export
+//[[Rcpp::export(rng=false)]]
+bool test_set_executor() {
+    manticore::Executor test;
+    tatami_r::set_executor(&test);
+    if (&(tatami_r::executor()) != &test) {
+        return false;
+    }
+
+    tatami_r::set_executor(NULL);
+    if (&(tatami_r::executor()) == &test) {
+        return false;
+    }
+
+    return true;
+}
+
 /******************
  *** Dense full ***
  ******************/

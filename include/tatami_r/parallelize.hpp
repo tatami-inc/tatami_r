@@ -26,16 +26,42 @@
 namespace tatami_r {
 
 /**
+ * @cond
+ */
+inline manticore::Executor* executor_ptr = NULL;
+/**
+ * @cond
+ */
+
+/**
  * Retrieve a global `manticore::Executor` object for all **tatami_r** uses.
  * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
  *
  * @return Reference to a global `manticore::Executor`.
+ * If `set_executor()` was called with a non-`NULL` pointer, the provided instance will be used;
+ * otherwise, a default instance will be instantiated.
  */
 inline manticore::Executor& executor() {
-    // This should end up resolving to a single instance, even across dynamically linked libraries:
-    // https://stackoverflow.com/questions/52851239/local-static-variable-linkage-in-a-template-class-static-member-function
-    static manticore::Executor mexec;
-    return mexec;
+    if (executor_ptr) {
+        return *executor_ptr;
+    } else {
+        // In theory, this should end up resolving to a single instance, even across dynamically linked libraries:
+        // https://stackoverflow.com/questions/52851239/local-static-variable-linkage-in-a-template-class-static-member-function
+        // In practice, this doesn't seem to be the case on a Mac, requiring us to use `set_executor()`.
+        static manticore::Executor mexec;
+        return mexec;
+    }
+}
+
+/**
+ * Set a global `manticore::Executor` object for all **tatami_r** uses.
+ * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
+ * Calling this function is occasionally necessary if `executor()` resolves to different instances of a `manticore::Executor` across different libraries.
+ *
+ * @param Pointer to a global `manticore::Executor`, or `NULL` to unset this pointer.
+ */
+inline void set_executor(manticore::Executor* ptr) {
+    executor_ptr = ptr;
 }
 
 /**
