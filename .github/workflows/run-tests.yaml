@@ -17,7 +17,7 @@ jobs:
         parallel: [true, false]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -30,7 +30,7 @@ jobs:
         echo "R_PKG_DIR=${R_HOME}/site-library" >> $GITHUB_ENV
 
     - name: Restore the package directory
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ${{ env.R_PKG_DIR }}
         key: preinstalled-packages
