@@ -4,20 +4,11 @@
     <name>parallelize.hpp</name>
     <path>/github/workspace/include/tatami_r/</path>
     <filename>parallelize_8hpp.html</filename>
-    <namespace>tatami_r</namespace>
   </compound>
   <compound kind="file">
     <name>sparse_matrix.hpp</name>
     <path>/github/workspace/include/tatami_r/</path>
     <filename>sparse__matrix_8hpp.html</filename>
-    <namespace>tatami_r</namespace>
-  </compound>
-  <compound kind="file">
-    <name>tatami_r.hpp</name>
-    <path>/github/workspace/include/tatami_r/</path>
-    <filename>tatami__r_8hpp.html</filename>
-    <includes id="parallelize_8hpp" name="parallelize.hpp" local="yes" import="no" module="no" objc="no">parallelize.hpp</includes>
-    <namespace>tatami_r</namespace>
   </compound>
   <compound kind="class">
     <name>tatami_r::UnknownMatrix</name>
@@ -58,33 +49,6 @@
       <anchorfile>structtatami__r_1_1UnknownMatrixOptions.html</anchorfile>
       <anchor>a789336083111a71a161a58a1ad383c52</anchor>
       <arglist></arglist>
-    </member>
-  </compound>
-  <compound kind="namespace">
-    <name>tatami_r</name>
-    <filename>namespacetatami__r.html</filename>
-    <class kind="class">tatami_r::UnknownMatrix</class>
-    <class kind="struct">tatami_r::UnknownMatrixOptions</class>
-    <member kind="function">
-      <type>manticore::Executor &amp;</type>
-      <name>executor</name>
-      <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>a7cbde3ef2a02ed9a8d84ecd89697eb58</anchor>
-      <arglist>()</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>parallelize</name>
-      <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>a7be9ffc5361622fa789ac269e92aa2f6</anchor>
-      <arglist>(Function_ fun, Index_ ntasks, int nthreads)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>parse_SVT_SparseMatrix</name>
-      <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>aae221ab80206d8ece556562f89c77089</anchor>
-      <arglist>(Rcpp::RObject matrix, Function_ fun)</arglist>
     </member>
   </compound>
   <compound kind="page">

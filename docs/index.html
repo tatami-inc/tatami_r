@@ -93,8 +93,8 @@ $(function(){ initResizable(false); });
 <p><img src="https://github.com/tatami-inc/tatami_r/actions/workflows/run-tests.yaml/badge.svg" alt="Unit tests" style="pointer-events: none;" class="inline"/> <img src="https://github.com/tatami-inc/tatami_r/actions/workflows/doxygenate.yaml/badge.svg" alt="Documentation" style="pointer-events: none;" class="inline"/></p>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Overview</h1>
-<p><b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> is an header-only library for reading abstract R matrices in <a href="https://github.com/tatami-inc/tatami"><b>tatami</b></a>. This allows <b>tatami</b>-based C++ functions to accept and operate on any matrix-like R object containing numeric data. Usage is as simple as:</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="tatami__r_8hpp.html">tatami_r/tatami_r.hpp</a>&quot;</span></div>
+<p><b>tatami_r</b> is an header-only library for reading abstract R matrices in <a href="https://github.com/tatami-inc/tatami"><b>tatami</b></a>. This allows <b>tatami</b>-based C++ functions to accept and operate on any matrix-like R object containing numeric data. Usage is as simple as:</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;tatami_r/tatami_r.hpp&quot;</span></div>
 <div class="line"> </div>
 <div class="line">SEXP some_typical_rcpp_function(Rcpp::RObject x) {</div>
 <div class="line">    <span class="keyword">auto</span> ptr = std::make_shared&lt;tatami_r::UnknownMatrix&lt;double, int&gt; &gt;(x);</div>
@@ -104,16 +104,15 @@ Overview</h1>
 <div class="line">    <span class="keyword">auto</span> row_extractor = ptr-&gt;dense_row();</div>
 <div class="line">    <span class="keyword">auto</span> first_row = row_extractor-&gt;fetch(0);</div>
 <div class="line">}</div>
-<div class="ttc" id="atatami__r_8hpp_html"><div class="ttname"><a href="tatami__r_8hpp.html">tatami_r.hpp</a></div><div class="ttdoc">tatami bindings for arbitrary R matrices.</div></div>
 </div><!-- fragment --><p>And that's it, really. If you want more details, you can check out the <a href="https://tatami-inc.github.io/tatami_r">reference documentation</a>.</p>
 <h1><a class="anchor" id="autotoc_md2"></a>
 Implementation</h1>
-<p><b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> assumes that the hosting R instance has loaded the <a href="https://bioconductor.org/packages/DelayedArray"><b>DelayedArray</b></a> package. The <code>UnknownMatrix</code> getters will then use the <code>extract_array()</code> and <code>extract_sparse_array()</code> R functions to retrieve data from the abstract R matrix. Note that this involves calling into R from C++, so high performance should not be expected here. Rather, the purpose of <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> is to ensure that <b>tatami</b>-based functions keep working when a native representation cannot be found for a particular matrix-like object.</p>
+<p><b>tatami_r</b> assumes that the hosting R instance has loaded the <a href="https://bioconductor.org/packages/DelayedArray"><b>DelayedArray</b></a> package. The <code>UnknownMatrix</code> getters will then use the <code>extract_array()</code> and <code>extract_sparse_array()</code> R functions to retrieve data from the abstract R matrix. Note that this involves calling into R from C++, so high performance should not be expected here. Rather, the purpose of <b>tatami_r</b> is to ensure that <b>tatami</b>-based functions keep working when a native representation cannot be found for a particular matrix-like object.</p>
 <p>It is worth mentioning that the <code>UnknownMatrix</code> will always call the <code>extract_*_array()</code> functions, even when a native representation exists in <b>tatami</b> or one of its extension libraries. R package developers should use the <code>initializeCpp()</code> function from the <a href="https://bioconductor.org/packages/beachmat"><b>beachmat</b></a> package to map an arbitrary matrix to its appropriate representation. When such mappings exist, this allows the C++ code to operate without calling back into R for maximum efficiency. If no mapping is known, <b>beachmat</b> will gracefully fall back to an <code>UnknownMatrix</code> to keep things running.</p>
 <h1><a class="anchor" id="autotoc_md3"></a>
 Enabling parallelization</h1>
-<p>Given a <code><a class="el" href="classtatami__r_1_1UnknownMatrix.html" title="Unknown matrix-like object in R.">tatami_r::UnknownMatrix</a></code> or a <code><a class="elRef" href="https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html">tatami::Matrix</a>*</code> that might refer to one, we can easily parallelize operations with the <code><a class="el" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize()</a></code> function. This accepts a lambda/functor with the thread ID and the range of jobs (in the example below, rows) to be processed.</p>
-<div class="fragment"><div class="line"><a class="code hl_function" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize</a>([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
+<p>Given a <code><a class="el" href="classtatami__r_1_1UnknownMatrix.html" title="Unknown matrix-like object in R.">tatami_r::UnknownMatrix</a></code> or a <code><a class="elRef" href="https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html">tatami::Matrix</a>*</code> that might refer to one, we can easily parallelize operations with the <code>tatami_r::parallelize()</code> function. This accepts a lambda/functor with the thread ID and the range of jobs (in the example below, rows) to be processed.</p>
+<div class="fragment"><div class="line">tatami_r::parallelize([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line">    <span class="comment">// Do something with the UnknownMatrix.</span></div>
 <div class="line">    <span class="keyword">auto</span> ext = ptr-&gt;dense_row();</div>
 <div class="line">    std::vector&lt;double&gt; buffer(ptr-&gt;ncol());</div>
@@ -122,23 +121,21 @@ Enabling parallelization</h1>
 <div class="line">        <span class="comment">// Do something with each row.</span></div>
 <div class="line">    }</div>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
-<div class="ttc" id="anamespacetatami__r_html_a7be9ffc5361622fa789ac269e92aa2f6"><div class="ttname"><a href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize</a></div><div class="ttdeci">void parallelize(Function_ fun, Index_ ntasks, int nthreads)</div><div class="ttdef"><b>Definition</b> parallelize.hpp:61</div></div>
 </div><!-- fragment --><p>Any calls to the <code>extract_*_array()</code> R functions are made thread-safe by the <a href="https://github.com/tatami-inc/manticore"><b>manticore</b></a> library. Developers can also access the <b>manticore</b> executor to safely perform their own R API calls from each thread.</p>
-<div class="fragment"><div class="line"><span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a>();</div>
+<div class="fragment"><div class="line"><span class="keyword">auto</span>&amp; mexec = tatami_r::executor();</div>
 <div class="line"> </div>
-<div class="line"><a class="code hl_function" href="namespacetatami__r.html#a7be9ffc5361622fa789ac269e92aa2f6">tatami_r::parallelize</a>([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line">tatami_r::parallelize([&amp;](<span class="keywordtype">size_t</span> thread_id, <span class="keywordtype">int</span> start, <span class="keywordtype">int</span> len) -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line">    mexec.run([&amp;]() -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line">        <span class="comment">// Do something that touches the R API.</span></div>
 <div class="line">    });</div>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
-<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:34</div></div>
 </div><!-- fragment --><p>Check out the <a class="el" href="md_parallel.html">comments about safe parallelization</a> for more gory details.</p>
 <h2><a class="anchor" id="autotoc_md4"></a>
 Deployment</h2>
-<p><b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> is intended to be compiled with other relevant C++ code inside an R package using <a href="https://www.rcpp.org/"><b>Rcpp</b></a>. This is most easily done by modifying the package <code>DESCRIPTION</code> with:</p>
+<p><b>tatami_r</b> is intended to be compiled with other relevant C++ code inside an R package using <a href="https://www.rcpp.org/"><b>Rcpp</b></a>. This is most easily done by modifying the package <code>DESCRIPTION</code> with:</p>
 <div class="fragment"><div class="line">LinkingTo: beachmat, assorthead, Rcpp</div>
-</div><!-- fragment --><p>which will automatically use the vendored copies of <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> (and <b>tatami</b>) inside the <a href="http://bioconductor.org/packages/assorthead"><b>assorthead</b></a> package, along with some of pre-configured macro definitions for safe parallelization in <a href="https://bioconductor.org/packages/beachmat"><b>beachmat</b></a>'s <code>Rtatami.h</code> header. Note that C++17 is required.</p>
-<p>If <b>assorthead</b> or <b>beachmat</b> cannot be used, the R package developer will need to copy the <b><a class="el" href="namespacetatami__r.html" title="tatami bindings for arbitrary R matrices.">tatami_r</a></b> and <b>tatami</b> <code>include/</code> directories into the package's <code>inst/include</code>, and then add a <code>Makevars</code> file like:</p>
+</div><!-- fragment --><p>which will automatically use the vendored copies of <b>tatami_r</b> (and <b>tatami</b>) inside the <a href="http://bioconductor.org/packages/assorthead"><b>assorthead</b></a> package, along with some of pre-configured macro definitions for safe parallelization in <a href="https://bioconductor.org/packages/beachmat"><b>beachmat</b></a>'s <code>Rtatami.h</code> header. Note that C++17 is required.</p>
+<p>If <b>assorthead</b> or <b>beachmat</b> cannot be used, the R package developer will need to copy the <b>tatami_r</b> and <b>tatami</b> <code>include/</code> directories into the package's <code>inst/include</code>, and then add a <code>Makevars</code> file like:</p>
 <div class="fragment"><div class="line">PKG_CPPFLAGS = -I../inst/include</div>
 </div><!-- fragment --> </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>

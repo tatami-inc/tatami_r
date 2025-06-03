@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['require_5fminimum_5fcache_0',['require_minimum_cache',['../structtatami__r_1_1UnknownMatrixOptions.html#a789336083111a71a161a58a1ad383c52',1,'tatami_r::UnknownMatrixOptions']]]
+  ['pointers_0',['pointers',['https://tatami-inc.github.io/tatami/structtatami_1_1CompressedSparseContents.html#ad9410e8d3b32bc97086bebf2322c0ef8',1,'tatami::CompressedSparseContents']]]
 ];
