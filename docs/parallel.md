@@ -116,6 +116,29 @@ for (auto& th : threads) {
 
 Check out the implementation of `tatami_r::parallelize()` for more details.
 
+## Dynamically loaded libraries
+
+When working with multiple dynamically loaded libraries (e.g., in separate R packages), it is possible for `tatami_r::executor()` to return references to different instances.
+(See [here](https://www.reddit.com/r/cpp_questions/comments/a5nhnm/why_is_a_static_function_variable_shared_between/) for a discussion on the relevant differences between Clang and GCC.)
+This can be problematic if, e.g., a `tatami::Matrix` object is created in one library and then used in a parallel section in the other.
+
+In such cases, we can force both libraries to use the same `manticore::Executor` instance.
+We first obtain the address of the instance in one of the libraries, usually the one that is more upstream in the dependency chain:
+
+```cpp
+auto ptr = &(tatami::executor());
+```
+
+We then pass this address to the other library, using it to set that library's global instance.
+This only needs to be done once, usually at library load time.
+
+```cpp
+tatami_r::set_executor(ptr);
+```
+
+After this is done, calls to `tatami_r::executor()` in the second library will use the instance of the first library.
+This ensures that we maintain thread-safe calls to R across both libraries.
+
 ## Further comments
 
 Construction of the `UnknownMatrix` must always be performed on the main thread.
