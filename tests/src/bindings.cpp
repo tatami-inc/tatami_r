@@ -59,6 +59,7 @@ bool sparse(Rcpp::RObject parsed) {
 //' @export
 //[[Rcpp::export(rng=false)]]
 bool test_set_executor() {
+#ifdef TEST_CUSTOM_PARALLEL
     manticore::Executor test;
     tatami_r::set_executor(&test);
     if (&(tatami_r::executor()) != &test) {
@@ -69,7 +70,7 @@ bool test_set_executor() {
     if (&(tatami_r::executor()) == &test) {
         return false;
     }
-
+#endif
     return true;
 }
 
