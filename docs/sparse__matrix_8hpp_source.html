@@ -217,31 +217,31 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <a class="code hl_function" href="sparse__matrix_8hpp.html#aae221ab80206d8ece556562f89c77089">parse_SVT_SparseMatrix</a>(</div>
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        matrix,</div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        [&amp;](<span class="keywordtype">int</span> c, <span class="keyword">const</span> <span class="keyword">auto</span>&amp; curindices, <span class="keywordtype">bool</span> all_ones, <span class="keyword">const</span> <span class="keyword">auto</span>&amp; curvalues) -&gt; <span class="keywordtype">void</span> {</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            <span class="keywordtype">size_t</span> nnz = curindices.size();</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            <span class="keyword">auto</span> nnz = curindices.size();</div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span> </div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>            <span class="comment">// Note that non-empty value_ptrs and index_ptrs may be longer than the</span></div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>            <span class="comment">// number of rows/columns in the SVT matrix, due to the reuse of slabs.</span></div>
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>            <span class="keywordflow">if</span> (row) {</div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>                <span class="keywordflow">if</span> (needs_value) {</div>
 <div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>                    <span class="keywordflow">if</span> (all_ones) {</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                        <span class="keywordflow">for</span> (<span class="keyword">decltype</span>(nnz) i = 0; i &lt; nnz; ++i) {</div>
 <div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>                            <span class="keyword">auto</span> ix = curindices[i];</div>
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>                            value_ptrs[ix][counts[ix]] = 1;</div>
 <div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>                        }</div>
 <div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>                    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                        <span class="keywordflow">for</span> (<span class="keyword">decltype</span>(nnz) i = 0; i &lt; nnz; ++i) {</div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>                            <span class="keyword">auto</span> ix = curindices[i];</div>
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>                            value_ptrs[ix][counts[ix]] = curvalues[i];</div>
 <div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>                        }</div>
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>                    }</div>
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>                }</div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>                <span class="keywordflow">if</span> (needs_index) {</div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>                    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>                    <span class="keywordflow">for</span> (<span class="keyword">decltype</span>(nnz) i = 0; i &lt; nnz; ++i) {</div>
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>                        <span class="keyword">auto</span> ix = curindices[i];</div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>                        index_ptrs[ix][counts[ix]] = c;</div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>                    }</div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>                }</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nnz; ++i) {</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>                <span class="keywordflow">for</span> (<span class="keyword">decltype</span>(nnz) i = 0; i &lt; nnz; ++i) {</div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>                    ++(counts[curindices[i]]);</div>
 <div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>                }</div>
 <div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>

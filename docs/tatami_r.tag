@@ -37,10 +37,10 @@
     <name>tatami_r::UnknownMatrixOptions</name>
     <filename>structtatami__r_1_1UnknownMatrixOptions.html</filename>
     <member kind="variable">
-      <type>size_t</type>
+      <type>std::optional&lt; std::size_t &gt;</type>
       <name>maximum_cache_size</name>
       <anchorfile>structtatami__r_1_1UnknownMatrixOptions.html</anchorfile>
-      <anchor>a988e54f7832165f55353f413025abf7d</anchor>
+      <anchor>ac231f00aa83f55652eb76299720617be</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">

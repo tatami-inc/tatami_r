@@ -14,7 +14,7 @@ var searchData=
   ['matrix_3c_20outputvalue_5f_2c_20index_5f_20_3e_11',['Matrix&lt; OutputValue_, Index_ &gt;',['https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html',1,'tatami']]],
   ['matrix_3c_20value_5f_2c_20index_5f_20_3e_12',['Matrix&lt; Value_, Index_ &gt;',['https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html',1,'tatami']]],
   ['matrix_3c_20valueout_5f_2c_20indexout_5f_20_3e_13',['Matrix&lt; ValueOut_, IndexOut_ &gt;',['https://tatami-inc.github.io/tatami/classtatami_1_1Matrix.html',1,'tatami']]],
-  ['maximum_5fcache_5fsize_14',['maximum_cache_size',['../structtatami__r_1_1UnknownMatrixOptions.html#a988e54f7832165f55353f413025abf7d',1,'tatami_r::UnknownMatrixOptions']]],
+  ['maximum_5fcache_5fsize_14',['maximum_cache_size',['../structtatami__r_1_1UnknownMatrixOptions.html#ac231f00aa83f55652eb76299720617be',1,'tatami_r::UnknownMatrixOptions']]],
   ['maybeoracle_15',['MaybeOracle',['https://tatami-inc.github.io/tatami/namespacetatami.html#a812af1bfb04773bf28da8549c3e6e5ee',1,'tatami']]],
   ['myopicdenseextractor_16',['MyopicDenseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1MyopicDenseExtractor.html',1,'tatami']]],
   ['myopicsparseextractor_17',['MyopicSparseExtractor',['https://tatami-inc.github.io/tatami/classtatami_1_1MyopicSparseExtractor.html',1,'tatami']]]
