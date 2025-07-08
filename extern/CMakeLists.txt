@@ -18,6 +18,13 @@ FetchContent_Declare(
   GIT_TAG master # ^1.0.0
 )
 
+FetchContent_Declare(
+  sanisizer 
+  GIT_REPOSITORY https://github.com/LTLA/sanisizer
+  GIT_TAG master # ^1.0.0
+)
+
 FetchContent_MakeAvailable(manticore)
 FetchContent_MakeAvailable(tatami)
 FetchContent_MakeAvailable(tatami_chunked)
+FetchContent_MakeAvailable(sanisizer)

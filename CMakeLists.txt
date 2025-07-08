@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(tatami_r
-    VERSION 2.0.2
+    VERSION 2.0.3
     DESCRIPTION "tatami bindings for abstract R matrices"
     LANGUAGES CXX)
 
@@ -17,9 +17,10 @@ else()
     find_package(tatami_tatami 4.0.0 CONFIG REQUIRED)
     find_package(tatami_tatami_chunked 2.0.0 CONFIG REQUIRED)
     find_package(tatami_manticore 1.0.0 CONFIG REQUIRED)
+    find_package(ltla_sanisizer 0.1.0 CONFIG REQUIRED)
 endif()
 
-target_link_libraries(tatami_r INTERFACE tatami::tatami tatami::tatami_chunked tatami::manticore)
+target_link_libraries(tatami_r INTERFACE tatami::tatami tatami::tatami_chunked tatami::manticore ltla::sanisizer)
 
 # Switch between include directories depending on whether the downstream is
 # using the build directly or is using the installed package.

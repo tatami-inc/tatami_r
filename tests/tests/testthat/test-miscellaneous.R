@@ -49,6 +49,15 @@ test_that("Behaves correctly with R-side errors", {
     expect_error(raticate.tests::oracular_sparse_sums(z, TRUE, 3))
 })
 
+test_that("invalid cache size", {
+    old <- getAutoBlockSize()
+    setAutoBlockSize(1e308);
+    on.exit(setAutoBlockSize(old))
+
+    mat <- matrix(runif(1000), 50, 20)
+    expect_error(raticate.tests::parse(mat, -1, FALSE), "integer overflow")
+})
+
 test_that("executor setting works as expected", {
     expect_true(raticate.tests::test_set_executor())
 })

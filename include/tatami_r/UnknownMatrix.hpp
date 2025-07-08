@@ -12,8 +12,8 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
-
-#include "parallelize.hpp"
+#include <optional>
+#include <cstddef>
 
 namespace tatami_r {
 
@@ -23,9 +23,9 @@ namespace tatami_r {
 struct UnknownMatrixOptions {
     /**
      * Size of the cache, in bytes.
-     * If -1, this is determined from `DelayedArray::getAutoBlockSize()`.
+     * If not set, this is determined from `DelayedArray::getAutoBlockSize()`.
      */
-    size_t maximum_cache_size = -1;
+    std::optional<std::size_t> maximum_cache_size;
 
     /**
      * Whether to automatically enforce a minimum size for the cache, regardless of `maximum_cache_size`.
@@ -81,8 +81,11 @@ public:
                 throw std::runtime_error("'dim(<" + ctype + ">)' should contain two non-negative integers");
             }
 
-            my_nrow = dims[0];
-            my_ncol = dims[1];
+            // If this cast is okay, all subsequent casts from 'int' to 'Index_' will be okay.
+            // This is because all subsequent casts will involve values that are smaller than 'dims', e.g., chunk extents.
+            // For example, an ArbitraryArrayGrid is restricted by the ticks, while a RegularArrayGrid must have chunkdim <= refdim.
+            my_nrow = sanisizer::cast<Index_>(dims[0]);
+            my_ncol = sanisizer::cast<Index_>(dims[1]);
         }
 
         {
@@ -96,8 +99,8 @@ public:
         }
 
         {
-            my_row_chunk_map.resize(my_nrow);
-            my_col_chunk_map.resize(my_ncol);
+            tatami::resize_container_to_Index_size(my_row_chunk_map, my_nrow);
+            tatami::resize_container_to_Index_size(my_col_chunk_map, my_ncol);
 
             Rcpp::Function fun = my_delayed_env["chunkGrid"];
             Rcpp::RObject grid = fun(seed);
@@ -107,9 +110,9 @@ public:
                 my_col_max_chunk_size = 1;
                 std::iota(my_row_chunk_map.begin(), my_row_chunk_map.end(), static_cast<Index_>(0));
                 std::iota(my_col_chunk_map.begin(), my_col_chunk_map.end(), static_cast<Index_>(0));
-                my_row_chunk_ticks.resize(my_nrow + 1);
+                my_row_chunk_ticks.resize(sanisizer::sum<decltype(my_row_chunk_ticks.size())>(my_nrow, 1));
                 std::iota(my_row_chunk_ticks.begin(), my_row_chunk_ticks.end(), static_cast<Index_>(0));
-                my_col_chunk_ticks.resize(my_ncol + 1);
+                my_col_chunk_ticks.resize(sanisizer::sum<decltype(my_col_chunk_ticks.size())>(my_ncol, 1));
                 std::iota(my_col_chunk_ticks.begin(), my_col_chunk_ticks.end(), static_cast<Index_>(0));
 
                 // Both dense and sparse inputs are implicitly column-major, so
@@ -159,12 +162,12 @@ public:
                         if (ticks.size() == 0 || ticks[ticks.size() - 1] != static_cast<int>(extent)) {
                             throw std::runtime_error("invalid ticks returned by 'chunkGrid'");
                         }
-                        new_ticks.resize(ticks.size() + 1);
+                        new_ticks.resize(sanisizer::sum<decltype(new_ticks.size())>(ticks.size(), 1));
                         std::copy(ticks.begin(), ticks.end(), new_ticks.begin() + 1);
 
                         max_chunk_size = 0;
                         int start = 0;
-                        map.resize(extent);
+                        tatami::resize_container_to_Index_size(map, extent);
                         Index_ counter = 0;
 
                         for (auto t : ticks) {
@@ -198,13 +201,16 @@ public:
             }
         }
 
-        my_cache_size_in_bytes = opt.maximum_cache_size;
         my_require_minimum_cache = opt.require_minimum_cache;
-        if (my_cache_size_in_bytes == static_cast<size_t>(-1)) {
+        if (opt.maximum_cache_size.has_value()) {
+            my_cache_size_in_bytes = *(opt.maximum_cache_size);
+        } else {
             Rcpp::Function fun = my_delayed_env["getAutoBlockSize"];
             Rcpp::NumericVector bsize = fun();
             if (bsize.size() != 1 || bsize[0] < 0) {
                 throw std::runtime_error("'getAutoBlockSize()' should return a non-negative number of bytes");
+            } else if (bsize[0] > std::numeric_limits<std::size_t>::max()) {
+                throw std::runtime_error("integer overflow from the current value of 'getAutoBlockSize()'");
             }
             my_cache_size_in_bytes = bsize[0];
         }
@@ -235,7 +241,7 @@ private:
     // that avoids inflation to the maximum allocation.
     Index_ my_row_max_chunk_size, my_col_max_chunk_size;
 
-    size_t my_cache_size_in_bytes;
+    std::size_t my_cache_size_in_bytes;
     bool my_require_minimum_cache;
 
     Rcpp::RObject my_original_seed;
@@ -310,7 +316,7 @@ private:
         std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
-        tatami_chunked::SlabCacheStats stats(max_target_chunk_length, non_target_length, my_cache_size_in_bytes, sizeof(CachedValue_), my_require_minimum_cache);
+        tatami_chunked::SlabCacheStats<Index_> stats(max_target_chunk_length, non_target_length, my_cache_size_in_bytes, sizeof(CachedValue_), my_require_minimum_cache);
 
         const auto& map = chunk_map(row);
         const auto& ticks = chunk_ticks(row);
@@ -412,7 +418,7 @@ public:
         std::unique_ptr<tatami::SparseExtractor<oracle_, Value_, Index_> > output;
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
-        tatami_chunked::SlabCacheStats stats(
+        tatami_chunked::SlabCacheStats<Index_> stats(
             max_target_chunk_length,
             non_target_length, 
             my_cache_size_in_bytes, 
