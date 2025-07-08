@@ -10,7 +10,7 @@ jobs:
   build:
     name: Run tests
     runs-on: ubuntu-latest
-    container: bioconductor/bioconductor_docker:RELEASE_3_19
+    container: bioconductor/bioconductor_docker:devel
     strategy:
       fail-fast: false
       matrix:
