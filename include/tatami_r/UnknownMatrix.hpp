@@ -282,6 +282,15 @@ private:
         return (row ? my_row_max_chunk_size : my_col_max_chunk_size);
     }
 
+    Index_ primary_num_chunks(bool row, Index_ primary_chunk_length) const {
+        auto primary_dim = (row ? my_nrow : my_ncol);
+        if (primary_chunk_length == 0) {
+            return primary_dim;
+        } else {
+            return primary_dim / primary_chunk_length;
+        }
+    }
+
     Index_ secondary_dim(bool row) const {
         return (row ? my_ncol : my_nrow);
     }
@@ -316,7 +325,14 @@ private:
         std::unique_ptr<tatami::DenseExtractor<oracle_, Value_, Index_> > output;
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
-        tatami_chunked::SlabCacheStats<Index_> stats(max_target_chunk_length, non_target_length, my_cache_size_in_bytes, sizeof(CachedValue_), my_require_minimum_cache);
+        tatami_chunked::SlabCacheStats<Index_> stats(
+            /* target length = */ max_target_chunk_length,
+            /* non_target_length = */ non_target_length,
+            /* target_num_slabs = */ primary_num_chunks(row, max_target_chunk_length),
+            /* cache_size_in_bytes = */ my_cache_size_in_bytes,
+            /* element_size = */ sizeof(CachedValue_),
+            /* require_minimum_cache = */ my_require_minimum_cache
+        );
 
         const auto& map = chunk_map(row);
         const auto& ticks = chunk_ticks(row);
@@ -419,11 +435,12 @@ public:
 
         Index_ max_target_chunk_length = max_primary_chunk_length(row);
         tatami_chunked::SlabCacheStats<Index_> stats(
-            max_target_chunk_length,
-            non_target_length, 
-            my_cache_size_in_bytes, 
-            (opt.sparse_extract_index ? sizeof(CachedIndex_) : 0) + (opt.sparse_extract_value ? sizeof(CachedValue_) : 0),
-            my_require_minimum_cache
+            /* target_length = */ max_target_chunk_length,
+            /* non_target_length = */ non_target_length, 
+            /* target_num_slabs = */ primary_num_chunks(row, max_target_chunk_length),
+            /* cache_size_in_bytes = */ my_cache_size_in_bytes, 
+            /* element_size = */ (opt.sparse_extract_index ? sizeof(CachedIndex_) : 0) + (opt.sparse_extract_value ? sizeof(CachedValue_) : 0),
+            /* require_minimum_cache = */ my_require_minimum_cache
         );
 
         const auto& map = chunk_map(row);
