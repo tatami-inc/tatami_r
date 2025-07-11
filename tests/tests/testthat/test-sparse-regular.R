@@ -45,3 +45,19 @@ set.seed(150000)
     big_test_suite(mat, cache.fraction = 0.01)
     big_test_suite(mat, cache.fraction = 0.1)
 }
+
+for (dims in list(c(0, 10), c(10, 0))) {
+    NR <- dims[1]
+    NC <- dims[2]
+    mat <- RegularChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=2), nrow=NR, ncol=NC), chunks=c(NR, NC))
+
+    test_that("sparse empty regular-chunked integer matrix passes basic checks", {
+        expect_s4_class(chunkGrid(mat), "RegularArrayGrid")
+        expect_identical(type(mat), "integer")
+
+        parsed <- raticate.tests::parse(mat, 0, FALSE)
+        expect_true(raticate.tests::sparse(parsed))
+    })
+
+    big_test_suite(mat, cache.fraction = 0.01)
+}

@@ -47,3 +47,19 @@ set.seed(200000)
     big_test_suite(mat, cache.fraction = 0.01)
     big_test_suite(mat, cache.fraction = 0.1)
 }
+
+for (dims in list(c(0, 10), c(10, 0))) {
+    NR <- dims[1]
+    NC <- dims[2]
+    mat <- ArbitraryChunkedSparseMatrix(matrix(rpois(NR * NC, lambda=0.1), nrow=NR, ncol=NC), numticks=c(NR, NC))
+
+    test_that("sparse empty arbitrarily-chunked integer matrix passes basic checks", {
+        expect_s4_class(chunkGrid(mat), "ArbitraryArrayGrid")
+        expect_true(is_sparse(mat))
+
+        parsed <- raticate.tests::parse(mat, 0, FALSE)
+        expect_true(raticate.tests::sparse(parsed))
+    })
+
+    big_test_suite(mat, cache.fraction = 0.01)
+}

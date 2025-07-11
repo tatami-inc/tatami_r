@@ -14,11 +14,15 @@ get_cache_size <- function(mat, cache.fraction) {
 }
 
 create_predictions <- function(iterdim, step, mode) {
-    iseq <- seq(1, iterdim, by=step)
-    if (mode == "reverse") {
-        rev(iseq)
+    if (iterdim == 0) {
+        integer(0)
     } else {
-        iseq
+        iseq <- seq(1, iterdim, by=step)
+        if (mode == "reverse") {
+            rev(iseq)
+        } else {
+            iseq
+        }
     }
 }
 
@@ -54,6 +58,14 @@ fill_sparse <- function(observed, otherdim, keep) {
         observed[[i]] <- vec
     }
     observed
+}
+
+unlist_to_integer <- function(x) {
+    if (length(x) == 0) {
+        integer(0) # handle zero-length lists being unlisted.
+    } else {
+        unlist(x)
+    }
 }
 
 full_test_suite <- function(mat, cache.fraction) {
@@ -103,11 +115,14 @@ full_test_suite <- function(mat, cache.fraction) {
             expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
             extractor.v <- FUN(ptr, row, iseq, TRUE, FALSE)
             expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
-            extractor.n <- unlist(FUN(ptr, row, iseq, FALSE, FALSE))
+            extractor.n <- unlist_to_integer(FUN(ptr, row, iseq, FALSE, FALSE))
             expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                expect_true(sum(extractor.n) < nrow(mat) * ncol(mat))
+                prod <- nrow(mat) * ncol(mat)
+                if (prod > 0) {
+                    expect_true(sum(extractor.n) < prod)
+                }
             }
         })
     }
@@ -165,11 +180,14 @@ block_test_suite <- function(mat, cache.fraction) {
             expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
             extractor.v <- FUN(ptr, row, iseq, bstart, blen, TRUE, FALSE)
             expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
-            extractor.n <- unlist(FUN(ptr, row, iseq, bstart, blen, FALSE, FALSE))
+            extractor.n <- unlist_to_integer(FUN(ptr, row, iseq, bstart, blen, FALSE, FALSE))
             expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                expect_true(sum(extractor.n) < nrow(mat) * ncol(mat))
+                prod <- nrow(mat) * ncol(mat)
+                if (prod > 0) {
+                    expect_true(sum(extractor.n) < prod)
+                }
             }
         })
     }
@@ -201,7 +219,11 @@ index_test_suite <- function(mat, cache.fraction) {
         iseq <- create_predictions(iterdim, step, mode)
 
         istart <- floor(index_params[[1]] * otherdim) + 1L
-        keep <- seq(istart, otherdim, by=index_params[[2]])
+        if (otherdim == 0) {
+            keep <- integer(0)
+        } else {
+            keep <- seq(istart, otherdim, by=index_params[[2]])
+        }
         all.expected <- create_expected_dense(mat, row, iseq, keep)
 
         test_that(pretty_name("dense index ", scenarios[i,]), {
@@ -226,11 +248,14 @@ index_test_suite <- function(mat, cache.fraction) {
             expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
             extractor.v <- FUN(ptr, row, iseq, keep, TRUE, FALSE)
             expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
-            extractor.n <- unlist(FUN(ptr, row, iseq, keep, FALSE, FALSE))
+            extractor.n <- unlist_to_integer(FUN(ptr, row, iseq, keep, FALSE, FALSE))
             expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                expect_true(sum(extractor.n) < nrow(mat) * ncol(mat))
+                prod <- nrow(mat) * ncol(mat)
+                if (prod > 0) {
+                    expect_true(sum(extractor.n) < prod)
+                }
             }
         })
     }
@@ -275,7 +300,7 @@ reuse_test_suite <- function(mat, cache.fraction) {
                 predictions <- append(predictions, list(current))
                 i <- i + step
             }
-            unlist(predictions)
+            unlist_to_integer(predictions)
         })()
         all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
