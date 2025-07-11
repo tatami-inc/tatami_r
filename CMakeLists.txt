@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(tatami_r
-    VERSION 2.0.3
+    VERSION 2.0.4
     DESCRIPTION "tatami bindings for abstract R matrices"
     LANGUAGES CXX)
 
