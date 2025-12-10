@@ -86,7 +86,7 @@ inline void set_executor(manticore::Executor* ptr) {
  * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
  */ 
 template<class Function_, class Index_>
-void parallelize(Function_ fun, Index_ ntasks, int nthreads) {
+void parallelize(const Function_ fun, const Index_ ntasks, int nthreads) {
     if (ntasks == 0) {
         return;
     }
@@ -116,7 +116,7 @@ void parallelize(Function_ fun, Index_ ntasks, int nthreads) {
         Index_ length = tasks_per_worker + (w < remainder);
 
         runners.emplace_back(
-            [&](int id, Index_ s, Index_ l) -> void {
+            [&](const int id, const Index_ s, const Index_ l) -> void {
                 try {
                     fun(id, s, l);
                 } catch (...) {
