@@ -10,6 +10,14 @@
     <path>/github/workspace/include/tatami_r/</path>
     <filename>sparse__matrix_8hpp.html</filename>
   </compound>
+  <compound kind="file">
+    <name>UnknownMatrix.hpp</name>
+    <path>/github/workspace/include/tatami_r/</path>
+    <filename>UnknownMatrix_8hpp.html</filename>
+    <includes id="parallelize_8hpp" name="parallelize.hpp" local="yes" import="no" module="no" objc="no">parallelize.hpp</includes>
+    <class kind="struct">tatami_r::UnknownMatrixOptions</class>
+    <class kind="class">tatami_r::UnknownMatrix</class>
+  </compound>
   <compound kind="class">
     <name>tatami_r::UnknownMatrix</name>
     <filename>classtatami__r_1_1UnknownMatrix.html</filename>

@@ -127,7 +127,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>}</div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keyword">template</span>&lt;<span class="keyword">class</span> Function_, <span class="keyword">class</span> Index_&gt;</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keywordtype">void</span> <a class="code hl_functionRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a5a08e0387bc00e8045a0364d6e35d120">parallelize</a>(Function_ fun, Index_ ntasks, <span class="keywordtype">int</span> nthreads) {</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keywordtype">void</span> <a class="code hl_functionRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a3ea65e5b93eb55c03b00aca301e0396f">parallelize</a>(<span class="keyword">const</span> Function_ fun, <span class="keyword">const</span> Index_ ntasks, <span class="keywordtype">int</span> nthreads) {</div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordflow">if</span> (ntasks == 0) {</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        <span class="keywordflow">return</span>;</div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    }</div>
@@ -157,7 +157,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        Index_ length = tasks_per_worker + (w &lt; remainder);</div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        runners.emplace_back(</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>            [&amp;](<span class="keywordtype">int</span> <span class="keywordtype">id</span>, Index_ s, Index_ l) -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>            [&amp;](<span class="keyword">const</span> <span class="keywordtype">int</span> <span class="keywordtype">id</span>, <span class="keyword">const</span> Index_ s, <span class="keyword">const</span> Index_ l) -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>                <span class="keywordflow">try</span> {</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>                    fun(<span class="keywordtype">id</span>, s, l);</div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>                } <span class="keywordflow">catch</span> (...) {</div>
@@ -191,7 +191,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclassmanticore_1_1Executor_html"><div class="ttname"><a href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html">manticore::Executor</a></div></div>
 <div class="ttc" id="amanticore_8hpp_html"><div class="ttname"><a href="https://tatami-inc.github.io/manticore/manticore_8hpp.html">manticore.hpp</a></div></div>
-<div class="ttc" id="anamespacetatami_html_a5a08e0387bc00e8045a0364d6e35d120"><div class="ttname"><a href="https://tatami-inc.github.io/tatami/namespacetatami.html#a5a08e0387bc00e8045a0364d6e35d120">tatami::parallelize</a></div><div class="ttdeci">void parallelize(Function_ fun, Index_ tasks, int threads)</div></div>
+<div class="ttc" id="anamespacetatami_html_a3ea65e5b93eb55c03b00aca301e0396f"><div class="ttname"><a href="https://tatami-inc.github.io/tatami/namespacetatami.html#a3ea65e5b93eb55c03b00aca301e0396f">tatami::parallelize</a></div><div class="ttdeci">void parallelize(Function_ fun, const Index_ tasks, const int threads)</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

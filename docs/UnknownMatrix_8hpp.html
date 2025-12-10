@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.12.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>tatami_r: /github/workspace/include/tatami_r/tatami_r.hpp Source File</title>
+<title>tatami_r: /github/workspace/include/tatami_r/UnknownMatrix.hpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -90,21 +90,40 @@ $(function(){ initResizable(false); });
 </div><!-- top -->
 <div id="doc-content">
 <div class="header">
-  <div class="headertitle"><div class="title">tatami_r.hpp</div></div>
+  <div class="summary">
+<a href="#nested-classes">Classes</a>  </div>
+  <div class="headertitle"><div class="title">UnknownMatrix.hpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef TATAMI_R_TATAMI_R_HPP</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define TATAMI_R_TATAMI_R_HPP</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="UnknownMatrix_8hpp.html">UnknownMatrix.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="parallelize_8hpp.html">parallelize.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">namespace </span>tatami_r {}</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aUnknownMatrix_8hpp_html"><div class="ttname"><a href="UnknownMatrix_8hpp.html">UnknownMatrix.hpp</a></div><div class="ttdoc">tatami binding for an unknown R matrix.</div></div>
-<div class="ttc" id="aparallelize_8hpp_html"><div class="ttname"><a href="parallelize_8hpp.html">parallelize.hpp</a></div><div class="ttdoc">Safely parallelize for unknown matrices.</div></div>
-</div><!-- fragment --></div><!-- contents -->
+
+<p><b>tatami</b> binding for an unknown R matrix.  
+<a href="#details">More...</a></p>
+<div class="textblock"><code>#include &quot;Rcpp.h&quot;</code><br />
+<code>#include &quot;<a class="elRef" href="https://tatami-inc.github.io/tatami/tatami_8hpp.html">tatami/tatami.hpp</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="parallelize_8hpp_source.html">parallelize.hpp</a>&quot;</code><br />
+<code>#include &quot;dense_extractor.hpp&quot;</code><br />
+<code>#include &quot;sparse_extractor.hpp&quot;</code><br />
+<code>#include &lt;vector&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;string&gt;</code><br />
+<code>#include &lt;stdexcept&gt;</code><br />
+<code>#include &lt;optional&gt;</code><br />
+<code>#include &lt;cstddef&gt;</code><br />
+</div>
+<p><a href="UnknownMatrix_8hpp_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtatami__r_1_1UnknownMatrixOptions.html">tatami_r::UnknownMatrixOptions</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Options for data extraction from an <code><a class="el" href="classtatami__r_1_1UnknownMatrix.html" title="Unknown matrix-like object in R.">UnknownMatrix</a></code>.  <a href="structtatami__r_1_1UnknownMatrixOptions.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtatami__r_1_1UnknownMatrix.html">tatami_r::UnknownMatrix&lt; Value_, Index_, CachedValue_, CachedIndex_ &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unknown matrix-like object in R.  <a href="classtatami__r_1_1UnknownMatrix.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p><b>tatami</b> binding for an unknown R matrix. </p>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.12.0

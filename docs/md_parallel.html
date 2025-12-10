@@ -121,7 +121,7 @@ Parallelizing matrix iterations</h1>
 <div class="line"><span class="preprocessor">#define TATAMI_CUSTOM_PARALLEL tatami_r::parallelize</span></div>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &quot;tatami_r/tatami_r.hpp&quot;</span></div>
-</div><!-- fragment --><p>We can now use <code><a class="elRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a5a08e0387bc00e8045a0364d6e35d120">tatami::parallelize()</a></code>, <code>TATAMI_CUSTOM_PARALLEL</code> and <code>tatami_r::parallelize()</code> interchangeably.</p>
+</div><!-- fragment --><p>We can now use <code><a class="elRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a3ea65e5b93eb55c03b00aca301e0396f">tatami::parallelize()</a></code>, <code>TATAMI_CUSTOM_PARALLEL</code> and <code>tatami_r::parallelize()</code> interchangeably.</p>
 <h1><a class="anchor" id="autotoc_md8"></a>
 Using the main thread executor</h1>
 <p>We can perform our own calls to the R API inside each worker by wrapping it in the <b>manticore</b> executor. This will execute the user-provided function on the main thread before returning control to the worker. Developers do not have to do the usual <b>manticore</b> dance of <code>initialize()</code>, <code>listen()</code>, <code>finish_thread()</code>, and so on; this is all handled by <code>tatami_r::parallelize()</code> itself, so only <code>run()</code> needs to be specified.</p>

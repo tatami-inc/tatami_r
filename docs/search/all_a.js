@@ -2,9 +2,9 @@ var searchData=
 [
   ['main_20thread_20executor_0',['Using the main thread executor',['../md_parallel.html#autotoc_md8',1,'']]],
   ['make_5fdelayedcast_1',['make_DelayedCast',['https://tatami-inc.github.io/tatami/namespacetatami.html#ab4c8b88eeaa5fcbb1e5d47d020eb98ea',1,'tatami']]],
-  ['make_5fdelayedsubset_2',['make_DelayedSubset',['https://tatami-inc.github.io/tatami/namespacetatami.html#a77fad1d2a2553899a7860521d6284f50',1,'tatami']]],
+  ['make_5fdelayedsubset_2',['make_DelayedSubset',['https://tatami-inc.github.io/tatami/namespacetatami.html#af62b9d27c0c501e5b65e52ce37f0ee5d',1,'tatami']]],
   ['make_5fdelayedsubset_2ehpp_3',['make_DelayedSubset.hpp',['https://tatami-inc.github.io/tatami/make__DelayedSubset_8hpp.html',1,'']]],
-  ['make_5fdelayedsubsetblock_4',['make_DelayedSubsetBlock',['https://tatami-inc.github.io/tatami/namespacetatami.html#ad50326a317ed80de39a1a872e098b2b2',1,'tatami']]],
+  ['make_5fdelayedsubsetblock_4',['make_DelayedSubsetBlock',['https://tatami-inc.github.io/tatami/namespacetatami.html#a4fdae940708614108ad158f0c2590f8d',1,'tatami']]],
   ['manticore_5',['manticore',['https://tatami-inc.github.io/manticore/namespacemanticore.html',1,'']]],
   ['manticore_2ehpp_6',['manticore.hpp',['https://tatami-inc.github.io/manticore/manticore_8hpp.html',1,'']]],
   ['math_5fhelpers_2ehpp_7',['math_helpers.hpp',['https://tatami-inc.github.io/tatami/math__helpers_8hpp.html',1,'']]],
