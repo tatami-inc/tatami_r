@@ -32,11 +32,11 @@ namespace tatami_r {
  */
 inline manticore::Executor* executor_ptr = NULL;
 /**
- * @cond
+ * @endcond
  */
 
 /**
- * Retrieve a global `manticore::Executor` object for all **tatami_r** uses.
+ * Retrieve a global `manticore::Executor` object for all **tatami_r** applications.
  * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
  *
  * @return Reference to a global `manticore::Executor`.
@@ -56,7 +56,7 @@ inline manticore::Executor& executor() {
 }
 
 /**
- * Set a global `manticore::Executor` object for all **tatami_r** uses.
+ * Set a global `manticore::Executor` object for all **tatami_r** applications.
  * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
  * Calling this function is occasionally necessary if `executor()` resolves to different instances of a `manticore::Executor` across different libraries.
  *
