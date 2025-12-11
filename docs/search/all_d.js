@@ -1,10 +1,10 @@
 var searchData=
 [
   ['parallelization_0',['parallelization',['../md_parallel.html',1,'Enabling parallelization'],['../index.html#autotoc_md3',1,'Enabling parallelization']]],
-  ['parallelize_1',['parallelize',['https://tatami-inc.github.io/tatami/namespacetatami.html#a3ea65e5b93eb55c03b00aca301e0396f',1,'tatami']]],
+  ['parallelize_1',['parallelize',['https://tatami-inc.github.io/tatami/namespacetatami.html#a3ea65e5b93eb55c03b00aca301e0396f',1,'tatami::parallelize()'],['../namespacetatami__r.html#a23b3149a67ca05913f08045bd1ef003c',1,'tatami_r::parallelize()']]],
   ['parallelize_2ehpp_2',['parallelize.hpp',['../parallelize_8hpp.html',1,'(Global Namespace)'],['https://tatami-inc.github.io/tatami/parallelize_8hpp.html',1,'(Global Namespace)']]],
   ['parallelizing_20matrix_20iterations_3',['Parallelizing matrix iterations',['../md_parallel.html#autotoc_md7',1,'']]],
-  ['parse_5fsvt_5fsparsematrix_4',['parse_SVT_SparseMatrix',['../sparse__matrix_8hpp.html#a1153096253856a330437d23e8f497d41',1,'tatami_r']]],
+  ['parse_5fsvt_5fsparsematrix_4',['parse_SVT_SparseMatrix',['../namespacetatami__r.html#a1153096253856a330437d23e8f497d41',1,'tatami_r']]],
   ['pointer_5',['pointer',['https://tatami-inc.github.io/tatami/structtatami_1_1SomeNumericArray_1_1Iterator.html#a613940ff1968b36ce461efb2cb6b7d25',1,'tatami::SomeNumericArray::Iterator']]],
   ['pointers_6',['pointers',['https://tatami-inc.github.io/tatami/structtatami_1_1CompressedSparseContents.html#ad9410e8d3b32bc97086bebf2322c0ef8',1,'tatami::CompressedSparseContents']]],
   ['predictionindex_7',['PredictionIndex',['https://tatami-inc.github.io/tatami/namespacetatami.html#acdedcc902be98f3bd38f3507b906971c',1,'tatami']]],

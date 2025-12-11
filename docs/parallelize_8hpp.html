@@ -90,6 +90,9 @@ $(function(){ initResizable(false); });
 </div><!-- top -->
 <div id="doc-content">
 <div class="header">
+  <div class="summary">
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">parallelize.hpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -106,6 +109,23 @@ $(function(){ initResizable(false); });
 <code>#include &lt;algorithm&gt;</code><br />
 </div>
 <p><a href="parallelize_8hpp_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetatami__r.html">tatami_r</a></td></tr>
+<tr class="memdesc:namespacetatami__r"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>tatami</b> bindings for arbitrary R matrices. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a7cbde3ef2a02ed9a8d84ecd89697eb58" id="r_a7cbde3ef2a02ed9a8d84ecd89697eb58"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html">manticore::Executor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a> ()</td></tr>
+<tr class="separator:a7cbde3ef2a02ed9a8d84ecd89697eb58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8156d94510560edbd62605df13e033da" id="r_a8156d94510560edbd62605df13e033da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetatami__r.html#a8156d94510560edbd62605df13e033da">tatami_r::set_executor</a> (<a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html">manticore::Executor</a> *ptr)</td></tr>
+<tr class="separator:a8156d94510560edbd62605df13e033da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23b3149a67ca05913f08045bd1ef003c" id="r_a23b3149a67ca05913f08045bd1ef003c"><td class="memTemplParams" colspan="2">template&lt;class Function_ , class Index_ &gt; </td></tr>
+<tr class="memitem:a23b3149a67ca05913f08045bd1ef003c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetatami__r.html#a23b3149a67ca05913f08045bd1ef003c">tatami_r::parallelize</a> (const Function_ fun, const Index_ ntasks, int nthreads)</td></tr>
+<tr class="separator:a23b3149a67ca05913f08045bd1ef003c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Safely parallelize for unknown matrices. </p>
 </div></div><!-- contents -->

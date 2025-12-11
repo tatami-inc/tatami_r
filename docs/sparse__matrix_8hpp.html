@@ -91,6 +91,7 @@ $(function(){ initResizable(false); });
 <div id="doc-content">
 <div class="header">
   <div class="summary">
+<a href="#namespaces">Namespaces</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">sparse_matrix.hpp File Reference</div></div>
 </div><!--header-->
@@ -104,59 +105,21 @@ $(function(){ initResizable(false); });
 </div>
 <p><a href="sparse__matrix_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetatami__r.html">tatami_r</a></td></tr>
+<tr class="memdesc:namespacetatami__r"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>tatami</b> bindings for arbitrary R matrices. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a1153096253856a330437d23e8f497d41" id="r_a1153096253856a330437d23e8f497d41"><td class="memTemplParams" colspan="2">template&lt;class Function_ &gt; </td></tr>
-<tr class="memitem:a1153096253856a330437d23e8f497d41"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a1153096253856a330437d23e8f497d41">tatami_r::parse_SVT_SparseMatrix</a> (const Rcpp::RObject &amp;matrix, const Function_ fun)</td></tr>
+<tr class="memitem:a1153096253856a330437d23e8f497d41"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetatami__r.html#a1153096253856a330437d23e8f497d41">tatami_r::parse_SVT_SparseMatrix</a> (const Rcpp::RObject &amp;matrix, const Function_ fun)</td></tr>
 <tr class="separator:a1153096253856a330437d23e8f497d41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Parse sparse matrices from block processing. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
-<a id="a1153096253856a330437d23e8f497d41" name="a1153096253856a330437d23e8f497d41"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1153096253856a330437d23e8f497d41">&#9670;&#160;</a></span>parse_SVT_SparseMatrix()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class Function_ &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void tatami_r::parse_SVT_SparseMatrix </td>
-          <td>(</td>
-          <td class="paramtype">const Rcpp::RObject &amp;</td>          <td class="paramname"><span class="paramname"><em>matrix</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const Function_</td>          <td class="paramname"><span class="paramname"><em>fun</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Parse the contents of a <code>SVT_SparseMatrix</code> from the <b>DelayedArray</b> package. This accounts for different versions of the class definition, different types of the values, and the presence of lacunar leaf nodes.</p>
-<dl class="tparams"><dt>Template Parameters</dt><dd>
-  <table class="tparams">
-    <tr><td class="paramname">Function_</td><td>Function to be applied at each leaf node.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">matrix</td><td>The <code>SVT_SparseMatrix</code> object. </td></tr>
-    <tr><td class="paramname">fun</td><td>Function to apply to each leaf node, accepting four arguments:<ol type="1">
-<li><code>c</code>, an integer specifying the index of the leaf node, i.e., the column index.</li>
-<li><code>indices</code>, an <code>Rcpp::IntegerVector</code> containing the sorted, zero-based indices of the structural non-zero elements in this node (i.e., column).</li>
-<li><code>all_ones</code>, a boolean indicating whether all values in this node/column are equal to 1.</li>
-<li><code>values</code>, an <code>Rcpp::IntegerVector</code>, <code>Rcpp::LogicalVector</code> or <code>Rcpp::NumericVector</code> containing the values of the structural non-zeros. This should be of the same length as <code>indices</code>. It should be ignored if <code>all_ones = true</code>.</li>
-</ol>
-The return value of this function is ignored. Note that <code>fun</code> may not be called for all <code>c</code> - if leaf nodes do not contain any data, they will be skipped. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-</div><!-- contents -->
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.12.0

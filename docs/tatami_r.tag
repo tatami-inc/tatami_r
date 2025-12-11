@@ -4,11 +4,21 @@
     <name>parallelize.hpp</name>
     <path>/github/workspace/include/tatami_r/</path>
     <filename>parallelize_8hpp.html</filename>
+    <namespace>tatami_r</namespace>
   </compound>
   <compound kind="file">
     <name>sparse_matrix.hpp</name>
     <path>/github/workspace/include/tatami_r/</path>
     <filename>sparse__matrix_8hpp.html</filename>
+    <namespace>tatami_r</namespace>
+  </compound>
+  <compound kind="file">
+    <name>tatami_r.hpp</name>
+    <path>/github/workspace/include/tatami_r/</path>
+    <filename>tatami__r_8hpp.html</filename>
+    <includes id="UnknownMatrix_8hpp" name="UnknownMatrix.hpp" local="yes" import="no" module="no" objc="no">UnknownMatrix.hpp</includes>
+    <includes id="parallelize_8hpp" name="parallelize.hpp" local="yes" import="no" module="no" objc="no">parallelize.hpp</includes>
+    <namespace>tatami_r</namespace>
   </compound>
   <compound kind="file">
     <name>UnknownMatrix.hpp</name>
@@ -17,6 +27,7 @@
     <includes id="parallelize_8hpp" name="parallelize.hpp" local="yes" import="no" module="no" objc="no">parallelize.hpp</includes>
     <class kind="struct">tatami_r::UnknownMatrixOptions</class>
     <class kind="class">tatami_r::UnknownMatrix</class>
+    <namespace>tatami_r</namespace>
   </compound>
   <compound kind="class">
     <name>tatami_r::UnknownMatrix</name>
@@ -57,6 +68,40 @@
       <anchorfile>structtatami__r_1_1UnknownMatrixOptions.html</anchorfile>
       <anchor>a789336083111a71a161a58a1ad383c52</anchor>
       <arglist></arglist>
+    </member>
+  </compound>
+  <compound kind="namespace">
+    <name>tatami_r</name>
+    <filename>namespacetatami__r.html</filename>
+    <class kind="class">tatami_r::UnknownMatrix</class>
+    <class kind="struct">tatami_r::UnknownMatrixOptions</class>
+    <member kind="function">
+      <type>manticore::Executor &amp;</type>
+      <name>executor</name>
+      <anchorfile>namespacetatami__r.html</anchorfile>
+      <anchor>a7cbde3ef2a02ed9a8d84ecd89697eb58</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>set_executor</name>
+      <anchorfile>namespacetatami__r.html</anchorfile>
+      <anchor>a8156d94510560edbd62605df13e033da</anchor>
+      <arglist>(manticore::Executor *ptr)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>parallelize</name>
+      <anchorfile>namespacetatami__r.html</anchorfile>
+      <anchor>a23b3149a67ca05913f08045bd1ef003c</anchor>
+      <arglist>(const Function_ fun, const Index_ ntasks, int nthreads)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>parse_SVT_SparseMatrix</name>
+      <anchorfile>namespacetatami__r.html</anchorfile>
+      <anchor>a1153096253856a330437d23e8f497d41</anchor>
+      <arglist>(const Rcpp::RObject &amp;matrix, const Function_ fun)</arglist>
     </member>
   </compound>
   <compound kind="page">

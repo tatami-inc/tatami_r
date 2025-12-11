@@ -110,7 +110,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &lt;optional&gt;</span></div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">namespace </span>tatami_r {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacetatami__r.html">tatami_r</a> {</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
 <div class="foldopen" id="foldopen00028" data-start="{" data-end="};">
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="structtatami__r_1_1UnknownMatrixOptions.html">   28</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structtatami__r_1_1UnknownMatrixOptions.html">UnknownMatrixOptions</a> {</div>
@@ -425,7 +425,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span> </div>
 <div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span><span class="preprocessor">#ifdef TATAMI_R_PARALLELIZE_UNKNOWN </span></div>
 <div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>        <span class="comment">// This involves some Rcpp initializations, so we lock it just in case.</span></div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>        <span class="keyword">auto</span>&amp; mexec = executor();</div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>        <span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">executor</a>();</div>
 <div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>        mexec.run([&amp;]() -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span> </div>
@@ -639,7 +639,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span> </div>
 <div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span><span class="preprocessor">#ifdef TATAMI_R_PARALLELIZE_UNKNOWN </span></div>
 <div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>        <span class="comment">// This involves some Rcpp initializations, so we lock it just in case.</span></div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>        <span class="keyword">auto</span>&amp; mexec = executor();</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>        <span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">executor</a>();</div>
 <div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>        mexec.run([&amp;]() -&gt; <span class="keywordtype">void</span> {</div>
 <div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span> </div>
@@ -853,6 +853,8 @@ $(function(){ initResizable(false); });
 <div class="ttc" id="aclasstatami__r_1_1UnknownMatrix_html"><div class="ttname"><a href="classtatami__r_1_1UnknownMatrix.html">tatami_r::UnknownMatrix</a></div><div class="ttdoc">Unknown matrix-like object in R.</div><div class="ttdef"><b>Definition</b> UnknownMatrix.hpp:56</div></div>
 <div class="ttc" id="aclasstatami__r_1_1UnknownMatrix_html_a27b22842bfe04b6d5bf9a78fb4977102"><div class="ttname"><a href="classtatami__r_1_1UnknownMatrix.html#a27b22842bfe04b6d5bf9a78fb4977102">tatami_r::UnknownMatrix::UnknownMatrix</a></div><div class="ttdeci">UnknownMatrix(Rcpp::RObject seed, const UnknownMatrixOptions &amp;opt)</div><div class="ttdef"><b>Definition</b> UnknownMatrix.hpp:64</div></div>
 <div class="ttc" id="aclasstatami__r_1_1UnknownMatrix_html_abff9cf90f9cb485f30f60901f89e8ef8"><div class="ttname"><a href="classtatami__r_1_1UnknownMatrix.html#abff9cf90f9cb485f30f60901f89e8ef8">tatami_r::UnknownMatrix::UnknownMatrix</a></div><div class="ttdeci">UnknownMatrix(Rcpp::RObject seed)</div><div class="ttdef"><b>Definition</b> UnknownMatrix.hpp:246</div></div>
+<div class="ttc" id="anamespacetatami__r_html"><div class="ttname"><a href="namespacetatami__r.html">tatami_r</a></div><div class="ttdoc">tatami bindings for arbitrary R matrices.</div></div>
+<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:46</div></div>
 <div class="ttc" id="anamespacetatami_html_a1a9c70ebcfa94bba3fea89202868f22f"><div class="ttname"><a href="https://tatami-inc.github.io/tatami/namespacetatami.html#a1a9c70ebcfa94bba3fea89202868f22f">tatami::VectorPtr</a></div><div class="ttdeci">std::shared_ptr&lt; const std::vector&lt; Index_ &gt; &gt; VectorPtr</div></div>
 <div class="ttc" id="anamespacetatami_html_a4d15fa0c5213ad27fc0c99c3dd5c02ad"><div class="ttname"><a href="https://tatami-inc.github.io/tatami/namespacetatami.html#a4d15fa0c5213ad27fc0c99c3dd5c02ad">tatami::can_cast_Index_to_container_size</a></div><div class="ttdeci">Index_ can_cast_Index_to_container_size(const Index_ x)</div></div>
 <div class="ttc" id="anamespacetatami_html_a61b43d2b751c7fcca6815f3be929d4d3"><div class="ttname"><a href="https://tatami-inc.github.io/tatami/namespacetatami.html#a61b43d2b751c7fcca6815f3be929d4d3">tatami::resize_container_to_Index_size</a></div><div class="ttdeci">void resize_container_to_Index_size(Container_ &amp;container, const Index_ x, Args_ &amp;&amp;... args)</div></div>
