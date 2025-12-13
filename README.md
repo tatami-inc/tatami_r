@@ -19,21 +19,23 @@ SEXP some_typical_rcpp_function(Rcpp::RObject x) {
     ptr->nrow();
     auto row_extractor = ptr->dense_row();
     auto first_row = row_extractor->fetch(0);
+
+    // Return something.
+    return R_NilValue;
 }
 ```
 
-And that's it, really.
-If you want more details, you can check out the [reference documentation](https://tatami-inc.github.io/tatami_r).
+For more details, check out the [reference documentation](https://tatami-inc.github.io/tatami_r).
 
 ## Implementation
 
 **tatami_r** assumes that the hosting R instance has loaded the [**DelayedArray**](https://bioconductor.org/packages/DelayedArray) package.
-The `UnknownMatrix` getters will then use the `extract_array()` and `extract_sparse_array()` R functions to retrieve data from the abstract R matrix.
+The `UnknownMatrix` will then use the `extract_array()` and `extract_sparse_array()` R functions to retrieve data from the abstract R matrix.
 Note that this involves calling into R from C++, so high performance should not be expected here.
 Rather, the purpose of **tatami_r** is to ensure that **tatami**-based functions keep working when a native representation cannot be found for a particular matrix-like object.
 
-It is worth mentioning that the `UnknownMatrix` will always call the `extract_*_array()` functions, even when a native representation exists in **tatami** or one of its extension libraries.
-R package developers should use the `initializeCpp()` function from the [**beachmat**](https://bioconductor.org/packages/beachmat) package to map an arbitrary matrix to its appropriate representation.
+Most R package developers will not need to use **tatami_r** directly.
+Rather, they should use the `initializeCpp()` function from the [**beachmat**](https://bioconductor.org/packages/beachmat) package to map an arbitrary matrix to its appropriate representation.
 When such mappings exist, this allows the C++ code to operate without calling back into R for maximum efficiency.
 If no mapping is known, **beachmat** will gracefully fall back to an `UnknownMatrix` to keep things running.
 
@@ -82,9 +84,10 @@ which will automatically use the vendored copies of **tatami_r** (and **tatami**
 along with some of pre-configured macro definitions for safe parallelization in [**beachmat**](https://bioconductor.org/packages/beachmat)'s `Rtatami.h` header.
 Note that C++17 is required.
 
-If **assorthead** or **beachmat** cannot be used, the R package developer will need to copy the **tatami_r** and **tatami** `include/` directories into the package's `inst/include`,
-and then add a `Makevars` file like:
+If **assorthead** or **beachmat** cannot be used, developers should ensure that the contents of the `include/` directories
+(as well as all dependencies listed in [`extern/CMakeLists.txt`](extern/CMakeLists.txt))
+are available during package build, and then add a `Makevars` file like:
 
 ```
-PKG_CPPFLAGS = -I../inst/include
+PKG_CPPFLAGS = -Isome/path/to/headers
 ```
