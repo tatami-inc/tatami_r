@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 
 namespace tatami_r {
 
@@ -24,6 +25,8 @@ namespace tatami_r {
 //   This is because the value being incremented is less than the dimension extent, which is known to fit into an Index_.
 // - No need to protect against overflows when creating IntegerVectors from dimension extents.
 //   We already checked for this in the UnknownMatrix constructor.
+// - Constructors are assumed to be serialized already, when called from an UnknownMatrix method.
+//   However, any destruction of Rcpp objects should also be serialized.
 
 /********************
  *** Core classes ***
@@ -44,18 +47,27 @@ public:
     ) :
         my_matrix(matrix),
         my_dense_extractor(dense_extractor),
-        my_extract_args(2),
         my_row(row),
         my_non_target_length(non_target_extract.size()),
         my_oracle(std::move(oracle))
     {
-        my_extract_args[static_cast<int>(row)] = std::move(non_target_extract);
+        my_extract_args.emplace(2);
+        (*my_extract_args)[static_cast<int>(row)] = std::move(non_target_extract);
+    }
+
+    ~SoloDenseCore() {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+        auto& mexec = executor();
+        mexec.run([&]() -> void {
+            my_extract_args.reset();
+        });
+#endif
     }
 
 private:
     const Rcpp::RObject& my_matrix;
     const Rcpp::Function& my_dense_extractor;
-    Rcpp::List my_extract_args;
+    std::optional<Rcpp::List> my_extract_args;
 
     bool my_row;
     Index_ my_non_target_length;
@@ -76,8 +88,8 @@ public:
         mexec.run([&]() -> void {
 #endif
 
-        my_extract_args[static_cast<int>(!my_row)] = Rcpp::IntegerVector::create(i + 1);
-        auto obj = my_dense_extractor(my_matrix, my_extract_args);
+        (*my_extract_args)[static_cast<int>(!my_row)] = Rcpp::IntegerVector::create(i + 1);
+        auto obj = my_dense_extractor(my_matrix, *my_extract_args);
         if (my_row) {
             parse_dense_matrix<Index_>(obj, 0, 0, true, buffer, 1, my_non_target_length);
         } else {
@@ -105,7 +117,6 @@ public:
     ) :
         my_matrix(matrix),
         my_dense_extractor(dense_extractor),
-        my_extract_args(2),
         my_row(row),
         my_non_target_length(non_target_extract.size()),
         my_chunk_ticks(ticks),
@@ -113,13 +124,23 @@ public:
         my_factory(stats),
         my_cache(stats.max_slabs_in_cache)
     {
-        my_extract_args[static_cast<int>(row)] = std::move(non_target_extract);
+        my_extract_args.emplace(2);
+        (*my_extract_args)[static_cast<int>(row)] = std::move(non_target_extract);
+    }
+
+    ~MyopicDenseCore() {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+        auto& mexec = executor();
+        mexec.run([&]() -> void {
+            my_extract_args.reset();
+        });
+#endif
     }
 
 private:
     const Rcpp::RObject& my_matrix;
     const Rcpp::Function& my_dense_extractor;
-    Rcpp::List my_extract_args;
+    std::optional<Rcpp::List> my_extract_args;
 
     bool my_row;
     Index_ my_non_target_length;
@@ -151,8 +172,8 @@ public:
                 mexec.run([&]() -> void {
 #endif
 
-                my_extract_args[static_cast<int>(!my_row)] = consecutive_indices(chunk_start, chunk_len);
-                auto obj = my_dense_extractor(my_matrix, my_extract_args);
+                (*my_extract_args)[static_cast<int>(!my_row)] = consecutive_indices(chunk_start, chunk_len);
+                auto obj = my_dense_extractor(my_matrix, *my_extract_args);
                 if (my_row) {
                     parse_dense_matrix<Index_>(obj, 0, 0, true, cache.data, chunk_len, my_non_target_length);
                 } else {
@@ -185,7 +206,6 @@ public:
     ) :
         my_matrix(matrix),
         my_dense_extractor(dense_extractor),
-        my_extract_args(2),
         my_row(row),
         my_non_target_length(non_target_extract.size()),
         my_chunk_ticks(ticks),
@@ -193,13 +213,23 @@ public:
         my_factory(stats),
         my_cache(std::move(oracle), stats.max_slabs_in_cache)
     {
-        my_extract_args[static_cast<int>(row)] = std::move(non_target_extract);
+        my_extract_args.emplace(2);
+        (*my_extract_args)[static_cast<int>(row)] = std::move(non_target_extract);
+    }
+
+    ~OracularDenseCore() {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+        auto& mexec = executor();
+        mexec.run([&]() -> void {
+            my_extract_args.reset();
+        });
+#endif
     }
 
 private:
     const Rcpp::RObject& my_matrix;
     const Rcpp::Function& my_dense_extractor;
-    Rcpp::List my_extract_args;
+    std::optional<Rcpp::List> my_extract_args;
 
     bool my_row;
     Index_ my_non_target_length;
@@ -252,8 +282,8 @@ public:
                     current += chunk_len;
                 }
 
-                my_extract_args[static_cast<int>(!my_row)] = std::move(primary_extract);
-                const auto obj = my_dense_extractor(my_matrix, my_extract_args);
+                (*my_extract_args)[static_cast<int>(!my_row)] = std::move(primary_extract);
+                const auto obj = my_dense_extractor(my_matrix, *my_extract_args);
 
                 current = 0;
                 for (const auto& p : to_populate) {

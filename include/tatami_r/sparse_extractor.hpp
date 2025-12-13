@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <numeric>
+#include <optional>
 
 namespace tatami_r {
 
@@ -23,6 +24,8 @@ namespace tatami_r {
 //   This is because the value being incremented is less than the dimension extent, which is known to fit into an Index_.
 // - No need to protect against overflows when creating IntegerVectors from dimension extents.
 //   We already know that the dimension extent can be safely converted to/from an int, based on checks in the UnknownMatrix constructor.
+// - Constructors are assumed to be serialized already, when called from an UnknownMatrix method.
+//   However, any destruction of Rcpp objects should also be serialized.
 
 /********************
  *** Core classes ***
@@ -46,7 +49,6 @@ public:
     ) : 
         my_matrix(matrix),
         my_sparse_extractor(sparse_extractor),
-        my_extract_args(2),
         my_row(row),
         my_factory(
             1,
@@ -58,13 +60,23 @@ public:
         my_solo(my_factory.create()),
         my_oracle(std::move(oracle))
     {
-        my_extract_args[static_cast<int>(row)] = std::move(non_target_extract);
+        my_extract_args.emplace(2);
+        (*my_extract_args)[static_cast<int>(row)] = std::move(non_target_extract);
+    }
+
+    ~SoloSparseCore() {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+        auto& mexec = executor();
+        mexec.run([&]() -> void {
+            my_extract_args.reset();
+        });
+#endif
     }
 
 private:
     const Rcpp::RObject& my_matrix;
     const Rcpp::Function& my_sparse_extractor;
-    Rcpp::List my_extract_args;
+    std::optional<Rcpp::List> my_extract_args;
 
     bool my_row;
 
@@ -88,8 +100,8 @@ public:
         mexec.run([&]() -> void {
 #endif
 
-        my_extract_args[static_cast<int>(!my_row)] = Rcpp::IntegerVector::create(i + 1);
-        const auto obj = my_sparse_extractor(my_matrix, my_extract_args);
+        (*my_extract_args)[static_cast<int>(!my_row)] = Rcpp::IntegerVector::create(i + 1);
+        const auto obj = my_sparse_extractor(my_matrix, *my_extract_args);
         parse_sparse_matrix(obj, my_row, my_solo.values, my_solo.indices, my_solo.number);
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
@@ -118,7 +130,6 @@ public:
     ) : 
         my_matrix(matrix),
         my_sparse_extractor(sparse_extractor),
-        my_extract_args(2),
         my_row(row),
         my_chunk_ticks(ticks),
         my_chunk_map(map),
@@ -131,13 +142,23 @@ public:
         ),
         my_cache(stats.max_slabs_in_cache)
     {
-        my_extract_args[static_cast<int>(row)] = std::move(non_target_extract);
+        my_extract_args.emplace(2);
+        (*my_extract_args)[static_cast<int>(row)] = std::move(non_target_extract);
+    }
+
+    ~MyopicSparseCore() {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+        auto& mexec = executor();
+        mexec.run([&]() -> void {
+            my_extract_args.reset();
+        });
+#endif
     }
 
 private:
     const Rcpp::RObject& my_matrix;
     const Rcpp::Function& my_sparse_extractor;
-    Rcpp::List my_extract_args;
+    std::optional<Rcpp::List> my_extract_args;
 
     bool my_row;
 
@@ -168,8 +189,8 @@ public:
                 mexec.run([&]() -> void {
 #endif
 
-                my_extract_args[static_cast<int>(!my_row)] = consecutive_indices(chunk_start, chunk_len);
-                auto obj = my_sparse_extractor(my_matrix, my_extract_args);
+                (*my_extract_args)[static_cast<int>(!my_row)] = consecutive_indices(chunk_start, chunk_len);
+                auto obj = my_sparse_extractor(my_matrix, *my_extract_args);
                 parse_sparse_matrix(obj, my_row, cache.values, cache.indices, cache.number);
 
 #ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
@@ -201,7 +222,6 @@ public:
     ) : 
         my_matrix(matrix),
         my_sparse_extractor(sparse_extractor),
-        my_extract_args(2),
         my_row(row),
         my_chunk_ticks(ticks),
         my_chunk_map(map),
@@ -216,13 +236,23 @@ public:
         my_needs_value(needs_value),
         my_needs_index(needs_index)
     {
-        my_extract_args[static_cast<int>(row)] = non_target_extract;
+        my_extract_args.emplace(2);
+        (*my_extract_args)[static_cast<int>(row)] = std::move(non_target_extract);
+    }
+
+    ~OracularSparseCore() {
+#ifdef TATAMI_R_PARALLELIZE_UNKNOWN 
+        auto& mexec = executor();
+        mexec.run([&]() -> void {
+            my_extract_args.reset();
+        });
+#endif
     }
 
 private:
     const Rcpp::RObject& my_matrix;
     const Rcpp::Function& my_sparse_extractor;
-    Rcpp::List my_extract_args;
+    std::optional<Rcpp::List> my_extract_args;
 
     bool my_row;
 
@@ -299,8 +329,8 @@ public:
                     current += chunk_len;
                 }
 
-                my_extract_args[static_cast<int>(!my_row)] = primary_extract;
-                auto obj = my_sparse_extractor(my_matrix, my_extract_args);
+                (*my_extract_args)[static_cast<int>(!my_row)] = std::move(primary_extract);
+                auto obj = my_sparse_extractor(my_matrix, *my_extract_args);
                 parse_sparse_matrix(obj, my_row, my_chunk_value_ptrs, my_chunk_index_ptrs, my_chunk_numbers.data());
 
                 current = 0;
