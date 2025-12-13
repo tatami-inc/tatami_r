@@ -17,9 +17,7 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat, cache.fraction = 0)
-    big_test_suite(mat, cache.fraction = 0.01)
-    big_test_suite(mat, cache.fraction = 0.1)
+    big_test_suite(mat)
 }
 
 {
@@ -39,9 +37,7 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat, cache.fraction = 0)
-    big_test_suite(mat, cache.fraction = 0.01)
-    big_test_suite(mat, cache.fraction = 0.1)
+    big_test_suite(mat)
 }
 
 {
@@ -58,7 +54,5 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat, cache.fraction = 0)
-    big_test_suite(mat, cache.fraction = 0.01)
-    big_test_suite(mat, cache.fraction = 0.1)
+    big_test_suite(mat)
 }

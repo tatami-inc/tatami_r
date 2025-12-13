@@ -26,8 +26,7 @@ set.seed(200000)
         expect_true(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat, cache.fraction = 0.01)
-    big_test_suite(mat, cache.fraction = 0.1)
+    big_test_suite(mat)
 }
 
 {
@@ -44,8 +43,7 @@ set.seed(200000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat, cache.fraction = 0.01)
-    big_test_suite(mat, cache.fraction = 0.1)
+    big_test_suite(mat)
 }
 
 for (dims in list(c(0, 10), c(10, 0))) {
@@ -61,5 +59,5 @@ for (dims in list(c(0, 10), c(10, 0))) {
         expect_true(raticate.tests::sparse(parsed))
     })
 
-    big_test_suite(mat, cache.fraction = 0.01)
+    big_test_suite(mat)
 }

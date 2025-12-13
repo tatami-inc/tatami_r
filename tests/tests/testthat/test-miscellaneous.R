@@ -13,13 +13,13 @@ test_that("works correctly with the default cache size", {
 {
     library(Matrix)
     y <- Matrix(runif(1), 1, 1) # only one job in either dimension.
-    parallel_test_suite(y, 0.1)
+    parallel_test_suite(y)
 
     y <- Matrix(runif(0), 0, 0) # no jobs in either dimension.
-    parallel_test_suite(y, 0.1)
+    parallel_test_suite(y)
 
     y <- Matrix(runif(4), 2, 2) # fewer jobs than threads (for workers = 3).
-    parallel_test_suite(y, 0.1)
+    parallel_test_suite(y)
 }
 
 test_that("Behaves correctly with R-side errors", {

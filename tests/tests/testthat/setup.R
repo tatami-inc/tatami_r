@@ -8,8 +8,14 @@ extract_sparse <- function(v, offset = 1L) {
     list(index = which(v != 0) + as.integer(offset) - 1L, value = v[v!=0])
 }
 
-get_cache_size <- function(mat, cache.fraction) {
-    type.size <- c(logical = 4L, integer = 4L, numeric = 8L, double = 8L)[[DelayedArray::type(mat)]]
+get_cache_size <- function(mat, cache.fraction, sparse) {
+    if (sparse) {
+        # For testing, the cache type is always double + int for the indices.
+        type.size <- 12
+    } else {
+        # For testing, the cache type is always double.
+        type.size <- 8
+    }
     cache.fraction * nrow(mat) * ncol(mat) * type.size
 }
 
@@ -20,6 +26,8 @@ create_predictions <- function(iterdim, step, mode) {
         iseq <- seq(1, iterdim, by=step)
         if (mode == "reverse") {
             rev(iseq)
+        } else if (mode == "random") {
+            sample(iseq)
         } else {
             iseq
         }
@@ -68,15 +76,12 @@ unlist_to_integer <- function(x) {
     }
 }
 
-full_test_suite <- function(mat, cache.fraction) {
-    cache.size <- get_cache_size(mat, cache.fraction)
-    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-
+full_test_suite <- function(mat) {
     scenarios <- expand.grid(
-        cache = cache.fraction,
+        cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        mode = c("forward", "reverse"), 
+        mode = c("forward", "reverse", "random"), 
         step = c(1, 5),
         stringsAsFactors=FALSE
     )
@@ -94,15 +99,22 @@ full_test_suite <- function(mat, cache.fraction) {
         all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
         test_that(pretty_name("dense full ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=FALSE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_full(ptr, row, iseq)
             } else {
                 extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
             }
+
             expect_identical(extracted, all.expected)
         })
 
         test_that(pretty_name("sparse full ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=TRUE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_full
             } else {
@@ -111,15 +123,18 @@ full_test_suite <- function(mat, cache.fraction) {
 
             extractor.b <- FUN(ptr, row, iseq, TRUE, TRUE)
             expect_identical(all.expected, fill_sparse(extractor.b, otherdim, NULL))
+
             extractor.i <- FUN(ptr, row, iseq, FALSE, TRUE)
             expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
+
             extractor.v <- FUN(ptr, row, iseq, TRUE, FALSE)
             expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
+
             extractor.n <- unlist_to_integer(FUN(ptr, row, iseq, FALSE, FALSE))
             expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                prod <- nrow(mat) * ncol(mat)
+                prod <- length(iseq) * otherdim
                 if (prod > 0) {
                     expect_true(sum(extractor.n) < prod)
                 }
@@ -128,21 +143,19 @@ full_test_suite <- function(mat, cache.fraction) {
     }
 }
 
-block_test_suite <- function(mat, cache.fraction) {
-    cache.size <- get_cache_size(mat, cache.fraction)
-    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-
+block_test_suite <- function(mat) {
     scenarios <- expand.grid(
-        cache = cache.fraction,
+        cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        mode = c("forward", "reverse"), 
+        mode = c("forward", "reverse", "random"), 
         step = c(1, 5),
         block = list(c(0, 0.3), c(0.2, 0.66), c(0.6, 0.37)),
         stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
+        cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
         mode <- scenarios[i, "mode"]
@@ -159,15 +172,22 @@ block_test_suite <- function(mat, cache.fraction) {
         all.expected <- create_expected_dense(mat, row, iseq, keep)
 
         test_that(pretty_name("dense block ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=FALSE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_block(ptr, row, iseq, bstart, blen) 
             } else {
                 extracted <- raticate.tests::myopic_dense_block(ptr, row, iseq, bstart, blen)
             }
+
             expect_identical(extracted, all.expected)
         })
 
         test_that(pretty_name("sparse block ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=TRUE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_block
             } else {
@@ -176,15 +196,18 @@ block_test_suite <- function(mat, cache.fraction) {
 
             extractor.b <- FUN(ptr, row, iseq, bstart, blen, TRUE, TRUE)
             expect_identical(all.expected, fill_sparse(extractor.b, otherdim, keep))
+
             extractor.i <- FUN(ptr, row, iseq, bstart, blen, FALSE, TRUE)
             expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
+
             extractor.v <- FUN(ptr, row, iseq, bstart, blen, TRUE, FALSE)
             expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
+
             extractor.n <- unlist_to_integer(FUN(ptr, row, iseq, bstart, blen, FALSE, FALSE))
             expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                prod <- nrow(mat) * ncol(mat)
+                prod <- length(iseq) * blen
                 if (prod > 0) {
                     expect_true(sum(extractor.n) < prod)
                 }
@@ -193,21 +216,19 @@ block_test_suite <- function(mat, cache.fraction) {
     }
 }
 
-index_test_suite <- function(mat, cache.fraction) {
-    cache.size <- get_cache_size(mat, cache.fraction)
-    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-
+index_test_suite <- function(mat) {
     scenarios <- expand.grid(
-        cache = cache.fraction,
+        cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
-        mode = c("forward", "reverse"), 
+        mode = c("forward", "reverse", "random"), 
         step = c(1, 5),
         index = list(c(0, 3), c(0.33, 4), c(0.5, 5)),
         stringsAsFactors=FALSE
     )
 
     for (i in seq_len(nrow(scenarios))) {
+        cache <- scenarios[i,"cache"]
         row <- scenarios[i,"row"]
         oracle <- scenarios[i,"oracle"]
         mode <- scenarios[i, "mode"]
@@ -227,15 +248,22 @@ index_test_suite <- function(mat, cache.fraction) {
         all.expected <- create_expected_dense(mat, row, iseq, keep)
 
         test_that(pretty_name("dense index ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=FALSE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_indexed(ptr, row, iseq, keep) 
             } else {
                 extracted <- raticate.tests::myopic_dense_indexed(ptr, row, iseq, keep)
             }
+
             expect_identical(all.expected, extracted)
         })
 
         test_that(pretty_name("sparse index ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=TRUE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_indexed
             } else {
@@ -244,15 +272,18 @@ index_test_suite <- function(mat, cache.fraction) {
 
             extractor.b <- FUN(ptr, row, iseq, keep, TRUE, TRUE)
             expect_identical(all.expected, fill_sparse(extractor.b, otherdim, keep))
+
             extractor.i <- FUN(ptr, row, iseq, keep, FALSE, TRUE)
             expect_identical(extractor.i, lapply(extractor.b, function(y) y$index))
+
             extractor.v <- FUN(ptr, row, iseq, keep, TRUE, FALSE)
             expect_identical(extractor.v, lapply(extractor.b, function(y) y$value))
+
             extractor.n <- unlist_to_integer(FUN(ptr, row, iseq, keep, FALSE, FALSE))
             expect_identical(extractor.n, lengths(extractor.v))
 
             if (DelayedArray::is_sparse(mat)) {
-                prod <- nrow(mat) * ncol(mat)
+                prod <- length(iseq) * length(keep)
                 if (prod > 0) {
                     expect_true(sum(extractor.n) < prod)
                 }
@@ -261,12 +292,9 @@ index_test_suite <- function(mat, cache.fraction) {
     }
 }
 
-reuse_test_suite <- function(mat, cache.fraction) {
-    cache.size <- get_cache_size(mat, cache.fraction)
-    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
-
+reuse_test_suite <- function(mat) {
     scenarios <- expand.grid(
-        cache = cache.fraction,
+        cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
         oracle = c(FALSE, TRUE),
         step = c(1, 5),
@@ -305,67 +333,84 @@ reuse_test_suite <- function(mat, cache.fraction) {
         all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
         test_that(pretty_name("dense full re-used ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=FALSE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 extracted <- raticate.tests::oracular_dense_full(ptr, row, iseq)
             } else {
                 extracted <- raticate.tests::myopic_dense_full(ptr, row, iseq)
             }
+
             expect_identical(all.expected, extracted)
         })
 
         test_that(pretty_name("sparse full re-used ", scenarios[i,]), {
+            cache.size <- get_cache_size(mat, cache, sparse=TRUE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+
             if (oracle) {
                 FUN <- raticate.tests::oracular_sparse_full
             } else {
                 FUN <- raticate.tests::myopic_sparse_full
             }
+
             extractor.b <- FUN(ptr, row, iseq, TRUE, TRUE)
             expect_identical(all.expected, fill_sparse(extractor.b, otherdim, NULL))
         })
     }
 }
 
-parallel_test_suite <- function(mat, cache.fraction) {
-    cache.size <- get_cache_size(mat, cache.fraction)
-    ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
+parallel_test_suite <- function(mat) {
+    for (cache in c(0, 0.01, 0.1, 0.5)) {
+        refr <- Matrix::rowSums(mat)
+        refc <- Matrix::colSums(mat)
 
-    refr <- Matrix::rowSums(mat)
-    refc <- Matrix::colSums(mat)
+        test_that("dense sums", {
+            cache.size <- get_cache_size(mat, cache, sparse=FALSE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
-    test_that("parallel dense rowsums", {
-        expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 1))
-        expect_equal(refr, raticate.tests::oracular_dense_sums(ptr, TRUE, 1))
-        expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 3))
-        expect_equal(refr, raticate.tests::oracular_dense_sums(ptr, TRUE, 3))
-    })
+            expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 1))
+            expect_equal(refr, raticate.tests::oracular_dense_sums(ptr, TRUE, 1))
+            expect_equal(refr, raticate.tests::myopic_dense_sums(ptr, TRUE, 3))
+            expect_equal(refr, raticate.tests::oracular_dense_sums(ptr, TRUE, 3))
 
-    test_that("parallel dense colsums", {
-        expect_equal(refc, raticate.tests::myopic_dense_sums(ptr, FALSE, 1))
-        expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 1))
-        expect_equal(refc, raticate.tests::myopic_dense_sums(ptr, FALSE, 3))
-        expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 3))
-    })
+            expect_equal(refc, raticate.tests::myopic_dense_sums(ptr, FALSE, 1))
+            expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 1))
+            expect_equal(refc, raticate.tests::myopic_dense_sums(ptr, FALSE, 3))
+            expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 3))
+        })
 
-    test_that("parallel sparse rowsums", {
-        expect_equal(refr, raticate.tests::myopic_sparse_sums(ptr, TRUE, 1))
-        expect_equal(refr, raticate.tests::oracular_sparse_sums(ptr, TRUE, 1))
-        expect_equal(refr, raticate.tests::myopic_sparse_sums(ptr, TRUE, 3))
-        expect_equal(refr, raticate.tests::oracular_sparse_sums(ptr, TRUE, 3))
-    })
+        test_that("sparse sums", {
+            cache.size <- get_cache_size(mat, cache, sparse=TRUE)
+            ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
-    test_that("parallel sparse colsums", {
-        expect_equal(refc, raticate.tests::myopic_sparse_sums(ptr, FALSE, 1))
-        expect_equal(refc, raticate.tests::oracular_sparse_sums(ptr, FALSE, 1))
-        expect_equal(refc, raticate.tests::myopic_sparse_sums(ptr, FALSE, 3))
-        expect_equal(refc, raticate.tests::oracular_sparse_sums(ptr, FALSE, 3))
-    })
+            expect_equal(refr, raticate.tests::myopic_sparse_sums(ptr, TRUE, 1))
+            expect_equal(refr, raticate.tests::oracular_sparse_sums(ptr, TRUE, 1))
+            expect_equal(refr, raticate.tests::myopic_sparse_sums(ptr, TRUE, 3))
+            expect_equal(refr, raticate.tests::oracular_sparse_sums(ptr, TRUE, 3))
+
+            expect_equal(refc, raticate.tests::myopic_sparse_sums(ptr, FALSE, 1))
+            expect_equal(refc, raticate.tests::oracular_sparse_sums(ptr, FALSE, 1))
+            expect_equal(refc, raticate.tests::myopic_sparse_sums(ptr, FALSE, 3))
+            expect_equal(refc, raticate.tests::oracular_sparse_sums(ptr, FALSE, 3))
+        })
+    }
 }
 
-big_test_suite <- function(mat, cache.fraction) {
-    full_test_suite(mat, cache.fraction)
-    block_test_suite(mat, cache.fraction)
-    index_test_suite(mat, cache.fraction)
-    reuse_test_suite(mat, cache.fraction)
-    parallel_test_suite(mat, cache.fraction)
+big_test_suite <- function(mat) {
+    full_test_suite(mat)
+    gc(full=TRUE)
+
+    block_test_suite(mat)
+    gc(full=TRUE)
+
+    index_test_suite(mat)
+    gc(full=TRUE)
+
+    reuse_test_suite(mat)
+    gc(full=TRUE)
+
+    parallel_test_suite(mat)
     gc(full=TRUE)
 }
