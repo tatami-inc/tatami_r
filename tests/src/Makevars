@@ -10,4 +10,4 @@ PKG_CPPFLAGS=-I../../include \
     -Werror=format-security \
     -Wdate-time \
     -D_FORTIFY_SOURCE=2 \
-    -Wall -Wextra -Wpedantic
+    -Wall -Wextra -Wpedantic -Wno-cast-function-type -Werror

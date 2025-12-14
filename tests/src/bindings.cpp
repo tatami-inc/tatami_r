@@ -436,7 +436,7 @@ Rcpp::NumericVector collapse_vector(const std::vector<std::vector<double> >& tem
 }
 
 template<bool oracle_>
-Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, [[maybe_unused]] int num_threads) {
     RatXPtr ptr(parsed);
     int primary = (row ? ptr->nrow() : ptr->ncol());
     int secondary = (!row ? ptr->nrow() : ptr->ncol());
@@ -509,7 +509,7 @@ Rcpp::NumericVector oracular_dense_sums(Rcpp::RObject parsed, bool row, int num_
 }
 
 template<bool oracle_>
-Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, int num_threads) {
+Rcpp::NumericVector sparse_sums(Rcpp::RObject parsed, bool row, [[maybe_unused]] int num_threads) {
     RatXPtr ptr(parsed);
     int primary = (row ? ptr->nrow() : ptr->ncol());
     int secondary = (!row ? ptr->nrow() : ptr->ncol());
