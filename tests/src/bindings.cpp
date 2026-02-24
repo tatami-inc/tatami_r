@@ -443,7 +443,7 @@ Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, [[maybe_unused]] 
 
 #ifdef TEST_CUSTOM_PARALLEL
     std::vector<std::vector<double> > output(num_threads);
-    tatami_r::parallelize([&](int w, int start, int len) {
+    const int num_used = tatami_r::parallelize([&](int w, int start, int len) {
         auto ext = [&]() {
             if constexpr(oracle_) {
                 return tatami::new_extractor<false, oracle_>(ptr.get(), row, std::make_shared<tatami::ConsecutiveOracle<int> >(start, len));
@@ -468,6 +468,7 @@ Rcpp::NumericVector dense_sums(Rcpp::RObject parsed, bool row, [[maybe_unused]] 
         }
     }, primary, num_threads);
 
+    output.resize(num_used);
     return collapse_vector(output);
 #else
     auto ext = [&]() {
