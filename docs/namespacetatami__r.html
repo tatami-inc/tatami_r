@@ -111,9 +111,9 @@ Functions</h2></td></tr>
 <tr class="separator:a7cbde3ef2a02ed9a8d84ecd89697eb58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8156d94510560edbd62605df13e033da" id="r_a8156d94510560edbd62605df13e033da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8156d94510560edbd62605df13e033da">set_executor</a> (<a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html">manticore::Executor</a> *ptr)</td></tr>
 <tr class="separator:a8156d94510560edbd62605df13e033da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a355ba0f59dde7238d165fda32b29481d" id="r_a355ba0f59dde7238d165fda32b29481d"><td class="memTemplParams" colspan="2">template&lt;class Function_ , class Index_ &gt; </td></tr>
-<tr class="memitem:a355ba0f59dde7238d165fda32b29481d"><td class="memTemplItemLeft" align="right" valign="top">int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a355ba0f59dde7238d165fda32b29481d">parallelize</a> (const Function_ fun, const Index_ ntasks, int nthreads)</td></tr>
-<tr class="separator:a355ba0f59dde7238d165fda32b29481d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3bcb0e592d2a471d6d16f1095b5ef59" id="r_ad3bcb0e592d2a471d6d16f1095b5ef59"><td class="memTemplParams" colspan="2">template&lt;class Function_ , class Index_ &gt; </td></tr>
+<tr class="memitem:ad3bcb0e592d2a471d6d16f1095b5ef59"><td class="memTemplItemLeft" align="right" valign="top">int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ad3bcb0e592d2a471d6d16f1095b5ef59">parallelize</a> (const Function_ fun, const Index_ tasks, int threads)</td></tr>
+<tr class="separator:ad3bcb0e592d2a471d6d16f1095b5ef59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1153096253856a330437d23e8f497d41" id="r_a1153096253856a330437d23e8f497d41"><td class="memTemplParams" colspan="2">template&lt;class Function_ &gt; </td></tr>
 <tr class="memitem:a1153096253856a330437d23e8f497d41"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a1153096253856a330437d23e8f497d41">parse_SVT_SparseMatrix</a> (const Rcpp::RObject &amp;matrix, const Function_ fun)</td></tr>
 <tr class="separator:a1153096253856a330437d23e8f497d41"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,8 +148,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a355ba0f59dde7238d165fda32b29481d" name="a355ba0f59dde7238d165fda32b29481d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a355ba0f59dde7238d165fda32b29481d">&#9670;&#160;</a></span>parallelize()</h2>
+<a id="ad3bcb0e592d2a471d6d16f1095b5ef59" name="ad3bcb0e592d2a471d6d16f1095b5ef59"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3bcb0e592d2a471d6d16f1095b5ef59">&#9670;&#160;</a></span>parallelize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -164,12 +164,12 @@ template&lt;class Function_ , class Index_ &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const Index_</td>          <td class="paramname"><span class="paramname"><em>ntasks</em></span>, </td>
+          <td class="paramtype">const Index_</td>          <td class="paramname"><span class="paramname"><em>tasks</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>nthreads</em></span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>threads</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -183,18 +183,19 @@ template&lt;class Function_ , class Index_ &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fun</td><td>Function to run in each thread. This is a lambda that should accept three arguments:<ul>
-<li>Integer containing the thread ID.</li>
-<li>Integer specifying the index of the first task to be executed in a thread.</li>
-<li>Integer specifying the number of tasks to be executed in a thread. </li>
+<li>Integer containing the thread ID in <code>[0, threads)</code>.</li>
+<li>Integer specifying the index of the first task to be executed in a thread. This will lie in <code>[0, tasks)</code>.</li>
+<li>Integer specifying the number of tasks to be executed in a thread. This will lie in <code>(0, tasks)</code>, i.e., it is always positive. </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">ntasks</td><td>Number of tasks to be executed. </td></tr>
-    <tr><td class="paramname">nthreads</td><td>Number of threads to parallelize over.</td></tr>
+    <tr><td class="paramname">tasks</td><td>Number of tasks to be executed. This should be non-negative. </td></tr>
+    <tr><td class="paramname">threads</td><td>Number of threads to parallelize over. This should be positive.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This function is a drop-in replacement for <code><a class="elRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a9c3979c60e3d7e066be533f7ee3a2f97">tatami::parallelize()</a></code>. The series of integers from <code>[0, ntasks)</code> is split into <code>nthreads</code> contiguous ranges. Each range is used as input to a call to <code>fun</code> within a thread created by the standard <code>&lt;thread&gt;</code> library. Serialization can be achieved via <code>&lt;mutex&gt;</code> in most cases, or <code><a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html#a3bc19ec43cefc2e0b77f413a47c0e090">manticore::Executor::run()</a></code> if the task must be performed on the main thread (see <code><a class="el" href="#a7cbde3ef2a02ed9a8d84ecd89697eb58">executor()</a></code>).</p>
-<p>This function is only available if <code>TATAMI_R_PARALLELIZE_UNKNOWN</code> is defined. </p>
+<p>This function is a drop-in replacement for <code><a class="elRef" href="https://tatami-inc.github.io/tatami/namespacetatami.html#a9c3979c60e3d7e066be533f7ee3a2f97">tatami::parallelize()</a></code>. The series of integers from <code>[0, tasks)</code> is split into <code>&lt;= threads</code> non-overlapping non-empty contiguous ranges. Each range is used as input to a call to <code>fun</code> within a thread created by the standard <code>&lt;thread&gt;</code> library. Serialization can be achieved via <code>&lt;mutex&gt;</code> in most cases, or <code><a class="elRef" href="https://tatami-inc.github.io/manticore/classmanticore_1_1Executor.html#a3bc19ec43cefc2e0b77f413a47c0e090">manticore::Executor::run()</a></code> if the task must be performed on the main thread (see <code><a class="el" href="#a7cbde3ef2a02ed9a8d84ecd89697eb58">executor()</a></code>).</p>
+<p>This function is only available if <code>TATAMI_R_PARALLELIZE_UNKNOWN</code> is defined.</p>
+<dl class="section return"><dt>Returns</dt><dd>The number of workers (<code>K</code>) that were actually used. <code>K</code> is guaranteed to be no greater than <code>threads</code> (or 1, if the latter is not positive). <code>fun()</code> will have been called once for each of the thread IDs <code>[0, ..., K - 1]</code>. </dd></dl>
 
 </div>
 </div>

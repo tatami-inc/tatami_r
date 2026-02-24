@@ -93,8 +93,8 @@
       <type>int</type>
       <name>parallelize</name>
       <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>a355ba0f59dde7238d165fda32b29481d</anchor>
-      <arglist>(const Function_ fun, const Index_ ntasks, int nthreads)</arglist>
+      <anchor>ad3bcb0e592d2a471d6d16f1095b5ef59</anchor>
+      <arglist>(const Function_ fun, const Index_ tasks, int threads)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
