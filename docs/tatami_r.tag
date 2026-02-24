@@ -90,10 +90,10 @@
       <arglist>(manticore::Executor *ptr)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>int</type>
       <name>parallelize</name>
       <anchorfile>namespacetatami__r.html</anchorfile>
-      <anchor>a23b3149a67ca05913f08045bd1ef003c</anchor>
+      <anchor>a355ba0f59dde7238d165fda32b29481d</anchor>
       <arglist>(const Function_ fun, const Index_ ntasks, int nthreads)</arglist>
     </member>
     <member kind="function">
