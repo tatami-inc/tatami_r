@@ -72,47 +72,55 @@ inline void set_executor(manticore::Executor* ptr) {
  *
  * @param fun Function to run in each thread.
  * This is a lambda that should accept three arguments:
- * - Integer containing the thread ID.
+ * - Integer containing the thread ID in `[0, threads)`. 
  * - Integer specifying the index of the first task to be executed in a thread.
+ *   This will lie in `[0, tasks)`.
  * - Integer specifying the number of tasks to be executed in a thread.
- * @param ntasks Number of tasks to be executed.
- * @param nthreads Number of threads to parallelize over.
+ *   This will lie in `(0, tasks)`, i.e., it is always positive.
+ * @param tasks Number of tasks to be executed.
+ * This should be non-negative.
+ * @param threads Number of threads to parallelize over.
+ * This should be positive.
  *
  * This function is a drop-in replacement for `tatami::parallelize()`.
- * The series of integers from `[0, ntasks)` is split into `nthreads` contiguous ranges.
- * Each range is used as input to a call to `fun` within a thread created by the standard `<thread>` library. 
+ * The series of integers from `[0, tasks)` is deterministically split into `K` non-overlapping non-empty contiguous ranges where `K <= threads`.
+ * Each range is passed to `fun` for parallel execution with the standard `<thread>` library. 
  * Serialization can be achieved via `<mutex>` in most cases, or `manticore::Executor::run()` if the task must be performed on the main thread (see `executor()`).
  *
  * This function is only available if `TATAMI_R_PARALLELIZE_UNKNOWN` is defined.
+ *
+ * @return The number of workers (`K`) that were actually used.
+ * `K` is guaranteed to be no greater than `threads` (or 1, if the latter is not positive).
+ * `fun()` will have been called once for each of the thread IDs `[0, ..., K - 1]`.
  */ 
 template<class Function_, class Index_>
-int parallelize(const Function_ fun, const Index_ ntasks, int nthreads) {
-    if (ntasks == 0) {
+int parallelize(const Function_ fun, const Index_ tasks, int threads) {
+    if (tasks == 0) {
         return 0;
     }
 
-    if (nthreads <= 1 || ntasks == 1) {
-        fun(0, 0, ntasks);
+    if (threads <= 1 || tasks == 1) {
+        fun(0, 0, tasks);
         return 1;
     }
 
-    Index_ tasks_per_worker = ntasks / nthreads;
-    int remainder = ntasks % nthreads;
+    Index_ tasks_per_worker = tasks / threads;
+    int remainder = tasks % threads;
     if (tasks_per_worker == 0) {
         tasks_per_worker = 1; 
         remainder = 0;
-        nthreads = ntasks;
+        threads = tasks;
     }
 
     auto& mexec = executor();
-    mexec.initialize(nthreads, "failed to execute R command");
+    mexec.initialize(threads, "failed to execute R command");
 
     std::vector<std::thread> runners;
-    sanisizer::reserve(runners, nthreads);
-    auto errors = sanisizer::create<std::vector<std::exception_ptr> >(nthreads);
+    sanisizer::reserve(runners, threads);
+    auto errors = sanisizer::create<std::vector<std::exception_ptr> >(threads);
 
     Index_ start = 0;
-    for (int w = 0; w < nthreads; ++w) {
+    for (int w = 0; w < threads; ++w) {
         Index_ length = tasks_per_worker + (w < remainder);
 
         runners.emplace_back(
@@ -143,7 +151,7 @@ int parallelize(const Function_ fun, const Index_ ntasks, int nthreads) {
         }
     }
 
-    return nthreads;
+    return threads;
 }
 
 }
