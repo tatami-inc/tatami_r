@@ -230,12 +230,12 @@ template&lt;class Function_ &gt; </div>
   <table class="params">
     <tr><td class="paramname">matrix</td><td>The <code>SVT_SparseMatrix</code> object. </td></tr>
     <tr><td class="paramname">fun</td><td>Function to apply to each leaf node, accepting four arguments:<ol type="1">
-<li><code>c</code>, an integer specifying the index of the leaf node, i.e., the column index.</li>
+<li><code>c</code>, an integer (<code>R_xlen_t</code>) specifying the index of the leaf node, i.e., the column index.</li>
 <li><code>indices</code>, an <code>Rcpp::IntegerVector</code> containing the sorted, zero-based indices of the structural non-zero elements in this node (i.e., column).</li>
 <li><code>all_ones</code>, a boolean indicating whether all values in this node/column are equal to 1.</li>
 <li><code>values</code>, an <code>Rcpp::IntegerVector</code>, <code>Rcpp::LogicalVector</code> or <code>Rcpp::NumericVector</code> containing the values of the structural non-zeros. This should be of the same length as <code>indices</code>. It should be ignored if <code>all_ones = true</code>.</li>
 </ol>
-The return value of this function is ignored. Note that <code>fun</code> may not be called for all <code>c</code> - if leaf nodes do not contain any data, they will be skipped. </td></tr>
+The return value of this function is ignored. Note that <code>fun</code> may not be called for all <code>c</code> - if a column does not have any structural non-zero elements, it will be skipped. </td></tr>
   </table>
   </dd>
 </dl>
