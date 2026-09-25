@@ -56,3 +56,40 @@ set.seed(100000)
 
     big_test_suite(mat)
 }
+
+{
+    NR <- 26
+    NC <- 138
+    mat <- matrix(0L, NR, NC)
+    mat[,1:NC %% 2 == 1] <- matrix(rpois(NR * NC / 2, 2), nrow = NR)
+    mat <- as(mat, "SVT_SparseMatrix")
+
+    test_that("sparse unchunked matrix with empty columns works correctly", {
+        expect_identical(DelayedArray::type(mat), "integer")
+        expect_null(DelayedArray::chunkGrid(mat))
+
+        parsed <- raticate.tests::parse(mat, 0, FALSE)
+        expect_true(raticate.tests::sparse(parsed))
+        expect_false(raticate.tests::prefer_rows(parsed))
+    })
+
+    big_test_suite(mat)
+}
+
+{
+    NR <- 56
+    NC <- 87 
+    mat <- matrix(0L, NR, NC)
+    mat <- as(mat, "SVT_SparseMatrix")
+
+    test_that("sparse unchunked matrix with no values works correctly", {
+        expect_identical(DelayedArray::type(mat), "integer")
+        expect_null(DelayedArray::chunkGrid(mat))
+
+        parsed <- raticate.tests::parse(mat, 0, FALSE)
+        expect_true(raticate.tests::sparse(parsed))
+        expect_false(raticate.tests::prefer_rows(parsed))
+    })
+
+    big_test_suite(mat)
+}
