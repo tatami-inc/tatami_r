@@ -55,7 +55,7 @@ test_that("invalid cache size", {
     on.exit(setAutoBlockSize(old))
 
     mat <- matrix(runif(1000), 50, 20)
-    expect_error(raticate.tests::parse(mat, -1, FALSE), "integer overflow")
+    expect_error(raticate.tests::parse(mat, -1, FALSE), "overflow")
 })
 
 test_that("executor setting works as expected", {

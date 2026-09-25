@@ -3,6 +3,7 @@
 
 #include "Rcpp.h"
 #include "tatami/tatami.hpp"
+#include "sanisizer/sanisizer.hpp"
 
 #include "parallelize.hpp"
 #include "dense_extractor.hpp"
@@ -230,10 +231,8 @@ public:
             Rcpp::NumericVector bsize = fun();
             if (bsize.size() != 1 || bsize[0] < 0) {
                 throw std::runtime_error("'getAutoBlockSize()' should return a non-negative number of bytes");
-            } else if (bsize[0] > std::numeric_limits<std::size_t>::max()) {
-                throw std::runtime_error("integer overflow from the current value of 'getAutoBlockSize()'");
             }
-            my_cache_size_in_bytes = bsize[0];
+            my_cache_size_in_bytes = sanisizer::from_float<I<decltype(my_cache_size_in_bytes)> >(bsize[0]);
         }
     }
 
