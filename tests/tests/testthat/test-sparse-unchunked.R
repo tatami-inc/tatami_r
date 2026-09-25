@@ -1,4 +1,3 @@
-# This tests the dense matrix extraction.
 # library(testthat); source("setup.R"); source("test-sparse-unchunked.R")
 
 set.seed(100000)
@@ -7,8 +6,9 @@ set.seed(100000)
     NR <- 34
     NC <- 87
     mat <- as(Matrix::rsparsematrix(NR, NC, 0.15), "SVT_SparseMatrix")
+    name <- "sparse unchunked double matrix"
 
-    test_that("sparse unchunked double matrix passes basic checks", {
+    test_that(paste(name, "passes basic checks"), {
         expect_identical(DelayedArray::type(mat), "double")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -17,7 +17,7 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
 
 {
@@ -27,8 +27,9 @@ set.seed(100000)
     nnz <- length(mat) * 0.2
     mat[sample(length(mat), nnz)] <- rpois(nnz, lambda=10)
     mat <- as(mat, "SVT_SparseMatrix")
+    name <- "sparse unchunked integer matrix"
 
-    test_that("sparse unchunked integer matrix passes basic checks", {
+    test_that(paste(name, "passes basic checks"), {
         expect_identical(DelayedArray::type(mat), "integer")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -37,15 +38,17 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
 
+# This implicitly checks the all-1 lacunar leaf nodes, where nzvals is set to NULL.
 {
     NR <- 151
     NC <- 7
     mat <- as(matrix(rbinom(NR * NC, 1, 0.2) == 1, ncol=NC), "SVT_SparseMatrix")
+    name <- "sparse unchunked logical matrix"
 
-    test_that("sparse unchunked logical matrix passes basic checks", {
+    test_that(paste(name, "passes basic checks"), {
         expect_identical(DelayedArray::type(mat), "logical")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -54,18 +57,19 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
 
 {
     NR <- 26
     NC <- 138
-    mat <- matrix(0L, NR, NC)
-    mat[,1:NC %% 2 == 1] <- matrix(rpois(NR * NC / 2, 2), nrow = NR)
+    mat <- matrix(0, NR, NC)
+    mat[,1:NC %% 2 == 1] <- matrix(rpois(NR * NC / 2, lambda = 2), nrow = NR)
     mat <- as(mat, "SVT_SparseMatrix")
+    name <- "sparse unchunked double matrix with empty columns"
 
-    test_that("sparse unchunked matrix with empty columns works correctly", {
-        expect_identical(DelayedArray::type(mat), "integer")
+    test_that(paste(name, "passes basic checks"), {
+        expect_identical(DelayedArray::type(mat), "double")
         expect_null(DelayedArray::chunkGrid(mat))
 
         parsed <- raticate.tests::parse(mat, 0, FALSE)
@@ -73,7 +77,7 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
 
 {
@@ -81,8 +85,9 @@ set.seed(100000)
     NC <- 87 
     mat <- matrix(0L, NR, NC)
     mat <- as(mat, "SVT_SparseMatrix")
+    name <- "sparse unchunked integer matrix with no values"
 
-    test_that("sparse unchunked matrix with no values works correctly", {
+    test_that(paste(name, "passes basic checks"), {
         expect_identical(DelayedArray::type(mat), "integer")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -91,5 +96,5 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }

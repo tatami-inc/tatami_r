@@ -9,11 +9,10 @@ extract_sparse <- function(v, offset = 1L) {
 }
 
 get_cache_size <- function(mat, cache.fraction, sparse) {
+    # For testing, our CacheValue_ is always a double, regardless of the actual input type.
     if (sparse) {
-        # For testing, the cache type is always double + int for the indices.
-        type.size <- 12
+        type.size <- 12 # + 32-bit int for the indices.
     } else {
-        # For testing, the cache type is always double.
         type.size <- 8
     }
     cache.fraction * nrow(mat) * ncol(mat) * type.size
@@ -34,8 +33,8 @@ create_predictions <- function(iterdim, step, mode) {
     }
 }
 
-pretty_name <- function(prefix, params) {
-    paste0(prefix, "[", paste(vapply(colnames(params), function(x) paste0(x, "=", deparse(params[,x][[1]])), ""), collapse=", "), "]")
+pretty_name <- function(context, prefix, params) {
+    paste0(context, ", ", prefix, ", ", paste(vapply(colnames(params), function(x) paste0(x, "=", deparse(params[,x][[1]])), ""), collapse=", "))
 }
 
 create_expected_dense <- function(mat, row, iseq, keep) {
@@ -76,7 +75,7 @@ unlist_to_integer <- function(x) {
     }
 }
 
-full_test_suite <- function(mat) {
+full_test_suite <- function(mat, context) {
     scenarios <- expand.grid(
         cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
@@ -98,7 +97,7 @@ full_test_suite <- function(mat) {
         iseq <- create_predictions(iterdim, step, mode)
         all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
-        test_that(pretty_name("dense full ", scenarios[i,]), {
+        test_that(pretty_name(context, "dense full", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=FALSE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -111,7 +110,7 @@ full_test_suite <- function(mat) {
             expect_identical(extracted, all.expected)
         })
 
-        test_that(pretty_name("sparse full ", scenarios[i,]), {
+        test_that(pretty_name(context, "sparse full", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=TRUE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -143,7 +142,7 @@ full_test_suite <- function(mat) {
     }
 }
 
-block_test_suite <- function(mat) {
+block_test_suite <- function(mat, context) {
     scenarios <- expand.grid(
         cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
@@ -171,7 +170,7 @@ block_test_suite <- function(mat) {
         keep <- (bstart - 1L) + seq_len(blen)
         all.expected <- create_expected_dense(mat, row, iseq, keep)
 
-        test_that(pretty_name("dense block ", scenarios[i,]), {
+        test_that(pretty_name(context, "dense block", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=FALSE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -184,7 +183,7 @@ block_test_suite <- function(mat) {
             expect_identical(extracted, all.expected)
         })
 
-        test_that(pretty_name("sparse block ", scenarios[i,]), {
+        test_that(pretty_name(context, "sparse block", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=TRUE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -216,7 +215,7 @@ block_test_suite <- function(mat) {
     }
 }
 
-index_test_suite <- function(mat) {
+index_test_suite <- function(mat, context) {
     scenarios <- expand.grid(
         cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
@@ -247,7 +246,7 @@ index_test_suite <- function(mat) {
         }
         all.expected <- create_expected_dense(mat, row, iseq, keep)
 
-        test_that(pretty_name("dense index ", scenarios[i,]), {
+        test_that(pretty_name(context, "dense index", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=FALSE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -260,7 +259,7 @@ index_test_suite <- function(mat) {
             expect_identical(all.expected, extracted)
         })
 
-        test_that(pretty_name("sparse index ", scenarios[i,]), {
+        test_that(pretty_name(context, "sparse index", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=TRUE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -292,7 +291,7 @@ index_test_suite <- function(mat) {
     }
 }
 
-reuse_test_suite <- function(mat) {
+reuse_test_suite <- function(mat, context) {
     scenarios <- expand.grid(
         cache = c(0, 0.01, 0.1, 0.5),
         row = c(TRUE, FALSE),
@@ -332,7 +331,7 @@ reuse_test_suite <- function(mat) {
         })()
         all.expected <- create_expected_dense(mat, row, iseq, NULL)
 
-        test_that(pretty_name("dense full re-used ", scenarios[i,]), {
+        test_that(pretty_name(context, "dense re-use", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=FALSE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -345,7 +344,7 @@ reuse_test_suite <- function(mat) {
             expect_identical(all.expected, extracted)
         })
 
-        test_that(pretty_name("sparse full re-used ", scenarios[i,]), {
+        test_that(pretty_name(context, "sparse re-use", scenarios[i,]), {
             cache.size <- get_cache_size(mat, cache, sparse=TRUE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -361,12 +360,13 @@ reuse_test_suite <- function(mat) {
     }
 }
 
-parallel_test_suite <- function(mat) {
+parallel_test_suite <- function(mat, context) {
     for (cache in c(0, 0.01, 0.1, 0.5)) {
         refr <- Matrix::rowSums(mat)
         refc <- Matrix::colSums(mat)
+        scenario <- data.frame(cache=cache)
 
-        test_that("dense sums", {
+        test_that(pretty_name(context, "dense sums", scenario), {
             cache.size <- get_cache_size(mat, cache, sparse=FALSE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -381,7 +381,7 @@ parallel_test_suite <- function(mat) {
             expect_equal(refc, raticate.tests::oracular_dense_sums(ptr, FALSE, 3))
         })
 
-        test_that("sparse sums", {
+        test_that(pretty_name(context, "sparse sums", scenario), {
             cache.size <- get_cache_size(mat, cache, sparse=TRUE)
             ptr <- raticate.tests::parse(mat, cache.size, cache.size > 0)
 
@@ -398,19 +398,19 @@ parallel_test_suite <- function(mat) {
     }
 }
 
-big_test_suite <- function(mat) {
-    full_test_suite(mat)
+big_test_suite <- function(mat, context) {
+    full_test_suite(mat, context)
     gc(full=TRUE)
 
-    block_test_suite(mat)
+    block_test_suite(mat, context)
     gc(full=TRUE)
 
-    index_test_suite(mat)
+    index_test_suite(mat, context)
     gc(full=TRUE)
 
-    reuse_test_suite(mat)
+    reuse_test_suite(mat, context)
     gc(full=TRUE)
 
-    parallel_test_suite(mat)
+    parallel_test_suite(mat, context)
     gc(full=TRUE)
 }

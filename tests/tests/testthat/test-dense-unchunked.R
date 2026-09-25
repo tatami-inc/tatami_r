@@ -1,4 +1,3 @@
-# This tests the dense matrix extraction.
 # library(testthat); source("setup.R"); source("test-dense-unchunked.R")
 
 set.seed(100000)
@@ -7,8 +6,9 @@ set.seed(100000)
     NR <- 23
     NC <- 52
     mat <- matrix(runif(NR * NC), ncol=NC)
+    name <- "dense unchunked double matrix"
 
-    test_that("dense unchunked double matrix passes basic checks", {
+    test_that(paste(name, "passes basic checks"), {
         expect_type(mat, "double")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -19,15 +19,16 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
 
 {
     NR <- 61
     NC <- 27
     mat <- matrix(rpois(NR * NC, lambda=10), ncol=NC)
+    name <- "dense unchunked integer matrix"
 
-    test_that("dense unchunked integer matrix passes basic checks", {
+    test_that(paste(name, "passes basic checks"), {
         expect_type(mat, "integer")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -38,15 +39,16 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
 
 {
     NR <- 106
     NC <- 12
     mat <- matrix(rbinom(NR * NC, 1, 0.5) == 1, ncol=NC)
+    name <- "dense unchunked logical matrix"
 
-    test_that("dense unchunked logical matrix passes basic checks", {
+    test_that(paste(name, "passes basic checks"), {
         expect_type(mat, "logical")
         expect_null(DelayedArray::chunkGrid(mat))
 
@@ -57,5 +59,5 @@ set.seed(100000)
         expect_false(raticate.tests::prefer_rows(parsed))
     })
 
-    big_test_suite(mat)
+    big_test_suite(mat, name)
 }
