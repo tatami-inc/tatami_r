@@ -3,7 +3,11 @@
 
 #include "utils.hpp"
 #include "tatami/tatami.hpp"
+
 #include <type_traits>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 /**
  * @file sparse_matrix.hpp
@@ -21,7 +25,7 @@ namespace tatami_r {
  * @param matrix The `SVT_SparseMatrix` object.
  * @param fun Function to apply to each leaf node, accepting four arguments:
  * .
- * 1. `c`, an integer specifying the index of the leaf node, i.e., the column index. 
+ * 1. `c`, an integer (`R_xlen_t`) specifying the index of the leaf node, i.e., the column index. 
  * 2. `indices`, an `Rcpp::IntegerVector` containing the sorted, zero-based indices of the structural non-zero elements in this node (i.e., column).
  * 3. `all_ones`, a boolean indicating whether all values in this node/column are equal to 1.
  * 4. `values`, an `Rcpp::IntegerVector`, `Rcpp::LogicalVector` or `Rcpp::NumericVector` containing the values of the structural non-zeros.
@@ -29,7 +33,7 @@ namespace tatami_r {
  *    It should be ignored if `all_ones = true`.
  * .
  * The return value of this function is ignored.
- * Note that `fun` may not be called for all `c` - if leaf nodes do not contain any data, they will be skipped.
+ * Note that `fun` may not be called for all `c` - if a column does not have any structural non-zero elements, it will be skipped.
  */
 template<class Function_>
 void parse_SVT_SparseMatrix(const Rcpp::RObject& matrix, const Function_ fun) {
@@ -74,24 +78,24 @@ void parse_SVT_SparseMatrix(const Rcpp::RObject& matrix, const Function_ fun) {
         const Rcpp::RObject raw_values(inner[value_x]);
         const auto vsexp = raw_values.sexp_type();
         const bool has_values = raw_values != R_NilValue;
-        Rcpp::IntegerVector curvalues_i;
-        Rcpp::NumericVector curvalues_n;
-        Rcpp::LogicalVector curvalues_l;
+        std::optional<Rcpp::IntegerVector> curvalues_i;
+        std::optional<Rcpp::NumericVector> curvalues_n;
+        std::optional<Rcpp::LogicalVector> curvalues_l;
 
         if (has_values) {
             I<decltype(nnz)> vsize;
             switch (vsexp) {
                 case INTSXP:
-                    curvalues_i = Rcpp::IntegerVector(raw_values);
-                    vsize = curvalues_i.size();
+                    curvalues_i.emplace(raw_values);
+                    vsize = curvalues_i->size();
                     break;
                 case REALSXP:
-                    curvalues_n = Rcpp::NumericVector(raw_values);
-                    vsize = curvalues_n.size();
+                    curvalues_n.emplace(raw_values);
+                    vsize = curvalues_n->size();
                     break;
                 case LGLSXP:
-                    curvalues_l = Rcpp::LogicalVector(raw_values);
-                    vsize = curvalues_l.size();
+                    curvalues_l.emplace(raw_values);
+                    vsize = curvalues_l->size();
                     break;
                 default:
                     {
@@ -108,13 +112,13 @@ void parse_SVT_SparseMatrix(const Rcpp::RObject& matrix, const Function_ fun) {
 
         switch (vsexp) {
             case INTSXP:
-                fun(c, curindices, !has_values, curvalues_i);
+                fun(c, curindices, !has_values, *curvalues_i);
                 break;
             case REALSXP:
-                fun(c, curindices, !has_values, curvalues_n);
+                fun(c, curindices, !has_values, *curvalues_n);
                 break;
             default:
-                fun(c, curindices, !has_values, curvalues_l);
+                fun(c, curindices, !has_values, *curvalues_l);
                 break;
         }
     }
