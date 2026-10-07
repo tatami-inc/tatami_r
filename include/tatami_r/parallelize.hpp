@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <exception>
 #include <algorithm>
 
 /**
