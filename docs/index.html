@@ -125,7 +125,7 @@ Enabling parallelization</h1>
 <div class="line">        <span class="comment">// Do something with each row.</span></div>
 <div class="line">    }</div>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
-<div class="ttc" id="anamespacetatami__r_html_ad3bcb0e592d2a471d6d16f1095b5ef59"><div class="ttname"><a href="namespacetatami__r.html#ad3bcb0e592d2a471d6d16f1095b5ef59">tatami_r::parallelize</a></div><div class="ttdeci">int parallelize(const Function_ fun, const Index_ tasks, int threads)</div><div class="ttdef"><b>Definition</b> parallelize.hpp:97</div></div>
+<div class="ttc" id="anamespacetatami__r_html_ad3bcb0e592d2a471d6d16f1095b5ef59"><div class="ttname"><a href="namespacetatami__r.html#ad3bcb0e592d2a471d6d16f1095b5ef59">tatami_r::parallelize</a></div><div class="ttdeci">int parallelize(const Function_ fun, const Index_ tasks, int threads)</div><div class="ttdef"><b>Definition</b> parallelize.hpp:98</div></div>
 </div><!-- fragment --><p>Any calls to the <code>extract_*_array()</code> R functions are made thread-safe by the <a href="https://github.com/tatami-inc/manticore"><b>manticore</b></a> library. Developers can also access the <b>manticore</b> executor to safely perform their own R API calls from each thread.</p>
 <div class="fragment"><div class="line"><span class="keyword">auto</span>&amp; mexec = <a class="code hl_function" href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a>();</div>
 <div class="line"> </div>
@@ -134,7 +134,7 @@ Enabling parallelization</h1>
 <div class="line">        <span class="comment">// Do something that touches the R API.</span></div>
 <div class="line">    });</div>
 <div class="line">}, ptr-&gt;nrow(), num_threads);</div>
-<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:46</div></div>
+<div class="ttc" id="anamespacetatami__r_html_a7cbde3ef2a02ed9a8d84ecd89697eb58"><div class="ttname"><a href="namespacetatami__r.html#a7cbde3ef2a02ed9a8d84ecd89697eb58">tatami_r::executor</a></div><div class="ttdeci">manticore::Executor &amp; executor()</div><div class="ttdef"><b>Definition</b> parallelize.hpp:47</div></div>
 </div><!-- fragment --><p>Check out the <a class="el" href="md_parallel.html">comments about safe parallelization</a> for more gory details.</p>
 <h2><a class="anchor" id="autotoc_md4"></a>
 Deployment</h2>
